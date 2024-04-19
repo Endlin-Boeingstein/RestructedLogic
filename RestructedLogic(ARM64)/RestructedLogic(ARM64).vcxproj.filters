@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="x64\jni\libs\KittyMemory\MemoryPatch.cpp">
+      <Filter>x64\jni\libs\KittyMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="x64\jni\libs\KittyMemory\KittyMemory.cpp">
+      <Filter>x64\jni\libs\KittyMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="x64\jni\libs\64InlineHook\And64InlineHook.cpp">
+      <Filter>x64\jni\libs\64InlineHook</Filter>
+    </ClCompile>
+    <ClCompile Include="RestructedLogic_ARM64_.cpp" />
+    <ClCompile Include="memUtils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="x64\jni\include\Utils.h">
+      <Filter>x64\jni\include</Filter>
+    </ClInclude>
+    <ClInclude Include="x64\jni\libs\KittyMemory\KittyMemory.h">
+      <Filter>x64\jni\libs\KittyMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="x64\jni\libs\KittyMemory\MemoryPatch.h">
+      <Filter>x64\jni\libs\KittyMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="x64\jni\libs\64InlineHook\And64InlineHook.hpp">
+      <Filter>x64\jni\libs\64InlineHook</Filter>
+    </ClInclude>
+    <ClInclude Include="RestructedLogic_ARM64_.h" />
+    <ClInclude Include="SexyTypes.h" />
+    <ClInclude Include="Logging.h" />
+    <ClInclude Include="memUtils.h" />
+    <ClInclude Include="PvZ2\Board.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="x64">
+      <UniqueIdentifier>{6e350318-162c-4c85-b78d-d3f5323de8bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x64\jni">
+      <UniqueIdentifier>{1ef42489-e64b-4f80-aa97-717db21b7638}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x64\jni\include">
+      <UniqueIdentifier>{56023d27-523d-425b-aa27-72e0a5f5b2af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x64\jni\libs">
+      <UniqueIdentifier>{d1c2a284-1422-41c7-90dc-89ac72052aee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x64\jni\src">
+      <UniqueIdentifier>{aa26b0ed-5a98-4356-aa63-cbf755c37d2c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x64\jni\libs\64InlineHook">
+      <UniqueIdentifier>{0c8cc5aa-ce7d-4bbd-98a8-b60fe4a7108d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x64\jni\libs\KittyMemory">
+      <UniqueIdentifier>{8a42b763-19cc-47da-870c-4aa7308e54a8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="x64\jni\Android.mk">
+      <Filter>x64\jni</Filter>
+    </None>
+    <None Include="x64\jni\Application.mk">
+      <Filter>x64\jni</Filter>
+    </None>
+  </ItemGroup>
+</Project>

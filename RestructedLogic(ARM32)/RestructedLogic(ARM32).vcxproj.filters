@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="RestructedLogic_ARM32_.cpp" />
+    <ClCompile Include="memUtils.cpp" />
+    <ClCompile Include="x32\jni\libs\KittyMemory\MemoryPatch.cpp">
+      <Filter>x32\jni\libs\KittyMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="x32\jni\libs\KittyMemory\KittyMemory.cpp">
+      <Filter>x32\jni\libs\KittyMemory</Filter>
+    </ClCompile>
+    <ClCompile Include="x32\jni\libs\GlossHook\Gloss.cpp">
+      <Filter>x32\jni\libs\GlossHook</Filter>
+    </ClCompile>
+    <ClCompile Include="x32\jni\libs\Substrate\SubstrateDebug.cpp">
+      <Filter>x32\jni\libs\Substrate</Filter>
+    </ClCompile>
+    <ClCompile Include="x32\jni\libs\Substrate\SubstrateHook.cpp">
+      <Filter>x32\jni\libs\Substrate</Filter>
+    </ClCompile>
+    <ClCompile Include="x32\jni\libs\Substrate\SubstratePosixMemory.cpp">
+      <Filter>x32\jni\libs\Substrate</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RestructedLogic_ARM32_.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="Logging.h" />
+    <ClInclude Include="SexyTypes.h" />
+    <ClInclude Include="memUtils.h" />
+    <ClInclude Include="x32\jni\include\Utils.h">
+      <Filter>x32\jni\include</Filter>
+    </ClInclude>
+    <ClInclude Include="x32\jni\libs\KittyMemory\KittyMemory.h">
+      <Filter>x32\jni\libs\KittyMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="x32\jni\libs\KittyMemory\MemoryPatch.h">
+      <Filter>x32\jni\libs\KittyMemory</Filter>
+    </ClInclude>
+    <ClInclude Include="x32\jni\libs\GlossHook\Gloss.h">
+      <Filter>x32\jni\libs\GlossHook</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\Board.h" />
+    <ClInclude Include="x32\jni\libs\Substrate\SubstrateARM.hpp">
+      <Filter>x32\jni\libs\Substrate</Filter>
+    </ClInclude>
+    <ClInclude Include="x32\jni\libs\Substrate\SubstrateDebug.hpp">
+      <Filter>x32\jni\libs\Substrate</Filter>
+    </ClInclude>
+    <ClInclude Include="x32\jni\libs\Substrate\SubstrateHook.h">
+      <Filter>x32\jni\libs\Substrate</Filter>
+    </ClInclude>
+    <ClInclude Include="x32\jni\libs\Substrate\SubstrateLog.hpp">
+      <Filter>x32\jni\libs\Substrate</Filter>
+    </ClInclude>
+    <ClInclude Include="x32\jni\libs\Substrate\SubstrateX86.hpp">
+      <Filter>x32\jni\libs\Substrate</Filter>
+    </ClInclude>
+    <ClInclude Include="x32\jni\libs\Substrate\table64.h">
+      <Filter>x32\jni\libs\Substrate</Filter>
+    </ClInclude>
+    <ClInclude Include="x32\jni\libs\Substrate\Buffer.hpp">
+      <Filter>x32\jni\libs\Substrate</Filter>
+    </ClInclude>
+    <ClInclude Include="x32\jni\libs\Substrate\CydiaSubstrate.h">
+      <Filter>x32\jni\libs\Substrate</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="x32">
+      <UniqueIdentifier>{77b63282-9355-4302-a35f-e1824b453785}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x32\jni">
+      <UniqueIdentifier>{f188bea8-a458-49cc-942e-047eeebcdcf1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x32\jni\include">
+      <UniqueIdentifier>{27f5689c-c622-49f9-98e4-86e253fc47ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x32\jni\libs">
+      <UniqueIdentifier>{fe2812bf-0abe-4809-b8fc-ce277db94861}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x32\jni\src">
+      <UniqueIdentifier>{da7f11f2-9f9e-43a6-b4cc-9f1dfe7fa87d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x32\jni\libs\GlossHook">
+      <UniqueIdentifier>{99f36ce4-e30e-45cc-aa32-6b6a3b3fc7db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x32\jni\libs\KittyMemory">
+      <UniqueIdentifier>{708442f0-a5d0-4617-9fe5-403d9aee4ca1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x32\jni\src\GlossHookExample">
+      <UniqueIdentifier>{f746f90d-acea-45ad-81e3-b39b54136103}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x32\jni\libs\Substrate">
+      <UniqueIdentifier>{52a29c16-48a9-497e-b0cc-8759b52af820}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
