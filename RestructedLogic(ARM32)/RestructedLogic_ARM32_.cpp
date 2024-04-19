@@ -133,6 +133,14 @@ enum AspectRatio
     Ultrawide,
 };
 
+typedef int(*worldMapDoMovement)(void*, float, float, bool);
+worldMapDoMovement oWorldMapDoMovement = NULL;
+
+int hkWorldMapDoMovement(void* self, float fX, float fY, bool allowVerticalMovement)
+{
+    return oWorldMapDoMovement(self, fX, fY, true);
+}
+
 AspectRatio GetAspectRatio()
 {
     float ratio = (float)gWidth / (float)gHeight;
@@ -358,6 +366,8 @@ void libRestructedLogic_ARM32__main()
     PVZ2HookFunction(0x86CCAC, (void*)hkMagicianHealerConditionFunc, (void**)&dispose, "ZombieCarnieMagician::ConditionFunc");
     PVZ2HookFunction(0x84EAA0, (void*)hkMagicianHealerConditionFunc, (void**)&dispose, "ZombieRomanHealer::ConditionFunc");
     PVZ2HookFunction(0x86CCC0, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");
+    PVZ2HookFunction(0x44E604, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
+
 
     LOGI("Finished initializing");
 }
