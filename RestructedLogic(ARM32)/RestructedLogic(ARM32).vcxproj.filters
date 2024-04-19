@@ -65,6 +65,7 @@
     <ClInclude Include="x32\jni\libs\Substrate\CydiaSubstrate.h">
       <Filter>x32\jni\libs\Substrate</Filter>
     </ClInclude>
+    <ClInclude Include="VersionAddresses.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x32">

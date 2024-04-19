@@ -7,6 +7,7 @@
 #include "memUtils.h"
 #include "SexyTypes.h"
 #include "./PvZ2/Board.h"
+#include "VersionAddresses.h"
 
 #pragma region Alias to ID
 
@@ -76,7 +77,7 @@ void* hkCreatePlantNameMapper(PlantNameMapper* self)
 uint oCamelZombieFunc = NULL;
 
 typedef void(*camelMinigameModuleFunc)(int, int, int);
-camelMinigameModuleFunc cmmFunc = (camelMinigameModuleFunc)getActualOffset(0x797494);
+camelMinigameModuleFunc cmmFunc = (camelMinigameModuleFunc)getActualOffset(camelMinigameModuleFuncAddr);
 
 void hkCamelZombieFunc(int a1, int a2, int a3)
 {
@@ -103,7 +104,7 @@ bool hkInitZombiePianoList(int a1, int a2)
     {
         bool orig = oInitZombiePianoList(a1, a2);
 
-        uint ptrAddr = getActualOffset(0x1CE922C); // address of piano zombie's list in memory
+        uint ptrAddr = getActualOffset(ZombiePianoListAddr); // address of piano zombie's list in memory
         g_pianoList = reinterpret_cast<std::vector<SexyString>*>(ptrAddr);
 
         // @todo: add this to piano zombie's props instead?
@@ -227,7 +228,7 @@ bool hkMagicianHealerImmuneToShrink(int a1)
 bool hkMagicianInitializeFamilyImmunities(int a1, int64_t a2)
 {
     typedef bool(*zFamilyFunc)(int);
-    zFamilyFunc func = (zFamilyFunc)getActualOffset(0x8C70A0); // function 93 in Zombie's vftable 
+    zFamilyFunc func = (zFamilyFunc)getActualOffset(zFamilyFuncAddr); // function 93 in Zombie's vftable 
     return func(a1);
 }
 
@@ -239,6 +240,8 @@ __attribute__((constructor))
 void libRestructedLogic_ARM32__main()
 {
     LOGI("Initializing %s", LIB_TAG);
+    //根据版本修改偏移
+    AddressesChangedByVersion();
     // New, easier to manage way of adding typenames to the plant/zombie name mapper
     REGISTER_PLANT_TYPENAME("funny_tomato");
     REGISTER_PLANT_TYPENAME("newadd_0");
@@ -352,7 +355,7 @@ void libRestructedLogic_ARM32__main()
     REGISTER_PLANT_TYPENAME("newadd_108");
     REGISTER_PLANT_TYPENAME("newadd_109");
 
-    REGISTER_ZOMBIE_TYPENAME("steam");
+    //No need to use///REGISTER_ZOMBIE_TYPENAME("steam");
 
     // Function hooks
     ///Unused//PVZ2HookFunction(0x105123C, (void*)hkCreateZombieTypenameMap, (void**)&oZombieAlmanacCtor, "ZombieAlmanac::ZombieAlamanc");
@@ -366,8 +369,6 @@ void libRestructedLogic_ARM32__main()
     PVZ2HookFunction(0x86CCAC, (void*)hkMagicianHealerConditionFunc, (void**)&dispose, "ZombieCarnieMagician::ConditionFunc");
     PVZ2HookFunction(0x84EAA0, (void*)hkMagicianHealerConditionFunc, (void**)&dispose, "ZombieRomanHealer::ConditionFunc");
     PVZ2HookFunction(0x86CCC0, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");
-    PVZ2HookFunction(0x44E604, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
-
 
     LOGI("Finished initializing");
 }

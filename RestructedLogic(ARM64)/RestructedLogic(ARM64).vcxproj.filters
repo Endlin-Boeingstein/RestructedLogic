@@ -32,6 +32,7 @@
     <ClInclude Include="Logging.h" />
     <ClInclude Include="memUtils.h" />
     <ClInclude Include="PvZ2\Board.h" />
+    <ClInclude Include="VersionAddresses.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x64">
