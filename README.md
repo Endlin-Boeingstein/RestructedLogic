@@ -5,4 +5,4 @@ This project was compiled on April 11,2024.
 BreakfastBrainz2's libPVZ2.so hooking project: https://github.com/BreakfastBrainz2/PVZ2ExampleMod  
 Djngo's hooking project for many platforms: https://github.com/Djngo/Hooking-and-Patching-android-template  
 Rprop's ARM64 hooking project: https://github.com/Rprop/And64InlineHook  
-
+XMDS's hooking project: https://github.com/XMDS/GlossHook  
