@@ -10,3 +10,7 @@ XMDS's hooking project: https://github.com/XMDS/GlossHook
 Download and install Visual Studio 2022: https://visualstudio.microsoft.com.  
 Modify the Visual Studio 2022's Workloads and install "Mobile development with C++" module.  
 And then, you can clone the repo and open the repo's .sln file.  
+If you want to generate ARM32 so. Select the RestructedLogic(ARM32) and click the triangle button that the "Release" "ARM" nearby.  
+If you want to generate ARM6432 so. Select the RestructedLogic(ARM64) and click the triangle button that the "Release" "ARM64" nearby.  
+Then in the folder, you would found ARM and ARM64 folder.These so file may inside that name called "libRestructedLogic_ARM32_.so" in ARM/Release and "libRestructedLogic_ARM64_.so" in ARM64/Release.  
+Copy the .so file. 
