@@ -23,6 +23,9 @@ uint ZombieRomanHealer__ConditionFuncAddr;
 uint ZombieRomanHealer__InitializeFamilyImmunitiesAddr;
 uint zFamilyFuncAddr;
 
+//第一个自定义的植物ID
+uint firstFreePlantID;
+
 enum VersionOfGame
 {
     v9_4,
@@ -52,6 +55,8 @@ void AddressesChangedByVersion() {
         ZombieRomanHealer__ConditionFuncAddr = 0x84EAA0;
         ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x86CCC0;
         zFamilyFuncAddr = 0x8C70A0;
+
+        firstFreePlantID = 185;
         break;
     }
     case v9_6:
@@ -71,6 +76,8 @@ void AddressesChangedByVersion() {
         ZombieRomanHealer__ConditionFuncAddr = 0x8446A8;
         ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x8628C4;
         zFamilyFuncAddr = 0x8BD2C0;
+
+        firstFreePlantID = 188;
         break;
     }
     case v9_8:
@@ -90,6 +97,8 @@ void AddressesChangedByVersion() {
         ZombieRomanHealer__ConditionFuncAddr = 0x88C290;
         ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x8AA59C;
         zFamilyFuncAddr = 0x905110;
+
+        firstFreePlantID = 191;
         break;
     }
     //仿照上述case添加版本偏移

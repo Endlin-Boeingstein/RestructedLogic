@@ -26,7 +26,7 @@ public:
 };
 
 #define FIRST_FREE_ZOMBIE_ID 441
-#define FIRST_FREE_PLANT_ID 185
+#define FIRST_FREE_PLANT_ID firstFreePlantID
 
 std::vector<SexyString> g_modPlantTypenames;
 std::vector<SexyString> g_modZombieTypenames;
@@ -197,8 +197,8 @@ void* hkBoardCtor(Board* board)
     {
         board->m_lawnRect.mX = 200;//450
         board->m_lawnRect.mY = 160;//160
-        board->m_lawnRect.mWidth = 776; //576//
-        board->m_lawnRect.mHeight = 380; //380//525
+        //board->m_lawnRect.mWidth = 776; //576//
+        //board->m_lawnRect.mHeight = 525; //380//525
         break;
     }
     }

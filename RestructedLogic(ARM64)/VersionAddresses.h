@@ -23,6 +23,9 @@ uint ZombieRomanHealer__ConditionFuncAddr;
 uint ZombieRomanHealer__InitializeFamilyImmunitiesAddr;
 uint zFamilyFuncAddr;
 
+//第一个自定义的植物ID
+uint firstFreePlantID;
+
 enum VersionOfGame
 {
     v9_4,
@@ -37,59 +40,66 @@ void AddressesChangedByVersion() {
     {
     case v9_4:
     {
-        ZombieAlmanacAddr = 0x105123C;
-        PlantNameMapperAddr = 0xD994B8;
-        CamelZombieAddr = 0x7942BC;
-        camelMinigameModuleFuncAddr = 0x797494;
-        WorldMapDoMovementAddr = 0x44E604;
-        ZombiePianoAddr = 0x890108;
-        ZombiePianoListAddr = 0x1CE922C;
-        ReinitForSurfaceChangedAddr = 0x127415C;
-        BoardAddr = 0x71A004;
-        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x884B6C;
-        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x881C4C;
-        ZombieCarnieMagician__ConditionFuncAddr = 0x86CCAC;
-        ZombieRomanHealer__ConditionFuncAddr = 0x84EAA0;
-        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x86CCC0;
-        zFamilyFuncAddr = 0x8C70A0;
+        //部分偏移由某神秘大佬查找得来，但是由于v7a和v8a函数结构不同，还有新的库的未知什么导致的闪退问题，故v8a方案已废弃
+        ZombieAlmanacAddr = 0x00;
+        PlantNameMapperAddr = 0x1157778;//
+        CamelZombieAddr = 0x00;
+        camelMinigameModuleFuncAddr = 0x00;
+        WorldMapDoMovementAddr = 0x00;
+        ZombiePianoAddr = 0x00;
+        ZombiePianoListAddr = 0x00;
+        ReinitForSurfaceChangedAddr = 0x164C580;
+        BoardAddr = 0xA94604;//
+        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x00;
+        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x00;
+        ZombieCarnieMagician__ConditionFuncAddr = 0x00;
+        ZombieRomanHealer__ConditionFuncAddr = 0x00;
+        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
+        zFamilyFuncAddr = 0x00;
+
+        firstFreePlantID = 185;
         break;
     }
     case v9_6:
     {
-        ZombieAlmanacAddr = 0x10643E0;
-        PlantNameMapperAddr = 0xDA5C58;
-        CamelZombieAddr = 0x789DC8;
-        camelMinigameModuleFuncAddr = 0x78CFA0;
-        WorldMapDoMovementAddr = 0x441068;
-        ZombiePianoAddr = 0x885F80;
-        ZombiePianoListAddr = 0x1D890F4;
-        ReinitForSurfaceChangedAddr = 0x1287430;
-        BoardAddr = 0x70F63C;
-        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x87A9E4;
-        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x877AC4;
-        ZombieCarnieMagician__ConditionFuncAddr = 0x8628B0;
-        ZombieRomanHealer__ConditionFuncAddr = 0x8446A8;
-        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x8628C4;
-        zFamilyFuncAddr = 0x8BD2C0;
+        ZombieAlmanacAddr = 0x00;
+        PlantNameMapperAddr = 0x00;//
+        CamelZombieAddr = 0x00;
+        camelMinigameModuleFuncAddr = 0x00;
+        WorldMapDoMovementAddr = 0x00;
+        ZombiePianoAddr = 0x00;
+        ZombiePianoListAddr = 0x00;
+        ReinitForSurfaceChangedAddr = 0x00;
+        BoardAddr = 0x00;//
+        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x00;
+        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x00;
+        ZombieCarnieMagician__ConditionFuncAddr = 0x00;
+        ZombieRomanHealer__ConditionFuncAddr = 0x00;
+        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
+        zFamilyFuncAddr = 0x00;
+
+        firstFreePlantID = 188;
         break;
     }
     case v9_8:
     {
-        ZombieAlmanacAddr = 0x10C0800;
-        PlantNameMapperAddr = 0xDFC008;
-        CamelZombieAddr = 0x7D1BD0;
-        camelMinigameModuleFuncAddr = 0x7D4DA8;
-        WorldMapDoMovementAddr = 0x483504;
-        ZombiePianoAddr = 0x8CDC60;
-        ZombiePianoListAddr = 0x1E5429C;
-        ReinitForSurfaceChangedAddr = 0x12EE3AC;
-        BoardAddr = 0x75743C;
-        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x8C26C4;
-        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x8BF7A4;
-        ZombieCarnieMagician__ConditionFuncAddr = 0x8AA588;
-        ZombieRomanHealer__ConditionFuncAddr = 0x88C290;
-        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x8AA59C;
-        zFamilyFuncAddr = 0x905110;
+        ZombieAlmanacAddr = 0x00;
+        PlantNameMapperAddr = 0x00;//
+        CamelZombieAddr = 0x00;
+        camelMinigameModuleFuncAddr = 0x00;
+        WorldMapDoMovementAddr = 0x00;
+        ZombiePianoAddr = 0x00;
+        ZombiePianoListAddr = 0x00;
+        ReinitForSurfaceChangedAddr = 0x00;
+        BoardAddr = 0x00;//
+        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x00;
+        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x00;
+        ZombieCarnieMagician__ConditionFuncAddr = 0x00;
+        ZombieRomanHealer__ConditionFuncAddr = 0x00;
+        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
+        zFamilyFuncAddr = 0x00;
+
+        firstFreePlantID = 191;
         break;
     }
     //仿照上述case添加版本偏移
