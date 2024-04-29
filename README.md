@@ -23,7 +23,7 @@ Delete the ARM lib version folder that you needn't use it.
 Then modify "PvZ2GameActivity.smali" which is in the decompiled folder.
 Open it, and find this:  
     .line 57  
-    invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V 
+    invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V   
 If you can not find this you would find:  
     invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V  
     const-string v0, "PVZ2"  
