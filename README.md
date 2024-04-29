@@ -42,4 +42,4 @@ You can modify libLoader$1.smali.Change "RestructedLogic" to what you want to ch
 Save and exit.  
 And then, Change "libRestructedLogic.so" to "lib"+ChangedName+".so".  
 
-Compile the decompiled folder.You will get a hooked apk.Install it in your device, enjoy it.
+Compile the decompiled folder.You will get a hooked apk. Install it in your device, enjoy it.
