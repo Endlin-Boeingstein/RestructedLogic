@@ -47,8 +47,10 @@ The key statements behind this like:
 
 ```
     invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V
-    this key statements without const-string v0, "XXX"
 ```
+
+this key statements without const-string v0, "XXX"
+
 Down there your paste this:
 ```
     invoke-static {}, Lcom/loadLib/libLoader;->loadLib()V
