@@ -28,16 +28,19 @@ uint firstFreePlantID;
 
 enum VersionOfGame
 {
-    v9_4,
-    v9_6,
-    v9_8,
-    v10_3
+    v9_4=940,
+    v9_6=960,
+    v9_8=980,
+    v10_3=1030
     //仿照上面添加版本号
 };
 
+
+
 #pragma region Auto Select Addresses
+int version_code = v10_3;
 void AddressesChangedByVersion() {
-    switch (v9_4)//在此处修改版本号
+    switch (version_code)//在此处修改版本号
     {
     case v9_4:
     {

@@ -28,13 +28,15 @@ uint firstFreePlantID;
 
 enum VersionOfGame
 {
-    v9_4,
-    v9_6,
-    v9_8
+    v9_4 = 940,
+    v9_6 = 960,
+    v9_8 = 980,
+    v10_3 = 1030
     //仿照上面添加版本号
 };
 
 #pragma region Auto Select Addresses
+int version_code = v10_3;
 void AddressesChangedByVersion() {
     switch (v9_4)//在此处修改版本号
     {
@@ -100,6 +102,27 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = 0x00;
 
         firstFreePlantID = 191;
+        break;
+    }
+    case v10_3:
+    {
+        ZombieAlmanacAddr = NULL;  // NULL means I don't know what it is.
+        PlantNameMapperAddr = NULL;  // 10.3 Don't need it.
+        CamelZombieAddr = NULL;
+        camelMinigameModuleFuncAddr = NULL;
+        WorldMapDoMovementAddr = NULL;
+        ZombiePianoAddr = NULL;
+        ZombiePianoListAddr = NULL;
+        ReinitForSurfaceChangedAddr = NULL;
+        BoardAddr = NULL;
+        ZombieCarnieMagician__IsImmuneToShrinkAddr = NULL;
+        ZombieRomanHealer__IsImmuneToShrinkAddr = NULL;
+        ZombieCarnieMagician__ConditionFuncAddr = NULL;
+        ZombieRomanHealer__ConditionFuncAddr = NULL;
+        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = NULL;
+        zFamilyFuncAddr = NULL;
+
+        firstFreePlantID = 0;  // 10.3 Don't need it.
         break;
     }
     //仿照上述case添加版本偏移
