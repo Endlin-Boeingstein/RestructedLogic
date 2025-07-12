@@ -175,6 +175,7 @@
     <ClInclude Include="memUtils.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PvZ2\Board.h" />
+    <ClInclude Include="PvZ2\WorldMap.h" />
     <ClInclude Include="RestructedLogic_ARM64_.h" />
     <ClInclude Include="SexyTypes.h" />
     <ClInclude Include="VersionAddresses.h" />

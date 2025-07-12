@@ -31,8 +31,13 @@
     <ClInclude Include="SexyTypes.h" />
     <ClInclude Include="Logging.h" />
     <ClInclude Include="memUtils.h" />
-    <ClInclude Include="PvZ2\Board.h" />
     <ClInclude Include="VersionAddresses.h" />
+    <ClInclude Include="PvZ2\Board.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\WorldMap.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x64">
@@ -55,6 +60,9 @@
     </Filter>
     <Filter Include="x64\jni\libs\KittyMemory">
       <UniqueIdentifier>{8a42b763-19cc-47da-870c-4aa7308e54a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PvZ2">
+      <UniqueIdentifier>{bb6aef8a-dbf0-4984-8a60-9f2142dc34cb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

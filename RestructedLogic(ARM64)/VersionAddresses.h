@@ -22,6 +22,8 @@ uint ZombieCarnieMagician__ConditionFuncAddr;
 uint ZombieRomanHealer__ConditionFuncAddr;
 uint ZombieRomanHealer__InitializeFamilyImmunitiesAddr;
 uint zFamilyFuncAddr;
+uint LawnAppAddr;
+uint SexyAppAddr;
 
 //第一个自定义的植物ID
 uint firstFreePlantID;
@@ -58,6 +60,8 @@ void AddressesChangedByVersion() {
         ZombieRomanHealer__ConditionFuncAddr = 0x00;
         ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
         zFamilyFuncAddr = 0x00;
+        LawnAppAddr = NULL;
+        SexyAppAddr = NULL;
 
         firstFreePlantID = 185;
         break;
@@ -79,6 +83,8 @@ void AddressesChangedByVersion() {
         ZombieRomanHealer__ConditionFuncAddr = 0x00;
         ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
         zFamilyFuncAddr = 0x00;
+        LawnAppAddr = 0x2593760;
+        SexyAppAddr = 0x25A4618;
 
         firstFreePlantID = 188;
         break;
@@ -100,6 +106,8 @@ void AddressesChangedByVersion() {
         ZombieRomanHealer__ConditionFuncAddr = 0x00;
         ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
         zFamilyFuncAddr = 0x00;
+        LawnAppAddr = NULL;
+        SexyAppAddr = NULL;
 
         firstFreePlantID = 191;
         break;
@@ -121,6 +129,8 @@ void AddressesChangedByVersion() {
         ZombieRomanHealer__ConditionFuncAddr = NULL;
         ZombieRomanHealer__InitializeFamilyImmunitiesAddr = NULL;
         zFamilyFuncAddr = NULL;
+        LawnAppAddr = NULL;
+        SexyAppAddr = NULL;
 
         firstFreePlantID = 0;  // 10.3 Don't need it.
         break;

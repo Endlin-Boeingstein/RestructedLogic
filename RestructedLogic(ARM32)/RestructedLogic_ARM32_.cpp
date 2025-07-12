@@ -8,6 +8,7 @@
 #include "SexyTypes.h"
 #include "./PvZ2/Board.h"
 #include "VersionAddresses.h"
+#include "./PvZ2/WorldMap.h"
 
 #pragma region Alias to ID
 
@@ -15,21 +16,21 @@ class ZombieAlmanac
 {
 public:
     void* vftable;
-    std::map<SexyString, uint> m_aliasToId;
+    std::map<Sexy::SexyString, uint> m_aliasToId;
 };
 
 class PlantNameMapper
 {
 public:
     void* vftable;
-    std::map<SexyString, uint> m_aliasToId;
+    std::map<Sexy::SexyString, uint> m_aliasToId;
 };
 
 #define FIRST_FREE_ZOMBIE_ID 441
 #define FIRST_FREE_PLANT_ID firstFreePlantID
 
-std::vector<SexyString> g_modPlantTypenames;
-std::vector<SexyString> g_modZombieTypenames;
+std::vector<Sexy::SexyString> g_modPlantTypenames;
+std::vector<Sexy::SexyString> g_modZombieTypenames;
 
 #define REGISTER_PLANT_TYPENAME(typename) \
     g_modPlantTypenames.push_back(typename); \
@@ -43,15 +44,22 @@ ZombieAlmanacCtor oZombieAlmanacCtor = NULL;
 void* hkCreateZombieTypenameMap(ZombieAlmanac* a1)
 {
     // Let the game create the original alias->id map
-    ZombieAlmanac* obj = oZombieAlmanacCtor(a1);
+    oZombieAlmanacCtor(a1);
     // Now add our own zombie aliases to it 
     // (mod aliases can be registered with the REGISTER_ZOMBIE_TYPENAME macro)
+    g_modZombieTypenames.clear();
+    //循环加入
+    for (int i = 0; i < 109; i++) {
+        REGISTER_ZOMBIE_TYPENAME("new_added_zombie_"+i);
+    }
+    LOGI("Extra zombie typenames = %d", g_modZombieTypenames.size());
     for (int iter = 0; iter < g_modZombieTypenames.size(); iter++)
     {
-        obj->m_aliasToId[g_modZombieTypenames[iter]] = FIRST_FREE_ZOMBIE_ID + iter;
+        LOGI("Registering extra zombie typename %s", g_modZombieTypenames[iter].c_str());
+        a1->m_aliasToId[g_modZombieTypenames[iter]] = FIRST_FREE_ZOMBIE_ID + iter;
     }
 
-    return obj;
+    return a1;
 }
 
 typedef PlantNameMapper* (*PlantNameMapperCtor)(PlantNameMapper*);
@@ -60,13 +68,19 @@ PlantNameMapperCtor oPlantNameMapperCtor = NULL;
 void* hkCreatePlantNameMapper(PlantNameMapper* self)
 {
     // Same deal with the ZombieAlamanc::ctor hook
-    PlantNameMapper* obj = oPlantNameMapperCtor(self);
+    oPlantNameMapperCtor(self);
+    g_modPlantTypenames.clear();
+    for (int i = 0; i < 109; i++) {
+        REGISTER_PLANT_TYPENAME(("new_added_plant_" + i));
+    }
+    LOGI("Extra typenames size = %d", g_modPlantTypenames.size());
     for (int iter = 0; iter < g_modPlantTypenames.size(); iter++)
     {
-        obj->m_aliasToId[g_modPlantTypenames[iter]] = FIRST_FREE_PLANT_ID + iter;
+        LOGI("Registering plant %s", g_modPlantTypenames[iter].c_str());
+        self->m_aliasToId[g_modPlantTypenames[iter]] = FIRST_FREE_PLANT_ID + iter;
     }
 
-    return obj;
+    return self;
 }
 
 #pragma endregion
@@ -93,7 +107,7 @@ void hkCamelZombieFunc(int a1, int a2, int a3)
 typedef bool (*initZombiePianoList)(int, int);
 initZombiePianoList oInitZombiePianoList = NULL;
 
-std::vector<SexyString>* g_pianoList = NULL;
+std::vector<Sexy::SexyString>* g_pianoList = NULL;
 bool g_pianoListInitialized = false;
 
 bool hkInitZombiePianoList(int a1, int a2)
@@ -105,7 +119,7 @@ bool hkInitZombiePianoList(int a1, int a2)
         bool orig = oInitZombiePianoList(a1, a2);
 
         uint ptrAddr = getActualOffset(ZombiePianoListAddr); // address of piano zombie's list in memory
-        g_pianoList = reinterpret_cast<std::vector<SexyString>*>(ptrAddr);
+        g_pianoList = reinterpret_cast<std::vector<Sexy::SexyString>*>(ptrAddr);
 
         // @todo: add this to piano zombie's props instead?
         g_pianoList->clear();
@@ -115,6 +129,7 @@ bool hkInitZombiePianoList(int a1, int a2)
         g_pianoList->push_back("cowboy_armor4");
         g_pianoList->push_back("pirate_gargantuar");
 
+        LOGI("Initialized global piano list");
         g_pianoListInitialized = true;
     }
     return oInitZombiePianoList(a1, a2);
@@ -122,10 +137,60 @@ bool hkInitZombiePianoList(int a1, int a2)
 
 #pragma endregion
 
+#pragma region Vertical World Map Scrolling
+
+bool g_allowVerticalMovement = true;
+
+typedef int (*worldMapDoMovement)(WorldMap*, int64_t, int64_t);
+worldMapDoMovement oWorldMapDoMovement = NULL;
+
+int hkWorldMapDoMovement(WorldMap* map, int64_t x, int64_t y)
+{
+    LOGI("Doing map movement: x - %d, y - %d", x, y);
+    return oWorldMapDoMovement(map, x, y);
+}
+
+inline int worldMapBoundaryMovement(WorldMap* self, float fX, float fY, bool allowVerticalMovement)
+{
+    if (fX <= self->m_boundaryX)
+    {
+        fX = self->m_boundaryX;
+    }
+
+    if (fX >= self->m_boundaryX + self->m_boundaryWidth)
+    {
+        fX = self->m_boundaryX + self->m_boundaryWidth;
+    }
+
+    if (fY <= self->m_boundaryY)
+    {
+        fY = self->m_boundaryY;
+    }
+
+    if (fY >= self->m_boundaryY + self->m_boundaryHeight)
+    {
+        fY = self->m_boundaryY + self->m_boundaryHeight;
+    }
+
+    return 1;
+}
+
+#pragma endregion
+
 #pragma region Board Zoom
+
+
 
 int gWidth = 0;
 int gHeight = 0;
+
+inline uint_t getLawnApp() {
+    return *(uint_t*)getActualOffset(LawnAppAddr);
+}
+
+uint_t getSexyApp() {
+    return *(uint_t*)getActualOffset(SexyAppAddr);
+}
 
 enum AspectRatio
 {
@@ -134,13 +199,13 @@ enum AspectRatio
     Ultrawide,
 };
 
-typedef int(*worldMapDoMovement)(void*, float, float, bool);
-worldMapDoMovement oWorldMapDoMovement = NULL;
-
-int hkWorldMapDoMovement(void* self, float fX, float fY, bool allowVerticalMovement)
-{
-    return oWorldMapDoMovement(self, fX, fY, true);
-}
+//typedef int(*worldMapDoMovement)(void*, float, float, bool);
+//worldMapDoMovement oWorldMapDoMovement = NULL;
+//
+//int hkWorldMapDoMovement(void* self, float fX, float fY, bool allowVerticalMovement)
+//{
+//    return oWorldMapDoMovement(self, fX, fY, true);
+//}
 
 AspectRatio GetAspectRatio()
 {
@@ -169,38 +234,53 @@ void HkReinitForSurfaceChange(int thisptr, int a2, int width, int height, int a5
     return oRFSC(thisptr, a2, width, height, a5);
 }
 
-typedef void* (*boardCtor)(void*);
+//要搞开关了
+bool g_boardZoomOut = true;
+
+typedef void* (*boardCtor)(Board*);
 boardCtor oBoardCtor = NULL;
 
 void* hkBoardCtor(Board* board)
 {
     oBoardCtor(board);
 
-    board->m_lawnRect.mX = 200; //200
-    board->m_lawnRect.mY = 160; //160
+    LOGI("Board constructor called");
+    LOGI("[ Column Count ] x: %d", board->m_columnCount);
+    LOGI("[ Row Count ] x: %d", board->m_rowCount);
+    LOGI("[ Lawn Rect ] x: %d, y: %d, w: %d, h: %d", board->m_lawnRect.mX, board->m_lawnRect.mY, board->m_lawnRect.mWidth, board->m_lawnRect.mHeight);
 
-    switch (GetAspectRatio())
+    if (g_boardZoomOut)
     {
-    case Letterbox:
-    {
-        board->m_lawnRect.mWidth = 576; //576//
-        board->m_lawnRect.mHeight = 500; //380//
-        break;
-    }
-    case Widescreen:
-    {
-        board->m_lawnRect.mWidth = 576; //576//
-        board->m_lawnRect.mHeight = 450; //380//
-        break;
-    }
-    case Ultrawide:
-    {
-        board->m_lawnRect.mX = 200;//450
-        board->m_lawnRect.mY = 160;//160
-        //board->m_lawnRect.mWidth = 776; //576//
-        //board->m_lawnRect.mHeight = 525; //380//525
-        break;
-    }
+        board->m_lawnRect.mX = 200; //200
+        board->m_lawnRect.mY = 160; //160
+
+        switch (GetAspectRatio())
+        {
+        case Letterbox:
+        {
+            LOGI("Aspect Ratio: Letterbox");
+            board->m_lawnRect.mWidth = 576; //576
+            board->m_lawnRect.mHeight = 500; //380
+            break;
+        }
+        case Widescreen:
+        {
+            LOGI("Aspect Ratio: Widescreen");
+            board->m_lawnRect.mWidth = 576; //576
+            board->m_lawnRect.mHeight = 450; //380
+            // board->m_lawnRect.mHeight = 540; //380
+            break;
+        }
+        case Ultrawide:
+        {
+            LOGI("Aspect Ratio: Ultrawide");
+            board->m_lawnRect.mX = 450; //450
+            board->m_lawnRect.mY = 160;
+            board->m_lawnRect.mWidth = 576; //576
+            board->m_lawnRect.mHeight = 525; //380
+            break;
+        }
+        }
     }
 
     return board;
@@ -242,124 +322,15 @@ void libRestructedLogic_ARM32__main()
     LOGI("Initializing %s", LIB_TAG);
     //根据版本修改偏移
     AddressesChangedByVersion();
-    // New, easier to manage way of adding typenames to the plant/zombie name mapper
-    REGISTER_PLANT_TYPENAME("funny_tomato");
-    REGISTER_PLANT_TYPENAME("newadd_0");
-    REGISTER_PLANT_TYPENAME("newadd_1");
-    REGISTER_PLANT_TYPENAME("newadd_2");
-    REGISTER_PLANT_TYPENAME("newadd_3");
-    REGISTER_PLANT_TYPENAME("newadd_4");
-    REGISTER_PLANT_TYPENAME("newadd_5");
-    REGISTER_PLANT_TYPENAME("newadd_6");
-    REGISTER_PLANT_TYPENAME("newadd_7");
-    REGISTER_PLANT_TYPENAME("newadd_8");
-    REGISTER_PLANT_TYPENAME("newadd_9");
-    REGISTER_PLANT_TYPENAME("newadd_10");
-    REGISTER_PLANT_TYPENAME("newadd_11");
-    REGISTER_PLANT_TYPENAME("newadd_12");
-    REGISTER_PLANT_TYPENAME("newadd_13");
-    REGISTER_PLANT_TYPENAME("newadd_14");
-    REGISTER_PLANT_TYPENAME("newadd_15");
-    REGISTER_PLANT_TYPENAME("newadd_16");
-    REGISTER_PLANT_TYPENAME("newadd_17");
-    REGISTER_PLANT_TYPENAME("newadd_18");
-    REGISTER_PLANT_TYPENAME("newadd_19");
-    REGISTER_PLANT_TYPENAME("newadd_20");
-    REGISTER_PLANT_TYPENAME("newadd_21");
-    REGISTER_PLANT_TYPENAME("newadd_22");
-    REGISTER_PLANT_TYPENAME("newadd_23");
-    REGISTER_PLANT_TYPENAME("newadd_24");
-    REGISTER_PLANT_TYPENAME("newadd_25");
-    REGISTER_PLANT_TYPENAME("newadd_26");
-    REGISTER_PLANT_TYPENAME("newadd_27");
-    REGISTER_PLANT_TYPENAME("newadd_28");
-    REGISTER_PLANT_TYPENAME("newadd_29");
-    REGISTER_PLANT_TYPENAME("newadd_30");
-    REGISTER_PLANT_TYPENAME("newadd_31");
-    REGISTER_PLANT_TYPENAME("newadd_32");
-    REGISTER_PLANT_TYPENAME("newadd_33");
-    REGISTER_PLANT_TYPENAME("newadd_34");
-    REGISTER_PLANT_TYPENAME("newadd_35");
-    REGISTER_PLANT_TYPENAME("newadd_36");
-    REGISTER_PLANT_TYPENAME("newadd_37");
-    REGISTER_PLANT_TYPENAME("newadd_38");
-    REGISTER_PLANT_TYPENAME("newadd_39");
-    REGISTER_PLANT_TYPENAME("newadd_40");
-    REGISTER_PLANT_TYPENAME("newadd_41");
-    REGISTER_PLANT_TYPENAME("newadd_42");
-    REGISTER_PLANT_TYPENAME("newadd_43");
-    REGISTER_PLANT_TYPENAME("newadd_44");
-    REGISTER_PLANT_TYPENAME("newadd_45");
-    REGISTER_PLANT_TYPENAME("newadd_46");
-    REGISTER_PLANT_TYPENAME("newadd_47");
-    REGISTER_PLANT_TYPENAME("newadd_48");
-    REGISTER_PLANT_TYPENAME("newadd_49");
-    REGISTER_PLANT_TYPENAME("newadd_50");
-    REGISTER_PLANT_TYPENAME("newadd_51");
-    REGISTER_PLANT_TYPENAME("newadd_52");
-    REGISTER_PLANT_TYPENAME("newadd_53");
-    REGISTER_PLANT_TYPENAME("newadd_54");
-    REGISTER_PLANT_TYPENAME("newadd_55");
-    REGISTER_PLANT_TYPENAME("newadd_56");
-    REGISTER_PLANT_TYPENAME("newadd_57");
-    REGISTER_PLANT_TYPENAME("newadd_58");
-    REGISTER_PLANT_TYPENAME("newadd_59");
-    REGISTER_PLANT_TYPENAME("newadd_60");
-    REGISTER_PLANT_TYPENAME("newadd_61");
-    REGISTER_PLANT_TYPENAME("newadd_62");
-    REGISTER_PLANT_TYPENAME("newadd_63");
-    REGISTER_PLANT_TYPENAME("newadd_64");
-    REGISTER_PLANT_TYPENAME("newadd_65");
-    REGISTER_PLANT_TYPENAME("newadd_66");
-    REGISTER_PLANT_TYPENAME("newadd_67");
-    REGISTER_PLANT_TYPENAME("newadd_68");
-    REGISTER_PLANT_TYPENAME("newadd_69");
-    REGISTER_PLANT_TYPENAME("newadd_70");
-    REGISTER_PLANT_TYPENAME("newadd_71");
-    REGISTER_PLANT_TYPENAME("newadd_72");
-    REGISTER_PLANT_TYPENAME("newadd_73");
-    REGISTER_PLANT_TYPENAME("newadd_74");
-    REGISTER_PLANT_TYPENAME("newadd_75");
-    REGISTER_PLANT_TYPENAME("newadd_76");
-    REGISTER_PLANT_TYPENAME("newadd_77");
-    REGISTER_PLANT_TYPENAME("newadd_78");
-    REGISTER_PLANT_TYPENAME("newadd_79");
-    REGISTER_PLANT_TYPENAME("newadd_80");
-    REGISTER_PLANT_TYPENAME("newadd_81");
-    REGISTER_PLANT_TYPENAME("newadd_82");
-    REGISTER_PLANT_TYPENAME("newadd_83");
-    REGISTER_PLANT_TYPENAME("newadd_84");
-    REGISTER_PLANT_TYPENAME("newadd_85");
-    REGISTER_PLANT_TYPENAME("newadd_86");
-    REGISTER_PLANT_TYPENAME("newadd_87");
-    REGISTER_PLANT_TYPENAME("newadd_88");
-    REGISTER_PLANT_TYPENAME("newadd_89");
-    REGISTER_PLANT_TYPENAME("newadd_90");
-    REGISTER_PLANT_TYPENAME("newadd_91");
-    REGISTER_PLANT_TYPENAME("newadd_92");
-    REGISTER_PLANT_TYPENAME("newadd_93");
-    REGISTER_PLANT_TYPENAME("newadd_94");
-    REGISTER_PLANT_TYPENAME("newadd_95");
-    REGISTER_PLANT_TYPENAME("newadd_96");
-    REGISTER_PLANT_TYPENAME("newadd_97");
-    REGISTER_PLANT_TYPENAME("newadd_98");
-    REGISTER_PLANT_TYPENAME("newadd_99");
-    REGISTER_PLANT_TYPENAME("newadd_100");
-    REGISTER_PLANT_TYPENAME("newadd_101");
-    REGISTER_PLANT_TYPENAME("newadd_102");
-    REGISTER_PLANT_TYPENAME("newadd_103");
-    REGISTER_PLANT_TYPENAME("newadd_104");
-    REGISTER_PLANT_TYPENAME("newadd_105");
-    REGISTER_PLANT_TYPENAME("newadd_106");
-    REGISTER_PLANT_TYPENAME("newadd_107");
-    REGISTER_PLANT_TYPENAME("newadd_108");
-    REGISTER_PLANT_TYPENAME("newadd_109");
+    
+    
 
+    // New, easier to manage way of adding typenames to the plant/zombie name mapper
     //No need to use///REGISTER_ZOMBIE_TYPENAME("steam");
 
     // Function hooks
     if (version_code < v10_3) {
-        PVZ2HookFunction(ZombieAlmanacAddr, (void*)hkCreateZombieTypenameMap, (void**)&oZombieAlmanacCtor, "ZombieAlmanac::ZombieAlamanc");
+        //PVZ2HookFunction(ZombieAlmanacAddr, (void*)hkCreateZombieTypenameMap, (void**)&oZombieAlmanacCtor, "ZombieAlmanac::ZombieAlamanc");
         PVZ2HookFunction(PlantNameMapperAddr, (void*)hkCreatePlantNameMapper, (void**)&oPlantNameMapperCtor, "PlantNameMapper::PlantNameMapper");
         PVZ2HookFunction(CamelZombieAddr, (void*)hkCamelZombieFunc, (void**)&oCamelZombieFunc, "CamelZombie::vftable_func_0xEC");
         PVZ2HookFunction(ZombiePianoAddr, (void*)hkInitZombiePianoList, (void**)&oInitZombiePianoList, "ZombiePiano::getTypenameList");

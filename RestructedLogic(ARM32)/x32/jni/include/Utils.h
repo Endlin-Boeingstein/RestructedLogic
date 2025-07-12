@@ -18,6 +18,7 @@ const char* libName = "libPVZ2.so";
 
 DWORD get_libBase(const char* libName);
 DWORD getRealOffset(DWORD address);
+DWORD getOriOffset(DWORD actualAddress);
 
 DWORD get_libBase(const char* libName) {
 	FILE *fp;
@@ -44,5 +45,11 @@ DWORD getRealOffset(DWORD address) {
 	return (libBase + address);
 }
 
+DWORD getOriOffset(DWORD actualAddress) {
+	if (libBase == 0) {
+		libBase = get_libBase(libName);
+	}
+	return (actualAddress - libBase);
+}
 
 #endif
