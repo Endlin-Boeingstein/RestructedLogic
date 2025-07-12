@@ -582,10 +582,74 @@ uint* hkPrimeGlyphCacheLimitation(uint* a1, int a2, int a3, int a4)
 #pragma endregion
 
 //真正的RSB解密函数
+//实际上，之前是有直接拦截路径然后解密的想法的，但是被解资源文件分布那里的rsb1头检测迷惑住了
+//还以为是把所有的文件都解了，而且还有就是担心解开来没临时路径，如果被人发现解密数据包在哪就完蛋了
+//然后就死磕那段代码，终于做好解密时候才发现，它只解了MANIFEST那块！
+//气死我了，如果接下来再去一个个把所有的地方都解一遍，我岂不是冤死！
+//于是乎，我转向了路径拦截
+//这块分析也不顺利，把我气个半死
+//最后好在全部解决了，这个函数也不难找，RSB读取函数找到那个读取的字符串Loading main RSB from the path那句前面就找到了
+//难的在路径结构分析，不过都解决了
+//过程就是，先拦截路径，分析出来之后先根据路径找到RSB去解密，将解密的文件放在某个位置
+//然后让RSB读取函数把数据都读完，这个时候数据包就没用了，资源都加载在内存里了
+//RSB读取函数就结束使命了，结束前顺手把解密后的RSB删了，就找不到了
+//从解密到删除，RSB估计才存在1秒吧，藏在哪人家也不知道
+//找到了又能怎的，你还能做到边打开游戏边1秒复制吗？你是超级硬盘？700+的数据包说1秒复制就1秒复制？
+//这就是RSB加密的全过程，不知道同行是不是也是这样做的
+//文章很长，不想看可以折叠
+#pragma region BeforeReading
+//但是无所谓了，曾经第一个做出RSB加密的大佬在卖自己加密功能的时候，不少人持反对意见
+//我的原话如下：
+//“也不要说垄断不垄断的，这玩意算另造引擎，已经超出pvz2修改范围
+// 凡事需要付出代价，要么是金钱要么是精力
+// 如果你们想要rsb加密宽视野加映射却对他收钱很不爽，你大可以不买。
+// 甚至你大可以自己搞一个，你也可以收费。
+// 你甚至可以自己搞出来把他饭碗砸了etc.”
+//现在，宽视野、加映射、RSB加密我全搞出来了，还开源了，但是又能怎么样呢？
+//我搞出来了RestructedLogic，谁会理解我测试上百遍失败才搞出来这个懒人开源工程呢？
+//当时做这个工程的时候，群被截图发到了国外，群成员被威胁，群内所有成员都被截图，那时候多苦？
+//最后下场是啥？作者被驱逐，别人拿过来改成自己的私人玩物，还说是那个老外做的
+//这次的RSB加密估计也是这样吧......我测试了上百遍，终于搞出来了
+//但是最终会被所有人使用吗？不会！因为他们会把这个据为己有！
+//他们会嫌弃这项工程，向外人表示他们的不齿，因为啥？因为他们为了数据包安全，已经向那位大佬付钱了（笑）！
+//我不仅砸了这位大佬的饭碗，我还砸了这群人的饭碗！
+//然后他们会根据这个工程去改装，变成自己的私人玩物
+//再次开启一段循环
+//现在啊，我等了半年，看看他们驱逐了曾经推广so的人，接下来国产so会怎么样？
+//结果啊，呵呵呵呵呵，不出所料，有个人，拿我的工程，搞了改渲染缓存的私活
+//他知道他注入成功了，但是那个语句有没有被调用？
+//他不知道！他只知道不闪退，就是成功！
+//他费尽心思把大多数的偏移给找了，但是他真的不知道他的函数实际上就是没用的
+//他还拙劣地复刻了那段原函数，实际上没必要，还得多找一段偏移
+//然后呢，他们狂欢，攻击被驱逐的人，显得自己赢了
+//他们这群废物，连LOGI干啥用的都不知道，ADB怕是也没碰过
+//找不出来什么原因，哪里错了？那就对了！
+//然后呢？他又做了什么？没了，没别的了
+//另外一群人呢？
+//他们曾经对被驱逐的人推崇的东西嗤之以鼻
+//现在却奉若圭臬，甚至做出了倒退版本的动作！
+//但是他们也不只是奉若圭臬啊！拿过来不好用还不忘嘲讽两句，踩两脚
+//最后一群人，是啊，和他们同流合污了啊
+//但是呢，他因为以前和那群人斗争过，所以他的思想比较先进
+//他找到了最初做这类工程的作者，和他合作
+//因为同流合污，所以他得到了大量资源和支持
+//因为找了国外，所以他得到了高端技术
+//这很好，不是吗？
+//阿三那样也很好吗？
+//那些小作者，为什么要屈服于那群人？
+//即使自己改版被骂，也得忍着
+//朋友同情他，他却捂着朋友的嘴，还得把朋友出卖以获得那群人的支持
+//然后整个圈子都去攻击那个放逐的人，知不知道真相不重要，重要的是要获取那群人支持
+//但是，一旦接受支持，那么，你就有了软肋，对方可以撤走在你身上的投入，你未完成的体系直接崩塌！
+//所以我再问一句，这很好，不是吗？
+//对此，我只能说
+//不独立自主，永远找不到出路！
+#pragma endregion
 #pragma region RSBPathChangeAndDecryptRSB
 // 临时文件路径列表
 static std::vector<std::string> g_tempFiles;
-// 解密函数（基于你的 XOR 0x5A）
+// 解密函数！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+//你的解密函数放在这里！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
 void decrypt_rsb(uint8_t* data, size_t size) {
     for (size_t i = 0; i < size; ++i) {
         data[i] ^= 0x5A;
@@ -664,7 +728,7 @@ int hkRSBPathRecorder(uint* a1) {
     }
     LOGI("RSBPathRecorder: Original path=%s", original_path.c_str());
 
-    // 验证预期路径
+    // 验证预期路径，可改，改成你的改版路径即可，不改也没影响！！！！！！！！！！！！
     std::string expected_path = "/storage/emulated/0/Android/obb/com.ea.game.pvz2_na/main.763.com.ea.game.pvz2_na.obb";
     if (original_path != expected_path) {
         LOGI("RSBPathRecorder: Path mismatch, expected %s", expected_path.c_str());
@@ -692,12 +756,14 @@ int hkRSBPathRecorder(uint* a1) {
     // 解密
     decrypt_rsb(buffer.data(), static_cast<size_t>(file_size));
 
-    // 创建缓存目录
+    // 创建缓存目录，必须改！这是你解密文件放的位置，虽然只存在1秒，但务必重视！！！！！！！！！！！！！！！！！！！！！！！！
+    // 最好放在你的游戏的data目录（一般为/storage/emulated/0/Android/data/com.ea.game.pvz2_改版名，然后如果深入就加/文件夹）
     std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_na/cache";
     if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
         LOGI("RSBPathRecorder: Failed to create %s, errno=%d", cache_dir.c_str(), errno);
         return result;
     }
+    //解密RSB的名称，可以改成别的混淆视听......实际上1秒他能看到个啥，改了之后更认不出来了！！！！！！！！！！！！！！！！！！
     std::string temp_path = cache_dir + "/cache.rsb";
     std::ofstream out_file(temp_path.c_str(), std::ios::binary);
     if (!out_file.is_open()) {
@@ -1099,8 +1165,8 @@ void libRestructedLogic_ARM32__main()
     PVZ2HookFunction(PrimeGlyphCacheAddr, (void*)hkPrimeGlyphCacheLimitation, (void**)&oPrimeGlyphCacheLimitation, "PrimeGlyphCache::PrimeGlyphCacheLimitation");
 
 
-    //PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)HkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
-    //PVZ2HookFunction(BoardAddr, (void*)hkBoardCtor, (void**)&oBoardCtor, "Board::Board");
+    PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)HkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
+    PVZ2HookFunction(BoardAddr, (void*)hkBoardCtor, (void**)&oBoardCtor, "Board::Board");
 
     //PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
     
