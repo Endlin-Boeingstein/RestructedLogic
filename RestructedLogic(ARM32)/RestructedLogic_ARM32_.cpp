@@ -144,15 +144,6 @@ bool hkInitZombiePianoList(int a1, int a2)
 
 bool g_allowVerticalMovement = true;
 
-typedef int (*worldMapDoMovement)(WorldMap*, int64_t, int64_t);
-worldMapDoMovement oWorldMapDoMovement = NULL;
-
-int hkWorldMapDoMovement(WorldMap* map, int64_t x, int64_t y)
-{
-    LOGI("Doing map movement: x - %d, y - %d", x, y);
-    return oWorldMapDoMovement(map, x, y);
-}
-
 inline int worldMapBoundaryMovement(WorldMap* self, float fX, float fY, bool allowVerticalMovement)
 {
     if (fX <= self->m_boundaryX)
@@ -177,6 +168,17 @@ inline int worldMapBoundaryMovement(WorldMap* self, float fX, float fY, bool all
 
     return 1;
 }
+
+typedef int (*worldMapDoMovement)(WorldMap*, int64_t, int64_t);
+worldMapDoMovement oWorldMapDoMovement = NULL;
+
+int hkWorldMapDoMovement(WorldMap* map, int64_t x, int64_t y)
+{
+    LOGI("Doing map movement: x - %d, y - %d", x, y);
+    return worldMapBoundaryMovement(map, x, y,g_allowVerticalMovement);
+}
+
+
 
 #pragma endregion
 
@@ -227,67 +229,210 @@ AspectRatio GetAspectRatio()
     }
 }
 
-typedef void(*ReinitForSurfaceChange)(int, int, int, int, int);
+// 全局分辨率
+static int deviceWidth = 3414;
+static int deviceHeight = 1536;
+
+typedef int (*ReinitForSurfaceChange)(int, int, int, int, int);
 ReinitForSurfaceChange oRFSC = nullptr;
 
-void HkReinitForSurfaceChange(int thisptr, int a2, int width, int height, int a5)
-{
-    gWidth = width;//width
-    gHeight = height;//height
-    return oRFSC(thisptr, a2, width, height, a5);
+// Hook sub_164FB80
+int hkReinitForSurfaceChange(int a1, int a2, int a3, int a4, int a5) {
+    // 保存原始参数
+    int orig_a3 = a3; // 请求的应用宽度
+    int orig_a4 = a4; // 请求的应用高度
+    int orig_a1_787 = *(int*)(a1 + 787 * 4); // 原始 a1[787]
+    int orig_a1_788 = *(int*)(a1 + 788 * 4); // 原始 a1[788]
+
+    // 修改请求分辨率
+    //a3 = CUSTOM_APP_WIDTH;
+    //a4 = CUSTOM_APP_HEIGHT;
+
+    // 修改 a1[787], a1[788]
+    //*(int*)(a1 + 787 * 4) = CUSTOM_APP_WIDTH;
+    //*(int*)(a1 + 788 * 4) = CUSTOM_APP_HEIGHT;
+
+    // 日志记录
+    LOGI("Hooked sub_164FB80: Original app (%d x %d), a1[787]=%d, a1[788]=%d, modified to (%d x %d), a5=%d",
+        orig_a3, orig_a4, orig_a1_787, orig_a1_788, a3, a4, a5);
+
+    // 调用原函数
+    int result = oRFSC(a1, a2, a3, a4, a5);
+
+    // 记录调用后 a1[787], a1[788]
+    LOGI("Hooked sub_164FB80: After call, a1[787]=%d, a1[788]=%d",
+        *(int*)(a1 + 787 * 4), *(int*)(a1 + 788 * 4));
+    // 全局分辨率
+    deviceWidth = *(int*)(a1 + 787 * 4);
+    deviceHeight = *(int*)(a1 + 788 * 4);
+
+    return result;
 }
 
-//要搞开关了
-bool g_boardZoomOut = true;
+//弃用，屏幕缩放率，会导致周围黑边以及按钮触控位置不跟随缩放
+//// 原函数指针
+//typedef float (*sub_16460F0)(int a1, int* a2, int* a3);
+//sub_16460F0 oSub_16460F0 = nullptr;
+//
+//// 函数指针类型
+//typedef void (*sub_1645DEC_t)(int* a2, int* a3);
+//typedef float (*sub_1646158_t)(int a1);
+//
+//// 获取 sub_1645DEC 和 sub_1646158 的实际地址
+//sub_1645DEC_t sub_1645DEC = (sub_1645DEC_t)getActualOffset(0x1645DEC);
+//sub_1646158_t sub_1646158 = (sub_1646158_t)getActualOffset(0x1646158);
+//
+//// Hook 函数
+//float hkSub_16460F0(int a1, int* a2, int* a3)
+//{
+//    // 调用 sub_1645DEC
+//    sub_1645DEC(a2, a3);
+//
+//    // 调用 sub_1646158 获取 result
+//    float result = sub_1646158(a1);
+//    // 记录 result 和 *a2, *a3 的值
+//    LOGI("Before sub_16460F0: result = %f, *a2 = %d, *a3 = %d", result, *a2, *a3);
+//    //// 调用原始函数
+//    //float result = oSub_16460F0(a1, a2, a3);
+//
+//    
+//    // 应用缩放逻辑（与原函数一致）
+//    if (result != 1.0f)
+//    {
+//        *a2 = (int)(result * (float)*a2);
+//        *a3 = (int)(result * (float)*a3);
+//    }
+//
+//    // 记录 result 和 *a2, *a3 的值
+//    LOGI("sub_16460F0: result = %f, *a2 = %d, *a3 = %d", result, *a2, *a3);
+//
+//    return result;
+//}
 
-typedef void* (*boardCtor)(Board*);
-boardCtor oBoardCtor = NULL;
 
-void* hkBoardCtor(Board* board)
-{
-    oBoardCtor(board);
 
-    LOGI("Board constructor called");
-    LOGI("[ Column Count ] x: %d", board->m_columnCount);
-    LOGI("[ Row Count ] x: %d", board->m_rowCount);
-    LOGI("[ Lawn Rect ] x: %d, y: %d, w: %d, h: %d", board->m_lawnRect.mX, board->m_lawnRect.mY, board->m_lawnRect.mWidth, board->m_lawnRect.mHeight);
+////要搞开关了
+//bool g_boardZoomOut = true;
+//
+//typedef void* (*boardCtor)(Board*);
+//boardCtor oBoardCtor = NULL;
+//
+//void* hkBoardCtor(Board* board)
+//{
+//    oBoardCtor(board);
+//
+//    LOGI("Board constructor called");
+//    LOGI("[ Column Count ] x: %d", board->m_columnCount);
+//    LOGI("[ Row Count ] x: %d", board->m_rowCount);
+//    LOGI("[ Lawn Rect ] x: %d, y: %d, w: %d, h: %d", board->m_lawnRect.mX, board->m_lawnRect.mY, board->m_lawnRect.mWidth, board->m_lawnRect.mHeight);
+//
+//    if (g_boardZoomOut)
+//    {
+//        board->m_lawnRect.mX = 200; //200
+//        board->m_lawnRect.mY = 160; //160
+//
+//        switch (GetAspectRatio())
+//        {
+//        case Letterbox:
+//        {
+//            LOGI("Aspect Ratio: Letterbox");
+//            board->m_lawnRect.mWidth = 576; //576
+//            board->m_lawnRect.mHeight = 500; //380
+//            break;
+//        }
+//        case Widescreen:
+//        {
+//            LOGI("Aspect Ratio: Widescreen");
+//            board->m_lawnRect.mWidth = 576; //576
+//            board->m_lawnRect.mHeight = 450; //380
+//            // board->m_lawnRect.mHeight = 540; //380
+//            break;
+//        }
+//        case Ultrawide:
+//        {
+//            LOGI("Aspect Ratio: Ultrawide");
+//            board->m_lawnRect.mX = 450; //450
+//            board->m_lawnRect.mY = 160;
+//            board->m_lawnRect.mWidth = 576; //576
+//            board->m_lawnRect.mHeight = 525; //380
+//            break;
+//        }
+//        }
+//    }
+//
+//    return board;
+//}
+// Hook sub_8856B4 (Board 构造函数)
+typedef int (*BoardCtor)(int);
+BoardCtor oBoardCtor = NULL;
 
-    if (g_boardZoomOut)
-    {
-        board->m_lawnRect.mX = 200; //200
-        board->m_lawnRect.mY = 160; //160
+int hkBoardCtor(int a1) {
+    int result = oBoardCtor(a1);
 
-        switch (GetAspectRatio())
-        {
-        case Letterbox:
-        {
-            LOGI("Aspect Ratio: Letterbox");
-            board->m_lawnRect.mWidth = 576; //576
-            board->m_lawnRect.mHeight = 500; //380
-            break;
-        }
-        case Widescreen:
-        {
-            LOGI("Aspect Ratio: Widescreen");
-            board->m_lawnRect.mWidth = 576; //576
-            board->m_lawnRect.mHeight = 450; //380
-            // board->m_lawnRect.mHeight = 540; //380
-            break;
-        }
-        case Ultrawide:
-        {
-            LOGI("Aspect Ratio: Ultrawide");
-            board->m_lawnRect.mX = 450; //450
-            board->m_lawnRect.mY = 160;
-            board->m_lawnRect.mWidth = 576; //576
-            board->m_lawnRect.mHeight = 525; //380
-            break;
-        }
-        }
+    // 获取当前 m_lawnRect 值（不修改）
+    int lawnRectX = *(int*)(a1 + 832);    // m_lawnRectX
+    int lawnRectY = *(int*)(a1 + 836);    // m_lawnRectY
+    int lawnRectWidth = *(int*)(a1 + 840); // m_lawnRectWidth
+    int lawnRectHeight = *(int*)(a1 + 844); // m_lawnRectHeight
+
+    // 获取屏幕尺寸
+    int context = *(int*)(a1 + 3124); // a1[781] = v8 - 7
+    int screenWidth = 0, screenHeight = 0;
+    if (context) {
+        screenWidth = *(int*)(context + 48); // sub_173CF68
+        screenHeight = *(int*)(context + 52); // sub_173CF70
     }
 
-    return board;
+    // 计算理论缩放因子
+    float scale = screenHeight > 0 ? (float)screenHeight / (380.0f + 160.0f) : 1.0f;
+    int theoreticalWidth = (int)(576 * scale + 0.5f);
+    int theoreticalHeight = (int)(380 * scale + 0.5f);
+    int theoreticalX = (int)(200 * scale + 0.5f);
+    int theoreticalY = (int)(160 * scale + 0.5f);
+
+    // 输出日志
+    LOGI("Hooked sub_8856B4: m_lawnRect=(%d, %d, %d, %d), screen=(%d, %d), scale=%.4f, theoretical=(%d, %d, %d, %d), context=0x%x, a1=0x%x",
+        lawnRectX, lawnRectY, lawnRectWidth, lawnRectHeight, screenWidth, screenHeight, scale,
+        theoreticalX, theoreticalY, theoreticalWidth, theoreticalHeight, context, a1);
+
+    return result;
 }
+
+// Hook sub_6E65AC (Board 初始化)
+typedef int (*BoardInit)(int);
+BoardInit oBoardInit = NULL;
+
+int hkBoardInit(int a1) {
+    
+    int result = oBoardInit(a1);
+    int board = *(uint*)(a1 + 1564); // m_board
+
+    // 获取当前偏移
+    int offsetX = board ? *(int*)(board + 100) : 0;   // v5[25]: x 偏移
+    int offsetY = board ? *(int*)(board + 104) : 0;   // v5[26]: y 偏移
+    int offsetXCopy = board ? *(int*)(board + 824) : 0; // v5[206]
+    int offsetYCopy = board ? *(int*)(board + 828) : 0; // v5[207]
+
+    // 获取屏幕尺寸
+    int context = *(int*)(a1 + 3124); // a1[781] = v8 - 7
+    int screenWidth = 0, screenHeight = 0;
+    if (context) {
+        screenWidth = *(int*)(context + 48); // sub_173CF68
+        screenHeight = *(int*)(context + 52); // sub_173CF70
+    }
+
+    // 计算理论偏移和缩放
+    float scale = screenHeight > 0 ? (float)screenHeight / (380.0f + 160.0f) : 1.0f;
+    int theoreticalOffsetY = screenHeight > 0 ? -(screenHeight - 380 - 160) : 0;
+
+    // 输出日志
+    LOGI("Hooked sub_6E65AC: offsets=(%d, %d, %d, %d), screen=(%d, %d), scale=%.4f, theoreticalOffsetY=%d, context=0x%x, a1=0x%x, board=0x%x",
+        offsetX, offsetY, offsetXCopy, offsetYCopy, screenWidth, screenHeight, scale, theoreticalOffsetY, context, a1, board);
+
+    return result;
+}
+
+
 
 #pragma endregion
 
@@ -1084,10 +1229,12 @@ void libRestructedLogic_ARM32__main()
     PVZ2HookFunction(PrimeGlyphCacheAddr, (void*)hkPrimeGlyphCacheLimitation, (void**)&oPrimeGlyphCacheLimitation, "PrimeGlyphCache::PrimeGlyphCacheLimitation");
 
 
-    PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)HkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
+    PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)hkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
+    //弃用，缩放率，没多大用PVZ2HookFunction(0x16460F0, (void*)hkSub_16460F0, (void**)&oSub_16460F0, "Sub_16460F0");
     PVZ2HookFunction(BoardAddr, (void*)hkBoardCtor, (void**)&oBoardCtor, "Board::Board");
-
-    //PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
+    PVZ2HookFunction(BoardInitAddr, (void*)hkBoardInit, (void**)&oBoardInit, "Board::BoardInit");
+    
+    PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
     
     
 

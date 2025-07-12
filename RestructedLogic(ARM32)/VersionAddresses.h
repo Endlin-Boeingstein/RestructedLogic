@@ -35,6 +35,7 @@ uint MainLoadFuncAddr;
 uint ResourceManagerFuncAddr;
 uint ResourceReadFuncAddr;
 uint RSBTestAndReadFuncAddr;
+uint BoardInitAddr;
 
 //第一个自定义的植物ID
 uint firstFreePlantID;
@@ -84,6 +85,7 @@ void AddressesChangedByVersion() {
         ResourceManagerFuncAddr=NULL;
         ResourceReadFuncAddr=NULL;
         RSBTestAndReadFuncAddr=NULL;
+        BoardInitAddr = NULL;
 
         firstFreePlantID = 185;
         break;
@@ -117,6 +119,7 @@ void AddressesChangedByVersion() {
         ResourceManagerFuncAddr = NULL;
         ResourceReadFuncAddr = NULL;
         RSBTestAndReadFuncAddr = NULL;
+        BoardInitAddr = NULL;
 
         firstFreePlantID = 188;
         break;
@@ -150,6 +153,7 @@ void AddressesChangedByVersion() {
         ResourceManagerFuncAddr = NULL;
         ResourceReadFuncAddr = NULL;
         RSBTestAndReadFuncAddr = NULL;
+        BoardInitAddr = NULL;
 
         firstFreePlantID = 191;
         break;
@@ -183,6 +187,7 @@ void AddressesChangedByVersion() {
         ResourceManagerFuncAddr = 0x6EE218;
         ResourceReadFuncAddr = 0x16228F0;
         RSBTestAndReadFuncAddr = 0x16303BC;
+        BoardInitAddr = 0x6E65AC;
 
         firstFreePlantID = 0;  // 10.3 Don't need it.
         break;
