@@ -27,6 +27,7 @@ uint SexyAppAddr;
 uint RSBReadAddr;
 uint PrimeGlyphCacheAddr;
 uint ForceResources1536Addr;
+uint ProjectileSpawnZombieAddr;
 
 //第一个自定义的植物ID
 uint firstFreePlantID;
@@ -69,6 +70,7 @@ void AddressesChangedByVersion() {
         RSBReadAddr=NULL;
         PrimeGlyphCacheAddr=NULL;
         ForceResources1536Addr=NULL;
+        ProjectileSpawnZombieAddr=NULL;
 
         firstFreePlantID = 185;
         break;
@@ -95,6 +97,7 @@ void AddressesChangedByVersion() {
         RSBReadAddr = NULL;
         PrimeGlyphCacheAddr = NULL;
         ForceResources1536Addr=NULL;
+        ProjectileSpawnZombieAddr = NULL;
 
         firstFreePlantID = 188;
         break;
@@ -121,6 +124,7 @@ void AddressesChangedByVersion() {
         RSBReadAddr = NULL;
         PrimeGlyphCacheAddr = 0x13FBA38;
         ForceResources1536Addr = NULL;
+        ProjectileSpawnZombieAddr = NULL;
 
         firstFreePlantID = 191;
         break;
@@ -147,6 +151,7 @@ void AddressesChangedByVersion() {
         RSBReadAddr = 0x162CEA4;
         PrimeGlyphCacheAddr = 0x177ECF4;
         ForceResources1536Addr = 0x6E4224;
+        ProjectileSpawnZombieAddr = 0xE6B880;
 
         firstFreePlantID = 0;  // 10.3 Don't need it.
         break;

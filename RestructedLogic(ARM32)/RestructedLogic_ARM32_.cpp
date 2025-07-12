@@ -559,6 +559,27 @@ int hkForceResources1536(int a1)
 }
 #pragma endregion
 
+//尝试自定义火鸡子弹默认生成类型
+#pragma region TurkeypultProjectileSummonCustom
+// Hook sub_E6B880 to change hardcoded zombie type
+typedef uint* (*ProjectileSpawnZombie)(void);
+ProjectileSpawnZombie oProjectileSpawnZombie = NULL;
+
+uint* hkProjectileSpawnZombie() {
+    LOGI("Hooking sub_E6B880: Spawning zombie");
+
+    uint* v0 = oProjectileSpawnZombie(); // 调用原始函数
+
+    // 直接替换僵尸类型和数量
+    strcpy((char*)v0[82], "turkeypult_turkzilla"); // 修改为你的目标僵尸类型
+    v0[83] = 1; // 设置僵尸数量，可根据需要调整
+
+    LOGI("Set zombie type to %s, count = %d", (char*)v0[82], v0[83]);
+
+    return v0;
+}
+#pragma endregion
+
 __attribute__((constructor))
 // This is automatically executed when the lib is loaded
 // Run your initialization code here
@@ -587,6 +608,8 @@ void libRestructedLogic_ARM32__main()
         PVZ2HookFunction(ZombieRomanHealer__InitializeFamilyImmunitiesAddr, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");
         
     }
+    //火鸡子弹默认生成类型修改测试
+    PVZ2HookFunction(ProjectileSpawnZombieAddr, (void*)hkProjectileSpawnZombie, (void**)&oProjectileSpawnZombie, "ProjectileSpawnZombie");
     //自主开发强制1536
     PVZ2HookFunction(ForceResources1536Addr, (void*)hkForceResources1536, (void**)&oForceResources1536, "ForceResources1536");
     // Hook RSBRead (replace original)
