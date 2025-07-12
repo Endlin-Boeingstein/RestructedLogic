@@ -24,8 +24,15 @@ uint ZombieRomanHealer__InitializeFamilyImmunitiesAddr;
 uint zFamilyFuncAddr;
 uint LawnAppAddr;
 uint SexyAppAddr;
-uint RSBReadAddr;
+//禁用
+//uint RSBReadAddr;
 uint ForceResources1536Addr;
+uint LogOutputFuncAddr;
+uint RSBPathRecorderAddr;
+uint MainLoadFuncAddr;
+uint ResourceManagerFuncAddr;
+uint ResourceReadFuncAddr;
+uint RSBTestAndReadFuncAddr;
 
 //第一个自定义的植物ID
 uint firstFreePlantID;
@@ -64,8 +71,14 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = 0x00;
         LawnAppAddr = NULL;
         SexyAppAddr = NULL;
-        RSBReadAddr = NULL;
+        /*RSBReadAddr = NULL;*/
+        RSBPathRecorderAddr = NULL;
         ForceResources1536Addr = NULL;
+        LogOutputFuncAddr = NULL;
+        MainLoadFuncAddr = NULL;
+        ResourceManagerFuncAddr = NULL;
+        ResourceReadFuncAddr = NULL;
+        RSBTestAndReadFuncAddr = NULL;
 
         firstFreePlantID = 185;
         break;
@@ -89,8 +102,14 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = 0x00;
         LawnAppAddr = 0x2593760;
         SexyAppAddr = 0x25A4618;
-        RSBReadAddr = NULL;
+        /*RSBReadAddr = NULL;*/
+        RSBPathRecorderAddr = NULL;
         ForceResources1536Addr = NULL;
+        LogOutputFuncAddr = NULL;
+        MainLoadFuncAddr = NULL;
+        ResourceManagerFuncAddr = NULL;
+        ResourceReadFuncAddr = NULL;
+        RSBTestAndReadFuncAddr = NULL;
 
         firstFreePlantID = 188;
         break;
@@ -114,8 +133,14 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = 0x00;
         LawnAppAddr = NULL;
         SexyAppAddr = NULL;
-        RSBReadAddr = NULL;
+        /*RSBReadAddr = NULL;*/
+        RSBPathRecorderAddr = NULL;
         ForceResources1536Addr = NULL;
+        LogOutputFuncAddr = NULL;
+        MainLoadFuncAddr = NULL;
+        ResourceManagerFuncAddr = NULL;
+        ResourceReadFuncAddr = NULL;
+        RSBTestAndReadFuncAddr = NULL;
 
         firstFreePlantID = 191;
         break;
@@ -139,8 +164,14 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = NULL;
         LawnAppAddr = NULL;
         SexyAppAddr = NULL;
-        RSBReadAddr = NULL;
+        /*RSBReadAddr = NULL;*/
+        RSBPathRecorderAddr = NULL;
         ForceResources1536Addr = NULL;
+        LogOutputFuncAddr = NULL;
+        MainLoadFuncAddr = NULL;
+        ResourceManagerFuncAddr = NULL;
+        ResourceReadFuncAddr = NULL;
+        RSBTestAndReadFuncAddr = NULL;
 
         firstFreePlantID = 0;  // 10.3 Don't need it.
         break;

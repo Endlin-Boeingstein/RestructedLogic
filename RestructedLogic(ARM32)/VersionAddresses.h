@@ -24,10 +24,17 @@ uint ZombieRomanHealer__InitializeFamilyImmunitiesAddr;
 uint zFamilyFuncAddr;
 uint LawnAppAddr;
 uint SexyAppAddr;
-uint RSBReadAddr;
+//弃用
+//uint RSBReadAddr;
 uint PrimeGlyphCacheAddr;
 uint ForceResources1536Addr;
 uint ProjectileSpawnZombieAddr;
+uint LogOutputFuncAddr;
+uint RSBPathRecorderAddr;
+uint MainLoadFuncAddr;
+uint ResourceManagerFuncAddr;
+uint ResourceReadFuncAddr;
+uint RSBTestAndReadFuncAddr;
 
 //第一个自定义的植物ID
 uint firstFreePlantID;
@@ -67,10 +74,16 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = 0x8C70A0;
         LawnAppAddr=NULL;
         SexyAppAddr=NULL;
-        RSBReadAddr=NULL;
+        /*RSBReadAddr=NULL;*/
+        RSBPathRecorderAddr=NULL;
         PrimeGlyphCacheAddr=NULL;
         ForceResources1536Addr=NULL;
         ProjectileSpawnZombieAddr=NULL;
+        LogOutputFuncAddr=NULL;
+        MainLoadFuncAddr = NULL;
+        ResourceManagerFuncAddr=NULL;
+        ResourceReadFuncAddr=NULL;
+        RSBTestAndReadFuncAddr=NULL;
 
         firstFreePlantID = 185;
         break;
@@ -94,10 +107,16 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = 0x8BD2C0;
         LawnAppAddr = 0x1D92A94;
         SexyAppAddr = 0x1D9CA24;
-        RSBReadAddr = NULL;
+        /*RSBReadAddr=NULL;*/
+        RSBPathRecorderAddr = NULL;
         PrimeGlyphCacheAddr = NULL;
         ForceResources1536Addr=NULL;
         ProjectileSpawnZombieAddr = NULL;
+        LogOutputFuncAddr = NULL;
+        MainLoadFuncAddr = NULL;
+        ResourceManagerFuncAddr = NULL;
+        ResourceReadFuncAddr = NULL;
+        RSBTestAndReadFuncAddr = NULL;
 
         firstFreePlantID = 188;
         break;
@@ -121,10 +140,16 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = 0x905110;
         LawnAppAddr = NULL;
         SexyAppAddr = NULL;
-        RSBReadAddr = NULL;
+        /*RSBReadAddr=NULL;*/
+        RSBPathRecorderAddr = NULL;
         PrimeGlyphCacheAddr = 0x13FBA38;
         ForceResources1536Addr = NULL;
         ProjectileSpawnZombieAddr = NULL;
+        LogOutputFuncAddr = NULL;
+        MainLoadFuncAddr = NULL;
+        ResourceManagerFuncAddr = NULL;
+        ResourceReadFuncAddr = NULL;
+        RSBTestAndReadFuncAddr = NULL;
 
         firstFreePlantID = 191;
         break;
@@ -148,10 +173,16 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = NULL;
         LawnAppAddr=NULL;
         SexyAppAddr=NULL;
-        RSBReadAddr = 0x162CEA4;
+        /*RSBReadAddr = 0x162CEA4;*/
+        RSBPathRecorderAddr = 0x16431A8;
         PrimeGlyphCacheAddr = 0x177ECF4;
         ForceResources1536Addr = 0x6E4224;
         ProjectileSpawnZombieAddr = 0xE6B880;
+        LogOutputFuncAddr = 0x146DE24;
+        MainLoadFuncAddr = 0x6F00A0;
+        ResourceManagerFuncAddr = 0x6EE218;
+        ResourceReadFuncAddr = 0x16228F0;
+        RSBTestAndReadFuncAddr = 0x16303BC;
 
         firstFreePlantID = 0;  // 10.3 Don't need it.
         break;

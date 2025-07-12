@@ -9,6 +9,9 @@
 #include "./PvZ2/Board.h"
 #include "VersionAddresses.h"
 #include "./PvZ2/WorldMap.h"
+#include <mutex>
+#include <fstream>
+#include <sys/stat.h>
 
 #pragma region Alias to ID
 
@@ -450,133 +453,287 @@ uint* hkPrimeGlyphCacheLimitation(uint* a1, int a2, int a3, int a4)
 //这句话就是RSB的路径分析入口，如果你想找主读取函数，那就对该句右键，选择图标视图
 //你会发现它被唯一一个函数引用，那就是RSB主读取函数
 //如果你只想看代码，那就按F5，转换成伪C代码，慢慢看吧，借助大模型分析（ChatGPT最佳，Grok也还行），找到那个读取RSB内容的内嵌在里面的函数就行了
-#pragma region RSB Decrypt
+#pragma region RSB _MANIFEST_GROUP_ Read
 
-inline uint32_t bswap32(uint32_t x) {
-    return ((x & 0xFF) << 24) | ((x & 0xFF00) << 8) | ((x & 0xFF0000) >> 8) | ((x & 0xFF000000) >> 24);
-}
+//inline uint32_t bswap32(uint32_t x) {
+//    return ((x & 0xFF) << 24) | ((x & 0xFF00) << 8) | ((x & 0xFF0000) >> 8) | ((x & 0xFF000000) >> 24);
+//}
+//
+//void decrypt_rsb(uint8_t* buffer, size_t size) {
+//    /*const uint8_t key = 0x5A;
+//    for (size_t i = 0; i < size; i++) {
+//        buffer[i] ^= key;
+//    }
+//    LOGI("Decrypted %zu bytes", size);
+//    if (size >= 4) {
+//        LOGI("First 4 bytes after decryption: %02x %02x %02x %02x",
+//            buffer[0], buffer[1], buffer[2], buffer[3]);
+//    }*/
+//}
+//
+//
+//
+//void* hkRSBRead(int a1, uint* a2, char* a3, int a4) {
+//    void* v7 = nullptr;
+//    int v16[513]; // 匹配原版大小
+//    uint v12 = 0;
+//    *a2 = 0;
+//    *a3 = 1; // 匹配原版初始值
+//
+//    int (*readFunc)(int, int*, int, int) = *(int (**)(int, int*, int, int))(*(int*)a1 + 40);
+//    int (*statusFunc)(int) = *(int (**)(int))(*(int*)a1 + 44);
+//    LOGI("readFunc=%p, statusFunc=%p, a1=%p", (void*)readFunc, (void*)statusFunc, (void*)a1);
+//
+//    if (!a1 || !readFunc || !statusFunc) {
+//        LOGI("Invalid parameters: a1=%p, readFunc=%p, statusFunc=%p",
+//            (void*)a1, (void*)readFunc, (void*)statusFunc);
+//        return nullptr;
+//    }
+//
+//    int readResult = readFunc(a1, v16, 2048, 0);
+//    LOGI("readFunc called, a1=%p, v16=%p, size=2048, offset=0, readResult=%d",
+//        (void*)a1, v16, readResult);
+//    if (readResult <= 0) {
+//        LOGI("Failed to read RSB data: readResult=%d", readResult);
+//        return nullptr;
+//    }
+//
+//    int status;
+//    do {
+//        status = statusFunc(a1);
+//        LOGI("statusFunc called, a1=%p, status=%d", (void*)a1, status);
+//    } while (status == 1);
+//    if (status == 2) {
+//        LOGI("Invalid status after read: status=%d", status);
+//        return nullptr;
+//    }
+//
+//    LOGI("v16 before decrypt: %02x %02x %02x %02x",
+//        ((uint8_t*)v16)[0], ((uint8_t*)v16)[1], ((uint8_t*)v16)[2], ((uint8_t*)v16)[3]);
+//    decrypt_rsb((uint8_t*)v16, 2048);
+//
+//    uint32_t header = *(uint32_t*)v16;
+//    LOGI("Raw header: %08x", header);
+//    char v9 = 0;
+//    if (header == 0x72736231) {
+//        v9 = 1;
+//    }
+//    else {
+//        header = bswap32(header);
+//        LOGI("Header after bswap: %08x", header);
+//        if (header != 0x72736231) {
+//            LOGI("Invalid RSB header after decryption and bswap: %08x", header);
+//            return nullptr;
+//        }
+//        *(uint32_t*)v16 = header;
+//    }
+//    *a3 = v9;
+//
+//    int v11 = 27;
+//    if (a4 || v16[1] < 4) v11 = 3;
+//    v12 = v16[v11];
+//    if (!*a3) v12 = bswap32(v12);
+//    LOGI("RSB data size (v12): %u bytes, v11=%d, a4=%d, v16[1]=%d", v12, v11, a4, v16[1]);
+//    LOGI("v16[3]=%08x, v16[27]=%08x", v16[3], v16[27]);
+//    *a2 = v12;
+//
+//    v7 = operator new[](v12);
+//    if (!v7) {
+//        LOGI("Failed to allocate v7: size=%u", v12);
+//        *a3 = 0;
+//        return nullptr;
+//    }
+//
+//    if (v12 <= 2048) {
+//        memcpy(v7, v16, v12);
+//        LOGI("Copied %u bytes from v16 to v7", v12);
+//    }
+//    else {
+//        memcpy(v7, v16, 2048);
+//        LOGI("Copied 2048 bytes from v16 to v7");
+//        readResult = readFunc(a1, (int*)((char*)v7 + 2048), v12 - 2048, 0); // 修正偏移为 0
+//        LOGI("readFunc called, a1=%p, v7+2048=%p, size=%u, offset=0, readResult=%d",
+//            (void*)a1, (char*)v7 + 2048, v12 - 2048, readResult);
+//        if (readResult <= 0) {
+//            LOGI("Failed to read remaining RSB data: readResult=%d, expected=%u",
+//                readResult, v12 - 2048);
+//            operator delete[](v7);
+//            *a3 = 0;
+//            return nullptr;
+//        }
+//        do {
+//            status = statusFunc(a1);
+//            LOGI("statusFunc called, a1=%p, status=%d", (void*)a1, status);
+//        } while (status == 1);
+//        if (status == 2) {
+//            LOGI("Invalid status after second read: status=%d", status);
+//            operator delete[](v7);
+//            *a3 = 0;
+//            return nullptr;
+//        }
+//        decrypt_rsb((uint8_t*)((char*)v7 + 2048), v12 - 2048);
+//    }
+//
+//    LOGI("v7 fields: v7[0]=%08x, v7[10]=%08x, v7[11]=%08x, v7[12]=%08x, v7[18]=%08x, v7[19]=%08x, v7[20]=%08x",
+//        ((uint32_t*)v7)[0], ((uint32_t*)v7)[10], ((uint32_t*)v7)[11], ((uint32_t*)v7)[12],
+//        ((uint32_t*)v7)[18], ((uint32_t*)v7)[19], ((uint32_t*)v7)[20]);
+//    return v7;
+//}
+#pragma endregion
 
-void decrypt_rsb(uint8_t* buffer, size_t size) {
-    /*const uint8_t key = 0x5A;
-    for (size_t i = 0; i < size; i++) {
-        buffer[i] ^= key;
+//真正的RSB解密函数
+#pragma region RSBPathChangeAndDecryptRSB
+// 临时文件路径列表
+static std::vector<std::string> g_tempFiles;
+// 解密函数（基于你的 XOR 0x5A）
+void decrypt_rsb(uint8_t* data, size_t size) {
+    for (size_t i = 0; i < size; ++i) {
+        data[i] ^= 0x5A;
     }
     LOGI("Decrypted %zu bytes", size);
-    if (size >= 4) {
-        LOGI("First 4 bytes after decryption: %02x %02x %02x %02x",
-            buffer[0], buffer[1], buffer[2], buffer[3]);
-    }*/
+}
+// 清理临时文件
+void cleanupTempFiles() {
+    for (const auto& path : g_tempFiles) {
+        if (unlink(path.c_str()) == 0) {
+            LOGI("Deleted temp file: %s", path.c_str());
+        }
+        else {
+            LOGI("Failed to delete temp file: %s, errno=%d", path.c_str(), errno);
+        }
+    }
+    g_tempFiles.clear();
+}
+
+//// 进程退出时清理
+//__attribute__((destructor))
+//void lib_cleanup() {
+//    LOGI("Cleaning up temp files");
+//    cleanupTempFiles();
+//}
+
+// Hook 函数
+typedef int (*RSBPathRecorder)(uint* a1);
+RSBPathRecorder oRSBPathRecorder = nullptr;
+
+int hkRSBPathRecorder(uint* a1) {
+    LOGI("Hooking RSBPathRecorder");
+
+    // 检查输入
+    if (!oRSBPathRecorder) {
+        LOGI("RSBPathRecorder: Original function is null");
+        return 0;
+    }
+    if (!a1) {
+        LOGI("RSBPathRecorder: a1 is null");
+        return oRSBPathRecorder(a1);
+    }
+
+    // 调用原始函数
+    int result = oRSBPathRecorder(a1);
+    LOGI("RSBPathRecorder: Original function returned %d, a1[0]=0x%x, a1[1]=0x%x, a1[2]=0x%x",
+        result, a1[0], a1[1], a1[2]);
+
+    // 提取路径
+    char* path_ptr = nullptr;
+    if (a1[0] & 1) {
+        path_ptr = (char*)a1[2]; // 动态分配，路径在 a1[2]
+    }
+    else {
+        path_ptr = (char*)a1[1]; // 非动态分配，路径在 a1[1]
+    }
+    if (!path_ptr || (uint)path_ptr < 0x1000) {
+        LOGI("RSBPathRecorder: Invalid path pointer 0x%x, a1[0]=0x%x", (uint)path_ptr, a1[0]);
+        return result;
+    }
+    std::string original_path;
+    size_t i;
+    for (i = 0; i < 1024; ++i) {
+        if (path_ptr[i] == '\0') {
+            original_path = std::string(path_ptr, i);
+            break;
+        }
+        if (i == 1023) {
+            LOGI("RSBPathRecorder: Path too long or invalid");
+            return result;
+        }
+    }
+    if (original_path.empty()) {
+        LOGI("RSBPathRecorder: Path is empty");
+        return result;
+    }
+    LOGI("RSBPathRecorder: Original path=%s", original_path.c_str());
+
+    // 验证预期路径
+    std::string expected_path = "/storage/emulated/0/Android/obb/com.ea.game.pvz2_na/main.763.com.ea.game.pvz2_na.obb";
+    if (original_path != expected_path) {
+        LOGI("RSBPathRecorder: Path mismatch, expected %s", expected_path.c_str());
+        // 继续处理，允许非预期路径
+    }
+
+    // 读取 RSB 文件
+    std::ifstream in_file(original_path.c_str(), std::ios::binary | std::ios::ate);
+    if (!in_file.is_open()) {
+        LOGI("RSBPathRecorder: Failed to open %s, errno=%d", original_path.c_str(), errno);
+        return result;
+    }
+    std::streamsize file_size = in_file.tellg();
+    in_file.seekg(0, std::ios::beg);
+    std::vector<uint8_t> buffer(file_size);
+    in_file.read(reinterpret_cast<char*>(buffer.data()), file_size);
+    if (!in_file) {
+        LOGI("RSBPathRecorder: Failed to read %s, errno=%d", original_path.c_str(), errno);
+        in_file.close();
+        return result;
+    }
+    in_file.close();
+    LOGI("RSBPathRecorder: Read %lld bytes", static_cast<long long>(file_size));
+
+    // 解密
+    decrypt_rsb(buffer.data(), static_cast<size_t>(file_size));
+
+    // 创建缓存目录
+    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_na/cache";
+    if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
+        LOGI("RSBPathRecorder: Failed to create %s, errno=%d", cache_dir.c_str(), errno);
+        return result;
+    }
+    std::string temp_path = cache_dir + "/cache.rsb";
+    std::ofstream out_file(temp_path.c_str(), std::ios::binary);
+    if (!out_file.is_open()) {
+        LOGI("RSBPathRecorder: Failed to create %s, errno=%d", temp_path.c_str(), errno);
+        return result;
+    }
+    out_file.write(reinterpret_cast<char*>(buffer.data()), file_size);
+    if (!out_file) {
+        LOGI("RSBPathRecorder: Failed to write %s, errno=%d", temp_path.c_str(), errno);
+        out_file.close();
+        return result;
+    }
+    out_file.close();
+    LOGI("RSBPathRecorder: Saved to %s", temp_path.c_str());
+    g_tempFiles.push_back(temp_path);
+
+    // 替换路径
+    char* new_path = strdup(temp_path.c_str());
+    if (!new_path) {
+        LOGI("RSBPathRecorder: Failed to allocate new_path");
+        return result;
+    }
+    if (a1[0] & 1) {
+        a1[2] = (uint)new_path; // 动态分配，替换 a1[2]
+    }
+    else {
+        a1[1] = (uint)new_path; // 非动态分配，替换 a1[1]
+    }
+    LOGI("RSBPathRecorder: Replaced path with %s", temp_path.c_str());
+
+    return result;
 }
 
 
-
-void* hkRSBRead(int a1, uint* a2, char* a3, int a4) {
-    void* v7 = nullptr;
-    int v16[513]; // 匹配原版大小
-    uint v12 = 0;
-    *a2 = 0;
-    *a3 = 1; // 匹配原版初始值
-
-    int (*readFunc)(int, int*, int, int) = *(int (**)(int, int*, int, int))(*(int*)a1 + 40);
-    int (*statusFunc)(int) = *(int (**)(int))(*(int*)a1 + 44);
-    LOGI("readFunc=%p, statusFunc=%p, a1=%p", (void*)readFunc, (void*)statusFunc, (void*)a1);
-
-    if (!a1 || !readFunc || !statusFunc) {
-        LOGI("Invalid parameters: a1=%p, readFunc=%p, statusFunc=%p",
-            (void*)a1, (void*)readFunc, (void*)statusFunc);
-        return nullptr;
-    }
-
-    int readResult = readFunc(a1, v16, 2048, 0);
-    LOGI("readFunc called, a1=%p, v16=%p, size=2048, offset=0, readResult=%d",
-        (void*)a1, v16, readResult);
-    if (readResult <= 0) {
-        LOGI("Failed to read RSB data: readResult=%d", readResult);
-        return nullptr;
-    }
-
-    int status;
-    do {
-        status = statusFunc(a1);
-        LOGI("statusFunc called, a1=%p, status=%d", (void*)a1, status);
-    } while (status == 1);
-    if (status == 2) {
-        LOGI("Invalid status after read: status=%d", status);
-        return nullptr;
-    }
-
-    LOGI("v16 before decrypt: %02x %02x %02x %02x",
-        ((uint8_t*)v16)[0], ((uint8_t*)v16)[1], ((uint8_t*)v16)[2], ((uint8_t*)v16)[3]);
-    decrypt_rsb((uint8_t*)v16, 2048);
-
-    uint32_t header = *(uint32_t*)v16;
-    LOGI("Raw header: %08x", header);
-    char v9 = 0;
-    if (header == 0x72736231) {
-        v9 = 1;
-    }
-    else {
-        header = bswap32(header);
-        LOGI("Header after bswap: %08x", header);
-        if (header != 0x72736231) {
-            LOGI("Invalid RSB header after decryption and bswap: %08x", header);
-            return nullptr;
-        }
-        *(uint32_t*)v16 = header;
-    }
-    *a3 = v9;
-
-    int v11 = 27;
-    if (a4 || v16[1] < 4) v11 = 3;
-    v12 = v16[v11];
-    if (!*a3) v12 = bswap32(v12);
-    LOGI("RSB data size (v12): %u bytes, v11=%d, a4=%d, v16[1]=%d", v12, v11, a4, v16[1]);
-    LOGI("v16[3]=%08x, v16[27]=%08x", v16[3], v16[27]);
-    *a2 = v12;
-
-    v7 = operator new[](v12);
-    if (!v7) {
-        LOGI("Failed to allocate v7: size=%u", v12);
-        *a3 = 0;
-        return nullptr;
-    }
-
-    if (v12 <= 2048) {
-        memcpy(v7, v16, v12);
-        LOGI("Copied %u bytes from v16 to v7", v12);
-    }
-    else {
-        memcpy(v7, v16, 2048);
-        LOGI("Copied 2048 bytes from v16 to v7");
-        readResult = readFunc(a1, (int*)((char*)v7 + 2048), v12 - 2048, 0); // 修正偏移为 0
-        LOGI("readFunc called, a1=%p, v7+2048=%p, size=%u, offset=0, readResult=%d",
-            (void*)a1, (char*)v7 + 2048, v12 - 2048, readResult);
-        if (readResult <= 0) {
-            LOGI("Failed to read remaining RSB data: readResult=%d, expected=%u",
-                readResult, v12 - 2048);
-            operator delete[](v7);
-            *a3 = 0;
-            return nullptr;
-        }
-        do {
-            status = statusFunc(a1);
-            LOGI("statusFunc called, a1=%p, status=%d", (void*)a1, status);
-        } while (status == 1);
-        if (status == 2) {
-            LOGI("Invalid status after second read: status=%d", status);
-            operator delete[](v7);
-            *a3 = 0;
-            return nullptr;
-        }
-        decrypt_rsb((uint8_t*)((char*)v7 + 2048), v12 - 2048);
-    }
-
-    LOGI("v7 fields: v7[0]=%08x, v7[10]=%08x, v7[11]=%08x, v7[12]=%08x, v7[18]=%08x, v7[19]=%08x, v7[20]=%08x",
-        ((uint32_t*)v7)[0], ((uint32_t*)v7)[10], ((uint32_t*)v7)[11], ((uint32_t*)v7)[12],
-        ((uint32_t*)v7)[18], ((uint32_t*)v7)[19], ((uint32_t*)v7)[20]);
-    return v7;
-}
 #pragma endregion
+
 //强制1536
 #pragma region ForceResources1536
 //此代码自主查找并转译得来
@@ -715,6 +872,185 @@ uint* hkProjectileSpawnZombie() {
 }
 #pragma endregion
 
+#pragma region LoaderTest
+//探测开启游戏时到底载入了哪些函数
+typedef int (*MainLoadFunc)(int, int, int);
+MainLoadFunc oMainLoadFunc = NULL;
+int hkMainLoadFunc(int a1, int a2, int a3) {
+    LOGI("Hooking MainLoadFunc 6F00A0");
+    LOGI("a1=%d, a2=%d, a3=%d", a1, a2, a3);
+    int backdata= oMainLoadFunc(a1, a2, a3);
+    LOGI("Hooking MainLoadFunc 6F00A0");
+    return backdata;
+}
+
+typedef int (*ResourceManagerFunc)(int, int, int);
+ResourceManagerFunc oResourceManagerFunc = NULL;
+int hkResourceManagerFunc(int a1, int a2, int a3) {
+    LOGI("Hooking ResourcesManagerFunc 6EE218");
+    LOGI("a1=%d, a2=%d, a3=%d", a1, a2, a3);
+    int backdata= oResourceManagerFunc(a1, a2, a3);
+    LOGI("Hooking ResourcesManagerFunc 6EE218 End");
+    LOGI("Cleaning up temp files");
+    cleanupTempFiles();
+    return backdata;
+}
+
+typedef int (*ResourceReadFunc)(
+    uint*,
+    int,
+    int,
+    uint8_t*,
+    uint8_t*,
+    int,
+    void*,
+    int,
+    int,
+    int,
+    void*);
+ResourceReadFunc oResourceReadFunc = NULL;
+int hkResourceReadFunc(
+    uint* a1,
+    int a2,
+    int a3,
+    uint8_t* a4,
+    uint8_t* a5,
+    int a6,
+    void* a7,
+    int a8,
+    int a9,
+    int a10,
+    void* a11) {
+    LOGI("Hooking ResourceReadFunc 16228F0");
+    int backdata= oResourceReadFunc(
+        a1,
+        a2,
+        a3,
+        a4,
+        a5,
+        a6,
+        a7,
+        a8,
+        a9,
+        a10,
+        a11);
+    LOGI("Hooking ResourceReadFunc 16228F0 End");
+    return backdata;
+}
+typedef int (*RSBTestAndReadFunc)(uint*, int*);
+RSBTestAndReadFunc oRSBTestAndReadFunc = NULL;
+int hkRSBTestAndReadFunc(uint* a1, int* a2) {
+    LOGI("Hooking RSBTestAndReadFunc 16303BC");
+    LOGI("a1=%p, a2=%p", (void*)a1, (void*)a2);
+    int backdata= oRSBTestAndReadFunc(a1, a2);
+    LOGI("return %d", backdata);
+    LOGI("Hello?");
+    LOGI("Hooking RSBTestAndReadFunc 16303BC End");
+    return backdata;
+}
+typedef int (*ManifestChecker)(
+    void*,
+    int,
+    int,
+    int,
+    int,
+    int,
+    void*,
+    int,
+    int,
+    int,
+    void*,
+    int);
+ManifestChecker oManifestChecker = NULL;
+int hkManifestChecker(
+    void* a1,
+    int a2,
+    int a3,
+    int a4,
+    int a5,
+    int a6,
+    void* a7,
+    int a8,
+    int a9,
+    int a10,
+    void* a11,
+    int a12) {
+    LOGI("Hooking ManifestChecker 16229C8");
+    
+    int backdata = oManifestChecker(
+        a1,
+        a2,
+        a3,
+        a4,
+        a5,
+        a6,
+        a7,
+        a8,
+        a9,
+        a10,
+        a11,
+        a12);
+    LOGI("return %d", backdata);
+    LOGI("Hooking ManifestChecker 16229C8 End");
+    return backdata;
+}
+#pragma endregion
+
+#pragma region LogOutputHook
+
+
+
+typedef int (*LogOutputFunc)(char*, ...);
+LogOutputFunc oLogOutputFunc = NULL;
+std::mutex g_logMutex;
+
+int hkLogOutputFunc(char* format, ...) {
+    if (!oLogOutputFunc) {
+        LOGI("LogOutputFunc: Original function pointer is null");
+        return -1;
+    }
+
+    std::lock_guard<std::mutex> lock(g_logMutex);
+
+    va_list va, va_copy;
+    va_start(va, format);
+    va_copy(va_copy, va);
+
+    // 计算所需长度
+    char temp[1];
+    int len = vsnprintf(temp, 0, format, va);
+    va_end(va);
+
+    va_start(va, format);
+    char* buffer;
+    if (len >= 0 && len < 1024) {
+        buffer = new char[1024];
+        len = vsnprintf(buffer, 1024, format, va);
+        buffer[len] = '\0';
+        LOGI("LogOutputFunc: %s", buffer);
+    }
+    else if (len >= 0) {
+        buffer = new char[len + 1];
+        len = vsnprintf(buffer, len + 1, format, va);
+        buffer[len] = '\0';
+        LOGI("LogOutputFunc: %s", buffer);
+    }
+    else {
+        LOGI("LogOutputFunc: Failed to format, format=%s, len=%d", format ? format : "null", len);
+    }
+
+    int result = oLogOutputFunc(format, va_copy);
+    va_end(va_copy);
+    va_end(va);
+    delete[] buffer;
+    return result;
+}
+
+#pragma endregion
+
+
+
+
 __attribute__((constructor))
 // This is automatically executed when the lib is loaded
 // Run your initialization code here
@@ -743,16 +1079,21 @@ void libRestructedLogic_ARM32__main()
         PVZ2HookFunction(ZombieRomanHealer__InitializeFamilyImmunitiesAddr, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");
         
     }
-    PVZ2HookFunction(0x6F00A0, (void*)hkMainLoadFunc, (void**)&oMainLoadFunc, "ResourceManager::MainLoadFunc");
-    PVZ2HookFunction(0x6EE218, (void*)hkResourceManagerFunc, (void**)&oResourceManagerFunc, "ResourceManager::ResourceManagerFunc");
-    PVZ2HookFunction(0x16228F0, (void*)hkResourceReadFunc, (void**)&oResourceReadFunc, "ResourceManager::ResourceReadFunc");
-    PVZ2HookFunction(0x16303BC, (void*)hkRSBTestAndReadFunc, (void**)&oRSBTestAndReadFunc, "ResourceManager::RSBTestAndReadFunc");
+    //输出日志
+    PVZ2HookFunction(LogOutputFuncAddr, (void*)hkLogOutputFunc, (void**)&oLogOutputFunc, "LogOutputFunc");
+    PVZ2HookFunction(MainLoadFuncAddr, (void*)hkMainLoadFunc, (void**)&oMainLoadFunc, "ResourceManager::MainLoadFunc");
+    PVZ2HookFunction(ResourceManagerFuncAddr, (void*)hkResourceManagerFunc, (void**)&oResourceManagerFunc, "ResourceManager::ResourceManagerFunc");
+    PVZ2HookFunction(ResourceReadFuncAddr, (void*)hkResourceReadFunc, (void**)&oResourceReadFunc, "ResourceManager::ResourceReadFunc");
+    PVZ2HookFunction(RSBTestAndReadFuncAddr, (void*)hkRSBTestAndReadFunc, (void**)&oRSBTestAndReadFunc, "ResourceManager::RSBTestAndReadFunc");
+    //PVZ2HookFunction(0x16229C8, (void*)hkManifestChecker, (void**)&oManifestChecker, "ResourceManager::ManifestChecker");
     //火鸡子弹默认生成类型修改测试
     //PVZ2HookFunction(ProjectileSpawnZombieAddr, (void*)hkProjectileSpawnZombie, (void**)&oProjectileSpawnZombie, "ProjectileSpawnZombie");
     //自主开发强制1536
     PVZ2HookFunction(ForceResources1536Addr, (void*)hkForceResources1536, (void**)&oForceResources1536, "ForceResources1536");
     // Hook RSBRead (replace original)
-    PVZ2HookFunction(RSBReadAddr, (void*)hkRSBRead, nullptr, "ResourceManager::RSBLoadingInit");
+    //禁用禁用PVZ2HookFunction(RSBReadAddr, (void*)hkRSBRead, nullptr, "ResourceManager::RSBLoadingInit");
+    //RSB解密
+    PVZ2HookFunction(RSBPathRecorderAddr, (void*)hkRSBPathRecorder, (void**)&oRSBPathRecorder, "ResourceManager::RSBPathRecorder");
     //此代码为融小宝对RestructedLogic工程的私有化改造功能之一，并未根据RestructedLogic的GPL-3.0协议进行公开，我已拥有相关证据，你不守规矩，就别怪我强制公开了，并且我也没用你的写法，自己写的
     PVZ2HookFunction(PrimeGlyphCacheAddr, (void*)hkPrimeGlyphCacheLimitation, (void**)&oPrimeGlyphCacheLimitation, "PrimeGlyphCache::PrimeGlyphCacheLimitation");
 
