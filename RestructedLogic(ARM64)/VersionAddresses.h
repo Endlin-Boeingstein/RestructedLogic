@@ -36,9 +36,9 @@ enum VersionOfGame
 };
 
 #pragma region Auto Select Addresses
-int version_code = v10_3;
+int version_code = v10_3;//在此处修改版本号
 void AddressesChangedByVersion() {
-    switch (version_code)//在此处修改版本号
+    switch (version_code)
     {
     case v9_4:
     {
