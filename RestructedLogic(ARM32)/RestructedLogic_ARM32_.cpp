@@ -318,7 +318,7 @@ bool hkMagicianInitializeFamilyImmunities(int a1, int64_t a2)
 //此代码为融小宝对RestructedLogic工程的私有化改造功能之一，并未根据RestructedLogic的GPL-3.0协议进行公开，我已拥有相关证据，你不守规矩，就别怪我强制公开了
 //也不是啥秘密，按照一般查找流程都能找到
 //再不济你去https://www.bilibili.com/opus/657868413102718978一路大佬的帖子，打开IDA PRO就知道怎么找了
-//实际上我是先去找RSB读取函数，然后再找这里的，一路大佬的帖子有一个地方会卡住人，所以使用RSB主读取函数寻找法就能找到了。
+//实际上我是先去找RSB读取函数，然后再找这里的，一路大佬的帖子有一个地方会卡住人（实际上是你不会确认位置），所以使用RSB主读取函数寻找法就能找到了。
 //你要是恼羞成怒，还以为我偷别人的抢别人的，那好，这段的伪C代码（10.3版本）我贴在这了
 //int __fastcall sub_1697E88(_DWORD* a1, int a2)
 //{
@@ -558,6 +558,24 @@ void* hkRSBRead(int a1, unsigned int* a2, char* a3, int a4) {
     return v7;
 }
 #pragma endregion
+//强制1536
+#pragma region ForceResources1536
+//此代码自主查找并转译得来
+//声明原始函数指针
+typedef int (*ForceResources1536)(int);
+ForceResources1536 oForceResources1536 = NULL;
+int hkForceResources1536(int a1)
+{
+    // 调用原始函数
+    int result = oForceResources1536(a1);
+    //强制1536
+    result = 1536;
+
+    // 强制返回 1536 (0x600, 对应 0205BCEC)
+    LOGI("Hooked sub_6E4224: Original result=%d, Forcing result=1536", result);
+    return result;
+}
+#pragma endregion
 
 __attribute__((constructor))
 // This is automatically executed when the lib is loaded
@@ -587,6 +605,8 @@ void libRestructedLogic_ARM32__main()
         PVZ2HookFunction(ZombieRomanHealer__InitializeFamilyImmunitiesAddr, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");
         
     }
+    //自主开发强制1536
+    PVZ2HookFunction(ForceResources1536Addr, (void*)hkForceResources1536, (void**)&oForceResources1536, "ForceResources1536");
     // Hook RSBRead (replace original)
     PVZ2HookFunction(RSBReadAddr, (void*)hkRSBRead, nullptr, "ResourceManager::Init");
     //此代码为融小宝对RestructedLogic工程的私有化改造功能之一，并未根据RestructedLogic的GPL-3.0协议进行公开，我已拥有相关证据，你不守规矩，就别怪我强制公开了

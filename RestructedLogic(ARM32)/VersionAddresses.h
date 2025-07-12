@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  *  @date   : 2024/04/20
  *  @author : Endlin Boeingstein
  */
@@ -26,8 +26,9 @@ uint LawnAppAddr;
 uint SexyAppAddr;
 uint RSBReadAddr;
 uint PrimeGlyphCacheAddr;
+uint ForceResources1536Addr;
 
-//µÚÒ»¸ö×Ô¶¨ÒåµÄÖ²ÎïID
+//ç¬¬ä¸€ä¸ªè‡ªå®šä¹‰çš„æ¤ç‰©ID
 uint firstFreePlantID;
 
 enum VersionOfGame
@@ -36,13 +37,13 @@ enum VersionOfGame
     v9_6=960,
     v9_8=980,
     v10_3=1030
-    //·ÂÕÕÉÏÃæÌí¼Ó°æ±¾ºÅ
+    //ä»¿ç…§ä¸Šé¢æ·»åŠ ç‰ˆæœ¬å·
 };
 
 
 
 #pragma region Auto Select Addresses
-int version_code = v10_3;//ÔÚ´Ë´¦ĞŞ¸Ä°æ±¾ºÅ
+int version_code = v10_3;//åœ¨æ­¤å¤„ä¿®æ”¹ç‰ˆæœ¬å·
 void AddressesChangedByVersion() {
     switch (version_code)
     {
@@ -67,6 +68,7 @@ void AddressesChangedByVersion() {
         SexyAppAddr=NULL;
         RSBReadAddr=NULL;
         PrimeGlyphCacheAddr=NULL;
+        ForceResources1536Addr=NULL;
 
         firstFreePlantID = 185;
         break;
@@ -92,6 +94,7 @@ void AddressesChangedByVersion() {
         SexyAppAddr = 0x1D9CA24;
         RSBReadAddr = NULL;
         PrimeGlyphCacheAddr = NULL;
+        ForceResources1536Addr=NULL;
 
         firstFreePlantID = 188;
         break;
@@ -117,6 +120,7 @@ void AddressesChangedByVersion() {
         SexyAppAddr = NULL;
         RSBReadAddr = NULL;
         PrimeGlyphCacheAddr = 0x13FBA38;
+        ForceResources1536Addr = NULL;
 
         firstFreePlantID = 191;
         break;
@@ -142,11 +146,12 @@ void AddressesChangedByVersion() {
         SexyAppAddr=NULL;
         RSBReadAddr = 0x162CEA4;
         PrimeGlyphCacheAddr = 0x177ECF4;
+        ForceResources1536Addr = 0x6E4224;
 
         firstFreePlantID = 0;  // 10.3 Don't need it.
         break;
     }
-    //·ÂÕÕÉÏÊöcaseÌí¼Ó°æ±¾Æ«ÒÆ
+    //ä»¿ç…§ä¸Šè¿°caseæ·»åŠ ç‰ˆæœ¬åç§»
     default:
     {
         break;
@@ -249,9 +254,9 @@ void AddressesChangedByVersion() {
 //        ZombieRomanHealer__InitializeFamilyImmunities = 0x8AA59C;
 //        zFamilyFunc = 0x905110;
 //    }
-//    //ÔÚ´Ë´¦Ìí¼ÓĞÂµÄ°æ±¾Æ«ÒÆ
+//    //åœ¨æ­¤å¤„æ·»åŠ æ–°çš„ç‰ˆæœ¬åç§»
 //    else {}
-//    //¼ÓÈëmapÒÔ¹©µ÷ÓÃ
+//    //åŠ å…¥mapä»¥ä¾›è°ƒç”¨
 //    funcaddress.insert(std::pair<std::string, uint>("ZombieAlmanac", ZombieAlmanac));
 //    funcaddress.insert(std::pair<std::string, uint>("PlantNameMapper", PlantNameMapper));
 //    funcaddress.insert(std::pair<std::string, uint>("CamelZombie", CamelZombie));

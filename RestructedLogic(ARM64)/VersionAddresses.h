@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  *  @date   : 2024/04/20
  *  @author : Endlin Boeingstein
  */
@@ -25,8 +25,9 @@ uint zFamilyFuncAddr;
 uint LawnAppAddr;
 uint SexyAppAddr;
 uint RSBReadAddr;
+uint ForceResources1536Addr;
 
-//µÚÒ»¸ö×Ô¶¨ÒåµÄÖ²ÎïID
+//ç¬¬ä¸€ä¸ªè‡ªå®šä¹‰çš„æ¤ç‰©ID
 uint firstFreePlantID;
 
 enum VersionOfGame
@@ -35,17 +36,17 @@ enum VersionOfGame
     v9_6 = 960,
     v9_8 = 980,
     v10_3 = 1030
-    //·ÂÕÕÉÏÃæÌí¼Ó°æ±¾ºÅ
+    //ä»¿ç…§ä¸Šé¢æ·»åŠ ç‰ˆæœ¬å·
 };
 
 #pragma region Auto Select Addresses
-int version_code = v10_3;//ÔÚ´Ë´¦ĞŞ¸Ä°æ±¾ºÅ
+int version_code = v10_3;//åœ¨æ­¤å¤„ä¿®æ”¹ç‰ˆæœ¬å·
 void AddressesChangedByVersion() {
     switch (version_code)
     {
     case v9_4:
     {
-        //²¿·ÖÆ«ÒÆÓÉÄ³ÉñÃØ´óÀĞ²éÕÒµÃÀ´£¬µ«ÊÇÓÉÓÚv7aºÍv8aº¯Êı½á¹¹²»Í¬£¬»¹ÓĞĞÂµÄ¿âµÄÎ´ÖªÊ²Ã´µ¼ÖÂµÄÉÁÍËÎÊÌâ£¬¹Êv8a·½°¸ÒÑ·ÏÆú
+        //éƒ¨åˆ†åç§»ç”±æŸç¥ç§˜å¤§ä½¬æŸ¥æ‰¾å¾—æ¥ï¼Œä½†æ˜¯ç”±äºv7aå’Œv8aå‡½æ•°ç»“æ„ä¸åŒï¼Œè¿˜æœ‰æ–°çš„åº“çš„æœªçŸ¥ä»€ä¹ˆå¯¼è‡´çš„é—ªé€€é—®é¢˜ï¼Œæ•…v8aæ–¹æ¡ˆå·²åºŸå¼ƒ
         ZombieAlmanacAddr = 0x00;
         PlantNameMapperAddr = 0x1157778;//
         CamelZombieAddr = 0x00;
@@ -64,6 +65,7 @@ void AddressesChangedByVersion() {
         LawnAppAddr = NULL;
         SexyAppAddr = NULL;
         RSBReadAddr = NULL;
+        ForceResources1536Addr = NULL;
 
         firstFreePlantID = 185;
         break;
@@ -88,6 +90,7 @@ void AddressesChangedByVersion() {
         LawnAppAddr = 0x2593760;
         SexyAppAddr = 0x25A4618;
         RSBReadAddr = NULL;
+        ForceResources1536Addr = NULL;
 
         firstFreePlantID = 188;
         break;
@@ -112,6 +115,7 @@ void AddressesChangedByVersion() {
         LawnAppAddr = NULL;
         SexyAppAddr = NULL;
         RSBReadAddr = NULL;
+        ForceResources1536Addr = NULL;
 
         firstFreePlantID = 191;
         break;
@@ -136,11 +140,12 @@ void AddressesChangedByVersion() {
         LawnAppAddr = NULL;
         SexyAppAddr = NULL;
         RSBReadAddr = NULL;
+        ForceResources1536Addr = NULL;
 
         firstFreePlantID = 0;  // 10.3 Don't need it.
         break;
     }
-    //·ÂÕÕÉÏÊöcaseÌí¼Ó°æ±¾Æ«ÒÆ
+    //ä»¿ç…§ä¸Šè¿°caseæ·»åŠ ç‰ˆæœ¬åç§»
     default:
     {
         break;
@@ -243,9 +248,9 @@ void AddressesChangedByVersion() {
 //        ZombieRomanHealer__InitializeFamilyImmunities = 0x8AA59C;
 //        zFamilyFunc = 0x905110;
 //    }
-//    //ÔÚ´Ë´¦Ìí¼ÓĞÂµÄ°æ±¾Æ«ÒÆ
+//    //åœ¨æ­¤å¤„æ·»åŠ æ–°çš„ç‰ˆæœ¬åç§»
 //    else {}
-//    //¼ÓÈëmapÒÔ¹©µ÷ÓÃ
+//    //åŠ å…¥mapä»¥ä¾›è°ƒç”¨
 //    funcaddress.insert(std::pair<std::string, uint>("ZombieAlmanac", ZombieAlmanac));
 //    funcaddress.insert(std::pair<std::string, uint>("PlantNameMapper", PlantNameMapper));
 //    funcaddress.insert(std::pair<std::string, uint>("CamelZombie", CamelZombie));

@@ -425,6 +425,25 @@ void* hkRSBRead(int a1, unsigned int* a2, char* a3, int a4) {
 }
 #pragma endregion
 
+//强制1536
+#pragma region ForceResources1536
+//此代码自主查找并转译得来
+//声明原始函数指针
+typedef int (*ForceResources1536)(int);
+ForceResources1536 oForceResources1536 = NULL;
+int hkForceResources1536(int a1)
+{
+    // 调用原始函数
+    int result = oForceResources1536(a1);
+    //强制1536
+    result = 1536;
+
+    // 强制返回 1536 (0x600, 对应 0205BCEC)
+    LOGI("Hooked sub_6E4224: Original result=%d, Forcing result=1536", result);
+    return result;
+}
+#pragma endregion
+
 __attribute__((constructor))
 // This is automatically executed when the lib is loaded
 // Run your initialization code here
@@ -469,6 +488,8 @@ void libRestructedLogic_ARM64__main()
         PVZ2HookFunction(ZombieRomanHealer__ConditionFuncAddr, (void*)hkMagicianHealerConditionFunc, (void**)&dispose, "ZombieRomanHealer::ConditionFunc");
         PVZ2HookFunction(ZombieRomanHealer__InitializeFamilyImmunitiesAddr, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");*/
     }
+    //自主开发强制1536
+    PVZ2HookFunction(ForceResources1536Addr, (void*)hkForceResources1536, (void**)&oForceResources1536, "ForceResources1536");
     // Hook RSBRead (replace original)
     PVZ2HookFunction(RSBReadAddr, (void*)hkRSBRead, nullptr, "ResourceManager::Init");
 
