@@ -338,88 +338,70 @@ void* hkRSBRead(int a1, unsigned int* a2, char* a3, int a4) {
     *a2 = 0;
     *a3 = 0; // Default to invalid, set to 1 on success
 
-    try {
-        // Read first 2048 bytes (encrypted)
-        int (*readFunc)(int, int*, int, int) = *(int (**)(int, int*, int, int))(*(int*)a1 + 40);
-        int readBytes = readFunc(a1, v16, 2048, 0);
-        LOGI("readFunc called, a1=%p, v16=%p, size=2048, offset=0, readBytes=%d",
-            (void*)a1, v16, readBytes);
+    // Read first 2048 bytes (encrypted)
+    int (*readFunc)(int, int*, int, int) = *(int (**)(int, int*, int, int))(*(int*)a1 + 40);
+    int readBytes = readFunc(a1, v16, 2048, 0);
+    LOGI("readFunc called, a1=%p, v16=%p, size=2048, offset=0, readBytes=%d",
+        (void*)a1, v16, readBytes);
 
-        if (readBytes <= 0) {
-            LOGI("Failed to read RSB data: readBytes=%d", readBytes);
-            return nullptr;
-        }
+    if (readBytes <= 0) {
+        LOGI("Failed to read RSB data: readBytes=%d", readBytes);
+        return nullptr;
+    }
 
-        // Decrypt v16
-        decrypt_rsb((uint8_t*)v16, readBytes);
+    // Decrypt v16
+    decrypt_rsb((uint8_t*)v16, readBytes);
 
-        // Verify header (optional, for debugging)
-        if (*(int*)v16 != 0x72736230) { // "rsb0"
-            LOGI("Invalid RSB header after decryption: %08x", *(int*)v16);
-            return nullptr;
-        }
+    // Verify header (optional, for debugging)
+    if (*(int*)v16 != 0x72736230) { // "rsb0"
+        LOGI("Invalid RSB header after decryption: %08x", *(int*)v16);
+        return nullptr;
+    }
 
-        // Set header validity
-        *a3 = 1;
+    // Set header validity
+    *a3 = 1;
 
-        // Get data size (mimic original logic)
-        int v11 = 27;
-        if (a4 || v16[1] < 4) {
-            v11 = 3;
-        }
-        v12 = v16[v11];
-        LOGI("RSB data size (v12): %u bytes", v12);
+    // Get data size (mimic original logic)
+    int v11 = 27;
+    if (a4 || v16[1] < 4) {
+        v11 = 3;
+    }
+    v12 = v16[v11];
+    LOGI("RSB data size (v12): %u bytes", v12);
 
-        // Allocate v7
-        v7 = operator new[](v12);
-        if (!v7) {
-            LOGI("Failed to allocate v7: size=%u", v12);
+    // Allocate v7
+    v7 = operator new[](v12);
+    if (!v7) {
+        LOGI("Failed to allocate v7: size=%u", v12);
+        *a3 = 0;
+        return nullptr;
+    }
+
+    // Copy decrypted v16 to v7
+    if (v12 <= 2048) {
+        memcpy(v7, v16, v12);
+    }
+    else {
+        memcpy(v7, v16, 2048);
+        // Read and decrypt remaining data
+        readBytes = readFunc(a1, (int*)((char*)v7 + 2048), v12 - 2048, 2048);
+        LOGI("readFunc called, a1=%p, v7+2048=%p, size=%u, offset=2048, readBytes=%d",
+            (void*)a1, (char*)v7 + 2048, v12 - 2048, readBytes);
+
+        if (readBytes != (int)(v12 - 2048)) {
+            LOGI("Failed to read remaining RSB data: readBytes=%d, expected=%u",
+                readBytes, v12 - 2048);
+            operator delete[](v7);
             *a3 = 0;
             return nullptr;
         }
 
-        // Copy decrypted v16 to v7
-        if (v12 <= 2048) {
-            memcpy(v7, v16, v12);
-        }
-        else {
-            memcpy(v7, v16, 2048);
-            // Read and decrypt remaining data
-            readBytes = readFunc(a1, (int*)((char*)v7 + 2048), v12 - 2048, 2048);
-            LOGI("readFunc called, a1=%p, v7+2048=%p, size=%u, offset=2048, readBytes=%d",
-                (void*)a1, (char*)v7 + 2048, v12 - 2048, readBytes);
-
-            if (readBytes != (int)(v12 - 2048)) {
-                LOGI("Failed to read remaining RSB data: readBytes=%d, expected=%u",
-                    readBytes, v12 - 2048);
-                operator delete[](v7);
-                *a3 = 0;
-                return nullptr;
-            }
-
-            // Decrypt remaining data
-            decrypt_rsb((uint8_t*)((char*)v7 + 2048), readBytes);
-        }
-
-        // Set output size
-        *a2 = v12;
+        // Decrypt remaining data
+        decrypt_rsb((uint8_t*)((char*)v7 + 2048), readBytes);
     }
-    catch (const std::exception& e) {
-        LOGI("Exception in hkRSBRead: %s", e.what());
-        if (v7) {
-            operator delete[](v7);
-        }
-        *a3 = 0;
-        return nullptr;
-    }
-    catch (...) {
-        LOGI("Unknown exception in hkRSBRead");
-        if (v7) {
-            operator delete[](v7);
-        }
-        *a3 = 0;
-        return nullptr;
-    }
+
+    // Set output size
+    *a2 = v12;
 
     return v7;
 }
