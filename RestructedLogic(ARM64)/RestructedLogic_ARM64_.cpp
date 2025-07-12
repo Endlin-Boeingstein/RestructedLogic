@@ -553,11 +553,28 @@ int hkRSBPathRecorder(uintptr_t* a1) {
         LOGI("RSBPathRecorder: Failed to allocate new_path");
         return result;
     }
-    if (a1[0] & 1) {
+    /*if (a1[0] & 1) {
         a1[2] = reinterpret_cast<uintptr_t>(new_path);
     }
     else {
         a1[1] = reinterpret_cast<uintptr_t>(new_path);
+    }*/
+    size_t new_path_len = strlen(new_path);
+    if (a1[0] & 1) {
+        // 动态分配
+        if (a1[2]) {
+            free((void*)a1[2]); // 释放原始路径
+        }
+        unsigned int v10 = new_path_len > 20 ? new_path_len : 20;
+        unsigned int v8 = (v10 + 16) & 0xFFFFFFF0; // 分配大小
+        a1[0] = v8 | 1; // a1[0] = 65 (0x41)
+        a1[1] = new_path_len; // a1[1] = 47 (0x2F)
+        a1[2] = reinterpret_cast<uintptr_t>(new_path); // 新路径指针
+    }
+    else {
+        // 非动态分配
+        a1[0] = 2 * new_path_len; // a1[0] = 2 * 路径长度
+        a1[1] = reinterpret_cast<uintptr_t>(new_path); // a1[1] = 新路径指针
     }
     LOGI("RSBPathRecorder: Replaced path with %s (ptr=%p)",
         temp_path.c_str(), (void*)new_path);
