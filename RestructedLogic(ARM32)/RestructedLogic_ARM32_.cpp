@@ -315,7 +315,7 @@ bool hkMagicianInitializeFamilyImmunities(int a1, int64_t a2)
 #pragma endregion
 
 #pragma region PrimeGlyphCacheLimitationDescription
-//此代码为融小宝对RestructedLogic工程的私有化改造功能之一，并未根据RestructedLogic的GPL-3.0协议进行公开，我已拥有相关证据，你不守规矩，就别怪我强制公开了
+//此代码为融小宝对RestructedLogic工程的私有化改造功能之一，并未根据RestructedLogic的GPL-3.0协议进行公开，我已拥有相关证据，你不守规矩，就别怪我强制公开了，并且我也没用你的写法，自己写的
 //也不是啥秘密，按照一般查找流程都能找到
 //再不济你去https://www.bilibili.com/opus/657868413102718978一路大佬的帖子，打开IDA PRO就知道怎么找了
 //实际上我是先去找RSB读取函数，然后再找这里的，一路大佬的帖子有一个地方会卡住人（实际上是你不会确认位置），所以使用RSB主读取函数寻找法就能找到了。
@@ -441,6 +441,7 @@ uint* hkPrimeGlyphCacheLimitation(uint* a1, int a2, int a3, int a4)
 #pragma endregion
 
 
+//特别提醒：该加密测试已经被我注释掉了，因为目前仅完成了对_MANIFESTGROUP_的解密，离完全完成还很远，但我没心情和时间陪这玩意耗了
 //已探明RSB读取入口（废了老大劲拿IDA PRO搁那推），先进行测试（目前为XOR加密未测试）
 //自己研究的RSB入口寻找法：用Hex编辑器打开so后文本搜索RSB Initialization failed，找到对应的偏移
 //使用IDA PRO跳转到该偏移上，随后对该句右键，选择交叉引用列表，选那个.text类型的（唯一）
@@ -450,9 +451,13 @@ uint* hkPrimeGlyphCacheLimitation(uint* a1, int a2, int a3, int a4)
 //你会发现它被唯一一个函数引用，那就是RSB主读取函数
 //如果你只想看代码，那就按F5，转换成伪C代码，慢慢看吧，借助大模型分析（ChatGPT最佳，Grok也还行），找到那个读取RSB内容的内嵌在里面的函数就行了
 #pragma region RSB Decrypt
-// RSB decryption function (replace with your actual decryption algorithm)
+
+inline uint32_t bswap32(uint32_t x) {
+    return ((x & 0xFF) << 24) | ((x & 0xFF00) << 8) | ((x & 0xFF0000) >> 8) | ((x & 0xFF000000) >> 24);
+}
+
 void decrypt_rsb(uint8_t* buffer, size_t size) {
-    const uint8_t key = 0x5A; // Example XOR key, replace with your decryption logic (e.g., AES)
+    /*const uint8_t key = 0x5A;
     for (size_t i = 0; i < size; i++) {
         buffer[i] ^= key;
     }
@@ -460,50 +465,75 @@ void decrypt_rsb(uint8_t* buffer, size_t size) {
     if (size >= 4) {
         LOGI("First 4 bytes after decryption: %02x %02x %02x %02x",
             buffer[0], buffer[1], buffer[2], buffer[3]);
-    }
+    }*/
 }
 
-// Hook function for RSBRead (completely replace original)
-void* hkRSBRead(int a1, unsigned int* a2, char* a3, int a4) {
+
+
+void* hkRSBRead(int a1, uint* a2, char* a3, int a4) {
     void* v7 = nullptr;
-    int v16[513]; // Buffer for first 2048 bytes
-    unsigned int v12 = 0; // Data size
-
+    int v16[513]; // 匹配原版大小
+    uint v12 = 0;
     *a2 = 0;
-    *a3 = 0; // Default to invalid, set to 1 on success
+    *a3 = 1; // 匹配原版初始值
 
-    // Read first 2048 bytes (encrypted)
     int (*readFunc)(int, int*, int, int) = *(int (**)(int, int*, int, int))(*(int*)a1 + 40);
-    int readBytes = readFunc(a1, v16, 2048, 0);
-    LOGI("readFunc called, a1=%p, v16=%p, size=2048, offset=0, readBytes=%d",
-        (void*)a1, v16, readBytes);
+    int (*statusFunc)(int) = *(int (**)(int))(*(int*)a1 + 44);
+    LOGI("readFunc=%p, statusFunc=%p, a1=%p", (void*)readFunc, (void*)statusFunc, (void*)a1);
 
-    if (readBytes <= 0) {
-        LOGI("Failed to read RSB data: readBytes=%d", readBytes);
+    if (!a1 || !readFunc || !statusFunc) {
+        LOGI("Invalid parameters: a1=%p, readFunc=%p, statusFunc=%p",
+            (void*)a1, (void*)readFunc, (void*)statusFunc);
         return nullptr;
     }
 
-    // Decrypt v16
-    decrypt_rsb((uint8_t*)v16, readBytes);
-
-    // Verify header (optional, for debugging)
-    if (*(int*)v16 != 0x72736230) { // "rsb0"
-        LOGI("Invalid RSB header after decryption: %08x", *(int*)v16);
+    int readResult = readFunc(a1, v16, 2048, 0);
+    LOGI("readFunc called, a1=%p, v16=%p, size=2048, offset=0, readResult=%d",
+        (void*)a1, v16, readResult);
+    if (readResult <= 0) {
+        LOGI("Failed to read RSB data: readResult=%d", readResult);
         return nullptr;
     }
 
-    // Set header validity
-    *a3 = 1;
+    int status;
+    do {
+        status = statusFunc(a1);
+        LOGI("statusFunc called, a1=%p, status=%d", (void*)a1, status);
+    } while (status == 1);
+    if (status == 2) {
+        LOGI("Invalid status after read: status=%d", status);
+        return nullptr;
+    }
 
-    // Get data size (mimic original logic)
+    LOGI("v16 before decrypt: %02x %02x %02x %02x",
+        ((uint8_t*)v16)[0], ((uint8_t*)v16)[1], ((uint8_t*)v16)[2], ((uint8_t*)v16)[3]);
+    decrypt_rsb((uint8_t*)v16, 2048);
+
+    uint32_t header = *(uint32_t*)v16;
+    LOGI("Raw header: %08x", header);
+    char v9 = 0;
+    if (header == 0x72736231) {
+        v9 = 1;
+    }
+    else {
+        header = bswap32(header);
+        LOGI("Header after bswap: %08x", header);
+        if (header != 0x72736231) {
+            LOGI("Invalid RSB header after decryption and bswap: %08x", header);
+            return nullptr;
+        }
+        *(uint32_t*)v16 = header;
+    }
+    *a3 = v9;
+
     int v11 = 27;
-    if (a4 || v16[1] < 4) {
-        v11 = 3;
-    }
+    if (a4 || v16[1] < 4) v11 = 3;
     v12 = v16[v11];
-    LOGI("RSB data size (v12): %u bytes", v12);
+    if (!*a3) v12 = bswap32(v12);
+    LOGI("RSB data size (v12): %u bytes, v11=%d, a4=%d, v16[1]=%d", v12, v11, a4, v16[1]);
+    LOGI("v16[3]=%08x, v16[27]=%08x", v16[3], v16[27]);
+    *a2 = v12;
 
-    // Allocate v7
     v7 = operator new[](v12);
     if (!v7) {
         LOGI("Failed to allocate v7: size=%u", v12);
@@ -511,32 +541,39 @@ void* hkRSBRead(int a1, unsigned int* a2, char* a3, int a4) {
         return nullptr;
     }
 
-    // Copy decrypted v16 to v7
     if (v12 <= 2048) {
         memcpy(v7, v16, v12);
+        LOGI("Copied %u bytes from v16 to v7", v12);
     }
     else {
         memcpy(v7, v16, 2048);
-        // Read and decrypt remaining data
-        readBytes = readFunc(a1, (int*)((char*)v7 + 2048), v12 - 2048, 2048);
-        LOGI("readFunc called, a1=%p, v7+2048=%p, size=%u, offset=2048, readBytes=%d",
-            (void*)a1, (char*)v7 + 2048, v12 - 2048, readBytes);
-
-        if (readBytes != (int)(v12 - 2048)) {
-            LOGI("Failed to read remaining RSB data: readBytes=%d, expected=%u",
-                readBytes, v12 - 2048);
+        LOGI("Copied 2048 bytes from v16 to v7");
+        readResult = readFunc(a1, (int*)((char*)v7 + 2048), v12 - 2048, 0); // 修正偏移为 0
+        LOGI("readFunc called, a1=%p, v7+2048=%p, size=%u, offset=0, readResult=%d",
+            (void*)a1, (char*)v7 + 2048, v12 - 2048, readResult);
+        if (readResult <= 0) {
+            LOGI("Failed to read remaining RSB data: readResult=%d, expected=%u",
+                readResult, v12 - 2048);
             operator delete[](v7);
             *a3 = 0;
             return nullptr;
         }
-
-        // Decrypt remaining data
-        decrypt_rsb((uint8_t*)((char*)v7 + 2048), readBytes);
+        do {
+            status = statusFunc(a1);
+            LOGI("statusFunc called, a1=%p, status=%d", (void*)a1, status);
+        } while (status == 1);
+        if (status == 2) {
+            LOGI("Invalid status after second read: status=%d", status);
+            operator delete[](v7);
+            *a3 = 0;
+            return nullptr;
+        }
+        decrypt_rsb((uint8_t*)((char*)v7 + 2048), v12 - 2048);
     }
 
-    // Set output size
-    *a2 = v12;
-
+    LOGI("v7 fields: v7[0]=%08x, v7[10]=%08x, v7[11]=%08x, v7[12]=%08x, v7[18]=%08x, v7[19]=%08x, v7[20]=%08x",
+        ((uint32_t*)v7)[0], ((uint32_t*)v7)[10], ((uint32_t*)v7)[11], ((uint32_t*)v7)[12],
+        ((uint32_t*)v7)[18], ((uint32_t*)v7)[19], ((uint32_t*)v7)[20]);
     return v7;
 }
 #pragma endregion
@@ -557,6 +594,104 @@ int hkForceResources1536(int a1)
     LOGI("Hooked sub_6E4224: Original result=%d, Forcing result=1536", result);
     return result;
 }
+#pragma endregion
+
+//尝试自定义火鸡子弹默认生成类型
+#pragma region TurkeypultProjectileSummonCustom
+// Hook sub_E6B880 to change hardcoded zombie type
+typedef uint* (*ProjectileSpawnZombie)(void);
+ProjectileSpawnZombie oProjectileSpawnZombie = NULL;
+
+uint* hkProjectileSpawnZombie() {
+    LOGI("Hooking sub_E6B880: Spawning zombie");
+
+    uint* v0 = oProjectileSpawnZombie(); // 调用原始函数
+
+    // 直接替换僵尸类型和数量
+    strcpy((char*)v0[82], "turkeypult_turkzilla"); // 修改为你的目标僵尸类型
+    v0[83] = 1; // 设置僵尸数量，可根据需要调整
+
+    LOGI("Set zombie type to %s, count = %d", (char*)v0[82], v0[83]);
+
+    return v0;
+}
+#pragma endregion
+
+#pragma region LoaderTest
+//探测开启游戏时到底载入了哪些函数
+typedef int (*MainLoadFunc)(int, int, int);
+MainLoadFunc oMainLoadFunc = NULL;
+int hkMainLoadFunc(int a1, int a2, int a3) {
+    LOGI("Hooking MainLoadFunc 6F00A0");
+    LOGI("a1=%d, a2=%d, a3=%d", a1, a2, a3);
+    int backdata= oMainLoadFunc(a1, a2, a3);
+    LOGI("Hooking MainLoadFunc 6F00A0");
+    return backdata;
+}
+
+typedef int (*ResourceManagerFunc)(int, int, int);
+ResourceManagerFunc oResourceManagerFunc = NULL;
+int hkResourceManagerFunc(int a1, int a2, int a3) {
+    LOGI("Hooking ResourcesManagerFunc 6EE218");
+    LOGI("a1=%d, a2=%d, a3=%d", a1, a2, a3);
+    int backdata= oResourceManagerFunc(a1, a2, a3);
+    LOGI("Hooking ResourcesManagerFunc 6EE218 End");
+    return backdata;
+}
+
+typedef int (*ResourceReadFunc)(
+    uint*,
+    int,
+    int,
+    uint8_t*,
+    uint8_t*,
+    int,
+    void*,
+    int,
+    int,
+    int,
+    void*);
+ResourceReadFunc oResourceReadFunc = NULL;
+int hkResourceReadFunc(
+    uint* a1,
+    int a2,
+    int a3,
+    uint8_t* a4,
+    uint8_t* a5,
+    int a6,
+    void* a7,
+    int a8,
+    int a9,
+    int a10,
+    void* a11) {
+    LOGI("Hooking ResourceReadFunc 16228F0");
+    int backdata= oResourceReadFunc(
+        a1,
+        a2,
+        a3,
+        a4,
+        a5,
+        a6,
+        a7,
+        a8,
+        a9,
+        a10,
+        a11);
+    LOGI("Hooking ResourceReadFunc 16228F0 End");
+    return backdata;
+}
+typedef int (*RSBTestAndReadFunc)(uint*, int*);
+RSBTestAndReadFunc oRSBTestAndReadFunc = NULL;
+int hkRSBTestAndReadFunc(uint* a1, int* a2) {
+    LOGI("Hooking RSBTestAndReadFunc 16303BC");
+    LOGI("a1=%p, a2=%p", (void*)a1, (void*)a2);
+    int backdata= oRSBTestAndReadFunc(a1, a2);
+    LOGI("return %d", backdata);
+    LOGI("Hello?");
+    LOGI("Hooking RSBTestAndReadFunc 16303BC End");
+    return backdata;
+}
+
 #pragma endregion
 
 //尝试自定义火鸡子弹默认生成类型
@@ -608,20 +743,25 @@ void libRestructedLogic_ARM32__main()
         PVZ2HookFunction(ZombieRomanHealer__InitializeFamilyImmunitiesAddr, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");
         
     }
+    PVZ2HookFunction(0x6F00A0, (void*)hkMainLoadFunc, (void**)&oMainLoadFunc, "ResourceManager::MainLoadFunc");
+    PVZ2HookFunction(0x6EE218, (void*)hkResourceManagerFunc, (void**)&oResourceManagerFunc, "ResourceManager::ResourceManagerFunc");
+    PVZ2HookFunction(0x16228F0, (void*)hkResourceReadFunc, (void**)&oResourceReadFunc, "ResourceManager::ResourceReadFunc");
+    PVZ2HookFunction(0x16303BC, (void*)hkRSBTestAndReadFunc, (void**)&oRSBTestAndReadFunc, "ResourceManager::RSBTestAndReadFunc");
     //火鸡子弹默认生成类型修改测试
-    PVZ2HookFunction(ProjectileSpawnZombieAddr, (void*)hkProjectileSpawnZombie, (void**)&oProjectileSpawnZombie, "ProjectileSpawnZombie");
+    //PVZ2HookFunction(ProjectileSpawnZombieAddr, (void*)hkProjectileSpawnZombie, (void**)&oProjectileSpawnZombie, "ProjectileSpawnZombie");
     //自主开发强制1536
     PVZ2HookFunction(ForceResources1536Addr, (void*)hkForceResources1536, (void**)&oForceResources1536, "ForceResources1536");
     // Hook RSBRead (replace original)
-    PVZ2HookFunction(RSBReadAddr, (void*)hkRSBRead, nullptr, "ResourceManager::Init");
-    //此代码为融小宝对RestructedLogic工程的私有化改造功能之一，并未根据RestructedLogic的GPL-3.0协议进行公开，我已拥有相关证据，你不守规矩，就别怪我强制公开了
+    PVZ2HookFunction(RSBReadAddr, (void*)hkRSBRead, nullptr, "ResourceManager::RSBLoadingInit");
+    //此代码为融小宝对RestructedLogic工程的私有化改造功能之一，并未根据RestructedLogic的GPL-3.0协议进行公开，我已拥有相关证据，你不守规矩，就别怪我强制公开了，并且我也没用你的写法，自己写的
     PVZ2HookFunction(PrimeGlyphCacheAddr, (void*)hkPrimeGlyphCacheLimitation, (void**)&oPrimeGlyphCacheLimitation, "PrimeGlyphCache::PrimeGlyphCacheLimitation");
 
 
-    PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)HkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
-    PVZ2HookFunction(BoardAddr, (void*)hkBoardCtor, (void**)&oBoardCtor, "Board::Board");
+    //PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)HkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
+    //PVZ2HookFunction(BoardAddr, (void*)hkBoardCtor, (void**)&oBoardCtor, "Board::Board");
 
-    PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
+    //PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
+    
     
 
     LOGI("Finished initializing");
