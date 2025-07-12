@@ -314,6 +314,117 @@ bool hkMagicianInitializeFamilyImmunities(int a1, int64_t a2)
 
 #pragma endregion
 
+//已探明RSB读取入口（废了老大劲拿IDA PRO搁那推），先进行测试（目前为XOR加密未测试）
+#pragma region RSB Decrypt
+// RSB decryption function (replace with your actual decryption algorithm)
+void decrypt_rsb(uint8_t* buffer, size_t size) {
+    const uint8_t key = 0x5A; // Example XOR key, replace with your decryption logic (e.g., AES)
+    for (size_t i = 0; i < size; i++) {
+        buffer[i] ^= key;
+    }
+    LOGI("Decrypted %zu bytes", size);
+    if (size >= 4) {
+        LOGI("First 4 bytes after decryption: %02x %02x %02x %02x",
+            buffer[0], buffer[1], buffer[2], buffer[3]);
+    }
+}
+
+// Hook function for RSBRead (completely replace original)
+void* hkRSBRead(int a1, unsigned int* a2, char* a3, int a4) {
+    void* v7 = nullptr;
+    int v16[513]; // Buffer for first 2048 bytes
+    unsigned int v12 = 0; // Data size
+
+    *a2 = 0;
+    *a3 = 0; // Default to invalid, set to 1 on success
+
+    try {
+        // Read first 2048 bytes (encrypted)
+        int (*readFunc)(int, int*, int, int) = *(int (**)(int, int*, int, int))(*(int*)a1 + 40);
+        int readBytes = readFunc(a1, v16, 2048, 0);
+        LOGI("readFunc called, a1=%p, v16=%p, size=2048, offset=0, readBytes=%d",
+            (void*)a1, v16, readBytes);
+
+        if (readBytes <= 0) {
+            LOGI("Failed to read RSB data: readBytes=%d", readBytes);
+            return nullptr;
+        }
+
+        // Decrypt v16
+        decrypt_rsb((uint8_t*)v16, readBytes);
+
+        // Verify header (optional, for debugging)
+        if (*(int*)v16 != 0x72736230) { // "rsb0"
+            LOGI("Invalid RSB header after decryption: %08x", *(int*)v16);
+            return nullptr;
+        }
+
+        // Set header validity
+        *a3 = 1;
+
+        // Get data size (mimic original logic)
+        int v11 = 27;
+        if (a4 || v16[1] < 4) {
+            v11 = 3;
+        }
+        v12 = v16[v11];
+        LOGI("RSB data size (v12): %u bytes", v12);
+
+        // Allocate v7
+        v7 = operator new[](v12);
+        if (!v7) {
+            LOGI("Failed to allocate v7: size=%u", v12);
+            *a3 = 0;
+            return nullptr;
+        }
+
+        // Copy decrypted v16 to v7
+        if (v12 <= 2048) {
+            memcpy(v7, v16, v12);
+        }
+        else {
+            memcpy(v7, v16, 2048);
+            // Read and decrypt remaining data
+            readBytes = readFunc(a1, (int*)((char*)v7 + 2048), v12 - 2048, 2048);
+            LOGI("readFunc called, a1=%p, v7+2048=%p, size=%u, offset=2048, readBytes=%d",
+                (void*)a1, (char*)v7 + 2048, v12 - 2048, readBytes);
+
+            if (readBytes != (int)(v12 - 2048)) {
+                LOGI("Failed to read remaining RSB data: readBytes=%d, expected=%u",
+                    readBytes, v12 - 2048);
+                operator delete[](v7);
+                *a3 = 0;
+                return nullptr;
+            }
+
+            // Decrypt remaining data
+            decrypt_rsb((uint8_t*)((char*)v7 + 2048), readBytes);
+        }
+
+        // Set output size
+        *a2 = v12;
+    }
+    catch (const std::exception& e) {
+        LOGI("Exception in hkRSBRead: %s", e.what());
+        if (v7) {
+            operator delete[](v7);
+        }
+        *a3 = 0;
+        return nullptr;
+    }
+    catch (...) {
+        LOGI("Unknown exception in hkRSBRead");
+        if (v7) {
+            operator delete[](v7);
+        }
+        *a3 = 0;
+        return nullptr;
+    }
+
+    return v7;
+}
+#pragma endregion
+
 __attribute__((constructor))
 // This is automatically executed when the lib is loaded
 // Run your initialization code here
@@ -328,6 +439,7 @@ void libRestructedLogic_ARM64__main()
         REGISTER_PLANT_TYPENAME(("newadd_" + i));
     }
 
+    // New, easier to manage way of adding typenames to the plant/zombie name mapper
     //No need to use///REGISTER_ZOMBIE_TYPENAME("steam");
 
     // Function hooks
@@ -357,6 +469,8 @@ void libRestructedLogic_ARM64__main()
         PVZ2HookFunction(ZombieRomanHealer__ConditionFuncAddr, (void*)hkMagicianHealerConditionFunc, (void**)&dispose, "ZombieRomanHealer::ConditionFunc");
         PVZ2HookFunction(ZombieRomanHealer__InitializeFamilyImmunitiesAddr, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");*/
     }
+    // Hook RSBRead (replace original)
+    PVZ2HookFunction(RSBReadAddr, (void*)hkRSBRead, nullptr, "ResourceManager::Init");
 
     /*PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)HkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
     PVZ2HookFunction(BoardAddr, (void*)hkBoardCtor, (void**)&oBoardCtor, "Board::Board");*/

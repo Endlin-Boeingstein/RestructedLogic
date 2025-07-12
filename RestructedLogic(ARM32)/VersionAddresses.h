@@ -24,6 +24,8 @@ uint ZombieRomanHealer__InitializeFamilyImmunitiesAddr;
 uint zFamilyFuncAddr;
 uint LawnAppAddr;
 uint SexyAppAddr;
+uint RSBReadAddr;
+uint PrimeGlyphCacheAddr;
 
 //第一个自定义的植物ID
 uint firstFreePlantID;
@@ -63,6 +65,8 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = 0x8C70A0;
         LawnAppAddr=NULL;
         SexyAppAddr=NULL;
+        RSBReadAddr=NULL;
+        PrimeGlyphCacheAddr=NULL;
 
         firstFreePlantID = 185;
         break;
@@ -86,6 +90,8 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = 0x8BD2C0;
         LawnAppAddr = 0x1D92A94;
         SexyAppAddr = 0x1D9CA24;
+        RSBReadAddr = NULL;
+        PrimeGlyphCacheAddr = NULL;
 
         firstFreePlantID = 188;
         break;
@@ -109,6 +115,8 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = 0x905110;
         LawnAppAddr = NULL;
         SexyAppAddr = NULL;
+        RSBReadAddr = NULL;
+        PrimeGlyphCacheAddr = 0x13FBA38;
 
         firstFreePlantID = 191;
         break;
@@ -132,6 +140,8 @@ void AddressesChangedByVersion() {
         zFamilyFuncAddr = NULL;
         LawnAppAddr=NULL;
         SexyAppAddr=NULL;
+        RSBReadAddr = 0x162CEA4;
+        PrimeGlyphCacheAddr = 0x177ECF4;
 
         firstFreePlantID = 0;  // 10.3 Don't need it.
         break;
