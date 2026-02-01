@@ -161,6 +161,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Decrypt\aes.cpp" />
     <ClCompile Include="memUtils.cpp" />
     <ClCompile Include="RestructedLogic_ARM32_.cpp" />
     <ClCompile Include="x32\jni\libs\GlossHook\Gloss.cpp" />
@@ -171,6 +172,8 @@
     <ClCompile Include="x32\jni\libs\Substrate\SubstratePosixMemory.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Decrypt\aes.h" />
+    <ClInclude Include="Decrypt\picosha2.h" />
     <ClInclude Include="Logging.h" />
     <ClInclude Include="memUtils.h" />
     <ClInclude Include="PvZ2\Board.h" />

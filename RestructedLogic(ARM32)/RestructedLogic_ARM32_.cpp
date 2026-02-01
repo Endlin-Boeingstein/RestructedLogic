@@ -12,6 +12,8 @@
 #include <mutex>
 #include <fstream>
 #include <sys/stat.h>
+#include "Decrypt/picosha2.h"
+#include "Decrypt/aes.h"
 
 #pragma region Alias to ID
 
@@ -791,15 +793,69 @@ uint* hkPrimeGlyphCacheLimitation(uint* a1, int a2, int a3, int a4)
 //不独立自主，永远找不到出路！
 #pragma endregion
 #pragma region RSBPathChangeAndDecryptRSB
+
+
+// ==========================================
+// C++11 兼容的编译期字符串混淆
+// ==========================================
+template <size_t... Is> struct index_sequence {};
+template <size_t N, size_t... Is> struct make_index_sequence : make_index_sequence<N - 1, N - 1, Is...> {};
+template <size_t... Is> struct make_index_sequence<0, Is...> : index_sequence<Is...> {};
+
+template <int XorKey, size_t N>
+struct ObfuscatedString {
+    char encrypted[N];
+    template <size_t... Is>
+    constexpr ObfuscatedString(const char* str, index_sequence<Is...>)
+        : encrypted{ static_cast<char>(str[Is] ^ (XorKey + Is))... } {}
+
+    inline std::string decrypt() const {
+        std::string s; s.resize(N - 1);
+        for (size_t i = 0; i < N - 1; ++i) s[i] = encrypted[i] ^ (XorKey + i);
+        return s;
+    }
+};
+#define HIDE_STR(s) (ObfuscatedString<(0x55 + __LINE__), sizeof(s)>(s, make_index_sequence<sizeof(s)>()).decrypt())
+
+
+
 // 临时文件路径列表
 static std::vector<std::string> g_tempFiles;
 // 解密函数！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
 //你的解密函数放在这里！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
 void decrypt_rsb(uint8_t* data, size_t size) {
-    for (size_t i = 0; i < size; ++i) {
-        data[i] ^= 0x5A;
+    if (size < 20) return;
+
+    // 1. 校验 Magic (现在顺序固定了)
+    if (memcmp(data, "RSB2", 4) != 0) return;
+
+    // 2. 提取 IV (直接从 data+4 拷贝)
+    uint8_t iv[16];
+    memcpy(iv, data + 4, 16);
+
+    // 3. 还原 Key
+    std::string pwd = HIDE_STR("RestructedLogic_Encrypt_V0");
+    uint8_t key[32];
+    picosha2::hash256_one_by_one hasher;
+    hasher.process(pwd.begin(), pwd.end());
+    hasher.finish();
+    hasher.get_hash_bytes(key, key + 32);
+
+    // 4. 原地解密
+    uint8_t* ciphertext = data + 20;
+    uint32_t ciphertext_len = (uint32_t)(size - 20);
+    struct AES_ctx ctx;
+    AES_init_ctx_iv(&ctx, key, iv);
+    AES_CBC_decrypt_buffer(&ctx, ciphertext, ciphertext_len);
+
+    // 5. 移除 Padding 并覆盖 Header
+    uint8_t pad = ciphertext[ciphertext_len - 1];
+    if (pad > 0 && pad <= 16) {
+        uint32_t plain_len = ciphertext_len - pad;
+        memmove(data, ciphertext, plain_len);
+        memset(data + plain_len, 0, size - plain_len);
+        // 此时 data[0] 就是解密后的原始第一个字节
     }
-    LOGI("Decrypted %zu bytes", size);
 }
 // 清理临时文件
 void cleanupTempFiles() {
@@ -903,7 +959,7 @@ int hkRSBPathRecorder(uint* a1) {
 
     // 创建缓存目录，必须改！这是你解密文件放的位置，虽然只存在1秒，但务必重视！！！！！！！！！！！！！！！！！！！！！！！！
     // 最好放在你的游戏的data目录（一般为/storage/emulated/0/Android/data/com.ea.game.pvz2_改版名，然后如果深入就加/文件夹）
-    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_na/cache";
+    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_row/cache";
     if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
         LOGI("RSBPathRecorder: Failed to create %s, errno=%d", cache_dir.c_str(), errno);
         return result;

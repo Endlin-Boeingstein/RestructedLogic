@@ -12,6 +12,9 @@
     </ClCompile>
     <ClCompile Include="RestructedLogic_ARM64_.cpp" />
     <ClCompile Include="memUtils.cpp" />
+    <ClCompile Include="Decrypt\aes.cpp">
+      <Filter>Decrypt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -38,6 +41,12 @@
     <ClInclude Include="PvZ2\WorldMap.h">
       <Filter>PvZ2</Filter>
     </ClInclude>
+    <ClInclude Include="Decrypt\aes.h">
+      <Filter>Decrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="Decrypt\picosha2.h">
+      <Filter>Decrypt</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x64">
@@ -63,6 +72,9 @@
     </Filter>
     <Filter Include="PvZ2">
       <UniqueIdentifier>{bb6aef8a-dbf0-4984-8a60-9f2142dc34cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Decrypt">
+      <UniqueIdentifier>{da75c95d-4d88-4a9e-9066-82bcfec5d38c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

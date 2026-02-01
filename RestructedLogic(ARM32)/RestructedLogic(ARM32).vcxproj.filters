@@ -21,6 +21,9 @@
     <ClCompile Include="x32\jni\libs\Substrate\SubstratePosixMemory.cpp">
       <Filter>x32\jni\libs\Substrate</Filter>
     </ClCompile>
+    <ClCompile Include="Decrypt\aes.cpp">
+      <Filter>Decrypt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RestructedLogic_ARM32_.h" />
@@ -71,6 +74,12 @@
     <ClInclude Include="PvZ2\WorldMap.h">
       <Filter>PvZ2</Filter>
     </ClInclude>
+    <ClInclude Include="Decrypt\aes.h">
+      <Filter>Decrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="Decrypt\picosha2.h">
+      <Filter>Decrypt</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x32">
@@ -102,6 +111,9 @@
     </Filter>
     <Filter Include="PvZ2">
       <UniqueIdentifier>{549f96a4-7f45-4185-8ccb-42938f2d78e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Decrypt">
+      <UniqueIdentifier>{998aadfa-bdd8-47a4-9248-7affc34d4eae}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
