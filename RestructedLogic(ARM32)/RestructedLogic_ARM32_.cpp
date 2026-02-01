@@ -14,6 +14,8 @@
 #include <sys/stat.h>
 #include "Decrypt/picosha2.h"
 #include "Decrypt/aes.h"
+#include <thread>
+#include <vector>
 
 #pragma region Alias to ID
 
@@ -824,16 +826,19 @@ static std::vector<std::string> g_tempFiles;
 // 解密函数！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
 //你的解密函数放在这里！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
 void decrypt_rsb(uint8_t* data, size_t size) {
-    if (size < 20) return;
+    // 基础检查：不仅要够头部的 20 字节，还得确保能放下至少 1 个加密块
+    if (size < 36) return;
 
-    // 1. 校验 Magic (现在顺序固定了)
+    // 1. 安全拦截：如果头已经是 "1bsr" (0x31 0x62 0x73 0x72)，说明已经解密过了
+    // 这样可以防止二次解密导致数据彻底损坏
+    if (data[0] == 0x31 && data[1] == 0x62 && data[2] == 0x73 && data[3] == 0x72) {
+        return;
+    }
+
+    // 2. 校验 Magic (RSB2)
     if (memcmp(data, "RSB2", 4) != 0) return;
 
-    // 2. 提取 IV (直接从 data+4 拷贝)
-    uint8_t iv[16];
-    memcpy(iv, data + 4, 16);
-
-    // 3. 还原 Key
+    // 3. 准备 Key (SHA256)
     std::string pwd = HIDE_STR("RestructedLogic_Encrypt_V0");
     uint8_t key[32];
     picosha2::hash256_one_by_one hasher;
@@ -841,20 +846,56 @@ void decrypt_rsb(uint8_t* data, size_t size) {
     hasher.finish();
     hasher.get_hash_bytes(key, key + 32);
 
-    // 4. 原地解密
-    uint8_t* ciphertext = data + 20;
-    uint32_t ciphertext_len = (uint32_t)(size - 20);
-    struct AES_ctx ctx;
-    AES_init_ctx_iv(&ctx, key, iv);
-    AES_CBC_decrypt_buffer(&ctx, ciphertext, ciphertext_len);
+    uint8_t* ciphertext_start = data + 20;
+    uint32_t total_cipher_len = (uint32_t)(size - 20);
+    uint32_t num_blocks = total_cipher_len / 16;
 
-    // 5. 移除 Padding 并覆盖 Header
-    uint8_t pad = ciphertext[ciphertext_len - 1];
+    // 4. 多线程并行解密设置
+    // 获取 CPU 核心数，通常 Android 手机返回 8
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    if (num_threads == 0) num_threads = 4;
+
+    uint32_t blocks_per_thread = num_blocks / num_threads;
+    std::vector<std::thread> threads;
+
+    for (unsigned int t = 0; t < num_threads; ++t) {
+        uint32_t start_block = t * blocks_per_thread;
+        uint32_t end_block = (t == num_threads - 1) ? num_blocks : (t + 1) * blocks_per_thread;
+
+        threads.emplace_back([=]() {
+            uint32_t current_offset = start_block * 16;
+            uint32_t thread_len = (end_block - start_block) * 16;
+            if (thread_len == 0) return;
+
+            struct AES_ctx ctx;
+            uint8_t thread_iv[16];
+
+            // CBC 解密的精髓：每一段的 IV 就是它前一个密文块
+            if (start_block == 0) {
+                // 第一段使用文件内置的初始 IV
+                memcpy(thread_iv, data + 4, 16);
+            }
+            else {
+                // 其他段使用前一个密文块作为其解密的初始 IV
+                memcpy(thread_iv, ciphertext_start + current_offset - 16, 16);
+            }
+
+            AES_init_ctx_iv(&ctx, key, thread_iv);
+            AES_CBC_decrypt_buffer(&ctx, ciphertext_start + current_offset, thread_len);
+            });
+    }
+
+    // 等待所有线程完成
+    for (auto& th : threads) th.join();
+
+    // 5. 移除 Padding 并原地移动内存
+    uint8_t pad = ciphertext_start[total_cipher_len - 1];
     if (pad > 0 && pad <= 16) {
-        uint32_t plain_len = ciphertext_len - pad;
-        memmove(data, ciphertext, plain_len);
+        uint32_t plain_len = total_cipher_len - pad;
+        // 核心移动：把明文覆盖到 data 最开头
+        memmove(data, ciphertext_start, plain_len);
+        // 清理末尾，确保“进化统计数据”逻辑读到的是干净数据
         memset(data + plain_len, 0, size - plain_len);
-        // 此时 data[0] 就是解密后的原始第一个字节
     }
 }
 // 清理临时文件
@@ -959,7 +1000,7 @@ int hkRSBPathRecorder(uint* a1) {
 
     // 创建缓存目录，必须改！这是你解密文件放的位置，虽然只存在1秒，但务必重视！！！！！！！！！！！！！！！！！！！！！！！！
     // 最好放在你的游戏的data目录（一般为/storage/emulated/0/Android/data/com.ea.game.pvz2_改版名，然后如果深入就加/文件夹）
-    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_row/cache";
+    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_na/cache";
     if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
         LOGI("RSBPathRecorder: Failed to create %s, errno=%d", cache_dir.c_str(), errno);
         return result;
@@ -1285,10 +1326,10 @@ void libRestructedLogic_ARM32__main()
     PVZ2HookFunction(PrimeGlyphCacheAddr, (void*)hkPrimeGlyphCacheLimitation, (void**)&oPrimeGlyphCacheLimitation, "PrimeGlyphCache::PrimeGlyphCacheLimitation");
 
 
-    PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)hkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
+    //PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)hkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
     //弃用，缩放率，没多大用PVZ2HookFunction(0x16460F0, (void*)hkSub_16460F0, (void**)&oSub_16460F0, "Sub_16460F0");
-    PVZ2HookFunction(BoardAddr, (void*)hkBoardCtor, (void**)&oBoardCtor, "Board::Board");
-    PVZ2HookFunction(BoardInitAddr, (void*)hkBoardInit, (void**)&oBoardInit, "Board::BoardInit");
+    //PVZ2HookFunction(BoardAddr, (void*)hkBoardCtor, (void**)&oBoardCtor, "Board::Board");
+    //PVZ2HookFunction(BoardInitAddr, (void*)hkBoardInit, (void**)&oBoardInit, "Board::BoardInit");
     
     PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
     
