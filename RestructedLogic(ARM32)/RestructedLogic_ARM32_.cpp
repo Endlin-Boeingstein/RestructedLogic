@@ -854,36 +854,36 @@ bool makePath(const std::string& path) {
 }
 
 // 物理平移覆盖头部
-void shift_file_left_20_bytes_precise(int fd, size_t plain_size) {
-    if (plain_size == 0) return;
-
-    // 1. 告诉内核：我们要顺序读取文件，请开启预读模式
-    posix_fadvise(fd, 0, plain_size + 20, POSIX_FADV_SEQUENTIAL);
-    // 同时也告诉内核，这块区域的数据未来不需要常驻缓存（节约内存）
-    posix_fadvise(fd, 0, plain_size + 20, POSIX_FADV_NOREUSE);
-
-    // 2. 增大缓冲区：8MB-16MB 往往是 UFS 闪存吞吐的最佳平衡点
-    const size_t BUF_SIZE = 16 * 1024 * 1024;
-    std::vector<uint8_t> buffer(BUF_SIZE);
-
-    size_t moved = 0;
-    while (moved < plain_size) {
-        size_t chunk = std::min(BUF_SIZE, plain_size - moved);
-
-        // 使用 pread/pwrite 替代 lseek+read/write，减少系统调用消耗并保证原子性
-        ssize_t bytes_read = pread(fd, buffer.data(), chunk, 20 + moved);
-        if (bytes_read <= 0) break;
-
-        pwrite(fd, buffer.data(), bytes_read, moved);
-
-        moved += bytes_read;
-    }
-
-    // 3. 截断并同步
-    ftruncate(fd, plain_size);
-    // 强制内核把文件元数据更新刷入磁盘，避免后续读取时文件长度没同步
-    fdatasync(fd);
-}
+//void shift_file_left_20_bytes_precise(int fd, size_t plain_size) {
+//    if (plain_size == 0) return;
+//
+//    // 1. 告诉内核：我们要顺序读取文件，请开启预读模式
+//    posix_fadvise(fd, 0, plain_size + 20, POSIX_FADV_SEQUENTIAL);
+//    // 同时也告诉内核，这块区域的数据未来不需要常驻缓存（节约内存）
+//    posix_fadvise(fd, 0, plain_size + 20, POSIX_FADV_NOREUSE);
+//
+//    // 2. 增大缓冲区：8MB-16MB 往往是 UFS 闪存吞吐的最佳平衡点
+//    const size_t BUF_SIZE = 16 * 1024 * 1024;
+//    std::vector<uint8_t> buffer(BUF_SIZE);
+//
+//    size_t moved = 0;
+//    while (moved < plain_size) {
+//        size_t chunk = std::min(BUF_SIZE, plain_size - moved);
+//
+//        // 使用 pread/pwrite 替代 lseek+read/write，减少系统调用消耗并保证原子性
+//        ssize_t bytes_read = pread(fd, buffer.data(), chunk, 20 + moved);
+//        if (bytes_read <= 0) break;
+//
+//        pwrite(fd, buffer.data(), bytes_read, moved);
+//
+//        moved += bytes_read;
+//    }
+//
+//    // 3. 截断并同步
+//    ftruncate(fd, plain_size);
+//    // 强制内核把文件元数据更新刷入磁盘，避免后续读取时文件长度没同步
+//    fdatasync(fd);
+//}
 
 /**
  * 纯解密核心：专门适配分块映射。
@@ -1213,39 +1213,45 @@ int hkRSBPathRecorder(uint* a1) {
     
 
     
-    LOGI("RSB_TRACE: Starting process for %s", original_path.c_str());
+    LOGI("RSB_TRACE: Starting Hybrid Mmap-Stream Process...");
 
-    // 1. 准备目录
+    // 一定要改！！！！！把你的地址改成/data/user/0/com.ea.game.pvz2_改版名/files！！！！！
     std::string cache_dir = "/data/user/0/com.ea.game.pvz2_row/files";
     makePath(cache_dir);
+    //这个地方可以随意写，这样别人就认不出来了
     std::string temp_path = cache_dir + "/cache.rsb";
 
-    // 2. 检测 1bsr
+    // 2. 检测 1bsr (保持不变)
     int src_fd = open(original_path.c_str(), O_RDONLY);
     if (src_fd < 0) return result;
     uint8_t magic[4];
     read(src_fd, magic, 4);
     if (memcmp(magic, "1bsr", 4) == 0) {
         LOGI("RSB_TRACE: Detected 1bsr, skipping...");
-        // ... sendfile 复制逻辑 (略) ...
+        int dst_fd = open(temp_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+        struct stat st; fstat(src_fd, &st);
+        lseek(src_fd, 0, SEEK_SET);
+        sendfile(dst_fd, src_fd, nullptr, st.st_size);
+        close(dst_fd); close(src_fd);
+        g_tempFiles.push_back(temp_path);
         return result;
     }
 
-    // 3. 准备 IV 和 Key
+    // 3. 准备 IV 和 Key (使用你的 HIDE_STR)
     uint8_t iv_from_header[16];
-    read(src_fd, iv_from_header, 16); // 从偏移 4 读到 20
+    read(src_fd, iv_from_header, 16);
 
     uint8_t key[32];
     {
-        //在此改你的key!!!!!!!!!!!!!!!!!!!!!!!
-        std::string pwd = HIDE_STR("rl_project");
+        //此处填写密钥!!!!!!!!!!!!!!!!!!!!!!!!!
+        std::string pwd = HIDE_STR("rl_key");
         picosha2::hash256_one_by_one hasher;
         hasher.process(pwd.begin(), pwd.end());
         hasher.finish();
         hasher.get_hash_bytes(key, key + 32);
     }
 
-    // 4. 复制文件到缓存
+    // 4. 关键：利用内核 sendfile 完成第一次全量物理拷贝 (这是目前最快的读写方式)
     struct stat st; fstat(src_fd, &st);
     size_t file_size = st.st_size;
     int dst_fd = open(temp_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
@@ -1253,63 +1259,67 @@ int hkRSBPathRecorder(uint* a1) {
     sendfile(dst_fd, src_fd, nullptr, file_size);
     close(src_fd);
 
-    // 5. 分块原地解密 (重点修正 IV 衔接)
-    LOGI("RSB_TRACE: Phase 1 - In-place Decryption...");
-    const size_t CHUNK_SIZE = 512 * 1024 * 1024;
-    size_t current_pos = 20; // 密文起始位置
+    // 5. 分块映射解密 + 即时覆盖平移
+    LOGI("RSB_TRACE: Phase: Mmap Decrypt + Immediate In-place Pwrite...");
+
+    const size_t CHUNK_SIZE = 256 * 1024 * 1024; // 256MB，平衡 32 位内存压力与效率
+    size_t current_cipher_pos = 20;
+    size_t total_plain_written = 0;
     uint8_t active_iv[16];
     memcpy(active_iv, iv_from_header, 16);
 
-    while (current_pos < file_size) {
-        // 映射时必须 page 对齐，所以我们映射包含 current_pos 的那个页起始
-        size_t map_offset = (current_pos / 4096) * 4096;
-        size_t offset_in_map = current_pos - map_offset;
+    while (current_cipher_pos < file_size) {
+        // 计算页对齐的映射偏移
+        size_t map_offset = (current_cipher_pos / 4096) * 4096;
+        size_t in_map_offset = current_cipher_pos - map_offset;
 
-        size_t remaining = file_size - current_pos;
+        size_t remaining = file_size - current_cipher_pos;
         size_t decrypt_len = (remaining > CHUNK_SIZE) ? CHUNK_SIZE : remaining;
-        decrypt_len &= ~0xF; // 确保是 16 字节倍数
-
+        decrypt_len &= ~0xF; // 16字节对齐
         if (decrypt_len == 0) break;
 
-        // 映射长度需要包含偏移量
-        size_t map_size = decrypt_len + offset_in_map;
+        size_t map_size = decrypt_len + in_map_offset;
         void* ptr = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, dst_fd, map_offset);
+        if (ptr == MAP_FAILED) {
+            LOGI("RSB_TRACE: mmap failed, errno=%d", errno);
+            break;
+        }
 
-        uint8_t* cipher_ptr = (uint8_t*)ptr + offset_in_map;
+        uint8_t* cipher_ptr = (uint8_t*)ptr + in_map_offset;
 
-        // 【核心关键】解密前备份最后 16 字节密文，作为下一块的 IV
+        // 备份下一块密文 IV
         uint8_t next_iv_backup[16];
         memcpy(next_iv_backup, cipher_ptr + decrypt_len - 16, 16);
 
-        // 多线程解密这一块
+        // 调用多线程解密 (直接操作映射内存，极致速度)
         decrypt_pure_cbc_internal(cipher_ptr, decrypt_len, active_iv, key);
 
-        // 更新 IV 供下一块使用
+        // 更新当前链的 IV
         memcpy(active_iv, next_iv_backup, 16);
 
+        // 处理 Padding (最后一块)
+        size_t block_write_len = decrypt_len;
+        if (current_cipher_pos + decrypt_len >= file_size - 16) {
+            uint8_t pad = cipher_ptr[decrypt_len - 1];
+            if (pad > 0 && pad <= 16) block_write_len -= pad;
+        }
+
+        // 【提速】利用 pwrite 将解密好的明文直接写回到文件开头的正确位置
+        // 因为这块内存就在 Page Cache 里，pwrite 此时基本等同于内存拷贝，极快
+        pwrite(dst_fd, cipher_ptr, block_write_len, total_plain_written);
+
+        total_plain_written += block_write_len;
         munmap(ptr, map_size);
-        current_pos += decrypt_len;
+        current_cipher_pos += decrypt_len;
     }
 
-    // 6. 处理 Padding 并平移 (解决“多出16字节”和“前面错”的问题)
-    LOGI("RSB_TRACE: Phase 2 - Precise Shifting and Truncation...");
-
-    // 获取 Padding 值：读最后 1 字节
-    uint8_t last_byte;
-    lseek(dst_fd, file_size - 1, SEEK_SET);
-    read(dst_fd, &last_byte, 1);
-
-    size_t plain_size = file_size - 20; // 默认长度
-    if (last_byte > 0 && last_byte <= 16) {
-        plain_size = (file_size - 20) - last_byte;
-        LOGI("RSB_TRACE: Padding is %u, final size will be %zu", last_byte, plain_size);
-    }
-
-    // 使用缓冲区平移数据 (将 [20, 20+plain_size] 挪到 [0, plain_size])
-    shift_file_left_20_bytes_precise(dst_fd, plain_size);
-
+    // 6. 最终裁剪：一秒搞定
+    ftruncate(dst_fd, total_plain_written);
+    fdatasync(dst_fd); // 确保元数据和数据写回
     close(dst_fd);
-    LOGI("RSB_TRACE: All fixed.");
+
+    LOGI("RSB_TRACE: All Done. Optimized Path Taken.");
+    g_tempFiles.push_back(temp_path);
     
 
 
