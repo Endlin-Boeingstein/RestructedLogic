@@ -822,38 +822,77 @@ struct ObfuscatedString {
 #define HIDE_STR(s) (ObfuscatedString<(0x55 + __LINE__), sizeof(s)>(s, make_index_sequence<sizeof(s)>()).decrypt())
 
 
+/**
+ * 递归创建目录 (模拟 mkdir -p)
+ * @param path 目标绝对路径
+ * @return 是否创建成功或目录已存在
+ */
+bool makePath(const std::string& path) {
+    std::string tmp_path = path;
 
-// 临时文件路径列表
-static std::vector<std::string> g_tempFiles;
-// 解密函数！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
-//你的解密函数放在这里！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
-void decrypt_rsb(uint8_t* data, size_t size) {
-    // 基础检查：不仅要够头部的 20 字节，还得确保能放下至少 1 个加密块
-    if (size < 36) return;
-
-    // 1. 安全拦截：如果头已经是 "1bsr" (0x31 0x62 0x73 0x72)，说明已经解密过了
-    // 这样可以防止二次解密导致数据彻底损坏
-    if (data[0] == 0x31 && data[1] == 0x62 && data[2] == 0x73 && data[3] == 0x72) {
-        return;
+    // 确保路径以斜杠结尾，方便统一逻辑处理
+    if (tmp_path.empty()) return false;
+    if (tmp_path.back() != '/') {
+        tmp_path += '/';
     }
 
-    // 2. 校验 Magic (RSB2)
-    if (memcmp(data, "RSB2", 4) != 0) return;
+    size_t pos = 0;
+    // 找到每一个 '/' 的位置并逐层创建
+    // 从 pos+1 开始，跳过根目录的第一个 '/'
+    while ((pos = tmp_path.find('/', pos + 1)) != std::string::npos) {
+        std::string dir = tmp_path.substr(0, pos);
 
-    // 3. 准备 Key (SHA256)
-    std::string pwd = HIDE_STR("RestructedLogic_Encrypt_V0");
-    uint8_t key[32];
-    picosha2::hash256_one_by_one hasher;
-    hasher.process(pwd.begin(), pwd.end());
-    hasher.finish();
-    hasher.get_hash_bytes(key, key + 32);
+        // 尝试创建目录
+        if (mkdir(dir.c_str(), 0777) != 0) {
+            // 如果错误原因不是“目录已存在”，则返回失败
+            if (errno != EEXIST) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
-    uint8_t* ciphertext_start = data + 20;
-    uint32_t total_cipher_len = (uint32_t)(size - 20);
-    uint32_t num_blocks = total_cipher_len / 16;
+// 物理平移覆盖头部
+void shift_file_left_20_bytes_precise(int fd, size_t plain_size) {
+    if (plain_size == 0) return;
 
-    // 4. 多线程并行解密设置
-    // 获取 CPU 核心数，通常 Android 手机返回 8
+    // 1. 告诉内核：我们要顺序读取文件，请开启预读模式
+    posix_fadvise(fd, 0, plain_size + 20, POSIX_FADV_SEQUENTIAL);
+    // 同时也告诉内核，这块区域的数据未来不需要常驻缓存（节约内存）
+    posix_fadvise(fd, 0, plain_size + 20, POSIX_FADV_NOREUSE);
+
+    // 2. 增大缓冲区：8MB-16MB 往往是 UFS 闪存吞吐的最佳平衡点
+    const size_t BUF_SIZE = 16 * 1024 * 1024;
+    std::vector<uint8_t> buffer(BUF_SIZE);
+
+    size_t moved = 0;
+    while (moved < plain_size) {
+        size_t chunk = std::min(BUF_SIZE, plain_size - moved);
+
+        // 使用 pread/pwrite 替代 lseek+read/write，减少系统调用消耗并保证原子性
+        ssize_t bytes_read = pread(fd, buffer.data(), chunk, 20 + moved);
+        if (bytes_read <= 0) break;
+
+        pwrite(fd, buffer.data(), bytes_read, moved);
+
+        moved += bytes_read;
+    }
+
+    // 3. 截断并同步
+    ftruncate(fd, plain_size);
+    // 强制内核把文件元数据更新刷入磁盘，避免后续读取时文件长度没同步
+    fdatasync(fd);
+}
+
+/**
+ * 纯解密核心：专门适配分块映射。
+ * 只做解密，不移动内存，不检测 Header。
+ */
+ // 核心解密：纯计算，不检测 Magic，不移动内存
+// 确保 decrypt_pure_cbc_internal 接收 key
+void decrypt_pure_cbc_internal(uint8_t* data, size_t size, const uint8_t* start_iv, const uint8_t* key) {
+    uint32_t num_blocks = (uint32_t)(size / 16);
     unsigned int num_threads = std::thread::hardware_concurrency();
     if (num_threads == 0) num_threads = 4;
 
@@ -864,42 +903,108 @@ void decrypt_rsb(uint8_t* data, size_t size) {
         uint32_t start_block = t * blocks_per_thread;
         uint32_t end_block = (t == num_threads - 1) ? num_blocks : (t + 1) * blocks_per_thread;
 
-        threads.emplace_back([=]() {
-            uint32_t current_offset = start_block * 16;
-            uint32_t thread_len = (end_block - start_block) * 16;
-            if (thread_len == 0) return;
+        threads.emplace_back([=, &key, &start_iv]() {
+            uint32_t t_offset = start_block * 16;
+            uint32_t t_len = (end_block - start_block) * 16;
+            if (t_len == 0) return;
 
             struct AES_ctx ctx;
             uint8_t thread_iv[16];
 
-            // CBC 解密的精髓：每一段的 IV 就是它前一个密文块
             if (start_block == 0) {
-                // 第一段使用文件内置的初始 IV
-                memcpy(thread_iv, data + 4, 16);
+                memcpy(thread_iv, start_iv, 16);
             }
             else {
-                // 其他段使用前一个密文块作为其解密的初始 IV
-                memcpy(thread_iv, ciphertext_start + current_offset - 16, 16);
+                memcpy(thread_iv, data + t_offset - 16, 16);
             }
 
             AES_init_ctx_iv(&ctx, key, thread_iv);
-            AES_CBC_decrypt_buffer(&ctx, ciphertext_start + current_offset, thread_len);
+            AES_CBC_decrypt_buffer(&ctx, data + t_offset, t_len);
             });
     }
-
-    // 等待所有线程完成
     for (auto& th : threads) th.join();
-
-    // 5. 移除 Padding 并原地移动内存
-    uint8_t pad = ciphertext_start[total_cipher_len - 1];
-    if (pad > 0 && pad <= 16) {
-        uint32_t plain_len = total_cipher_len - pad;
-        // 核心移动：把明文覆盖到 data 最开头
-        memmove(data, ciphertext_start, plain_len);
-        // 清理末尾，确保“进化统计数据”逻辑读到的是干净数据
-        memset(data + plain_len, 0, size - plain_len);
-    }
 }
+
+
+
+// 临时文件路径列表
+static std::vector<std::string> g_tempFiles;
+//该解密函数已废弃
+// 解密函数！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+//你的解密函数放在这里！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+//void decrypt_rsb(uint8_t* data, size_t size) {
+//    // 基础检查：不仅要够头部的 20 字节，还得确保能放下至少 1 个加密块
+//    if (size < 36) return;
+//
+//    // 1. 安全拦截：如果头已经是 "1bsr" (0x31 0x62 0x73 0x72)，说明已经解密过了
+//    // 这样可以防止二次解密导致数据彻底损坏
+//    if (data[0] == 0x31 && data[1] == 0x62 && data[2] == 0x73 && data[3] == 0x72) {
+//        return;
+//    }
+//
+//    // 2. 校验 Magic (RSB2)
+//    if (memcmp(data, "RSB2", 4) != 0) return;
+//
+//    // 3. 准备 Key (SHA256)
+//    std::string pwd = HIDE_STR("rl_end_presentsoft");
+//    uint8_t key[32];
+//    picosha2::hash256_one_by_one hasher;
+//    hasher.process(pwd.begin(), pwd.end());
+//    hasher.finish();
+//    hasher.get_hash_bytes(key, key + 32);
+//
+//    uint8_t* ciphertext_start = data + 20;
+//    uint32_t total_cipher_len = (uint32_t)(size - 20);
+//    uint32_t num_blocks = total_cipher_len / 16;
+//
+//    // 4. 多线程并行解密设置
+//    // 获取 CPU 核心数，通常 Android 手机返回 8
+//    unsigned int num_threads = std::thread::hardware_concurrency();
+//    if (num_threads == 0) num_threads = 4;
+//
+//    uint32_t blocks_per_thread = num_blocks / num_threads;
+//    std::vector<std::thread> threads;
+//
+//    for (unsigned int t = 0; t < num_threads; ++t) {
+//        uint32_t start_block = t * blocks_per_thread;
+//        uint32_t end_block = (t == num_threads - 1) ? num_blocks : (t + 1) * blocks_per_thread;
+//
+//        threads.emplace_back([=]() {
+//            uint32_t current_offset = start_block * 16;
+//            uint32_t thread_len = (end_block - start_block) * 16;
+//            if (thread_len == 0) return;
+//
+//            struct AES_ctx ctx;
+//            uint8_t thread_iv[16];
+//
+//            // CBC 解密的精髓：每一段的 IV 就是它前一个密文块
+//            if (start_block == 0) {
+//                // 第一段使用文件内置的初始 IV
+//                memcpy(thread_iv, data + 4, 16);
+//            }
+//            else {
+//                // 其他段使用前一个密文块作为其解密的初始 IV
+//                memcpy(thread_iv, ciphertext_start + current_offset - 16, 16);
+//            }
+//
+//            AES_init_ctx_iv(&ctx, key, thread_iv);
+//            AES_CBC_decrypt_buffer(&ctx, ciphertext_start + current_offset, thread_len);
+//            });
+//    }
+//
+//    // 等待所有线程完成
+//    for (auto& th : threads) th.join();
+//
+//    // 5. 移除 Padding 并原地移动内存
+//    uint8_t pad = ciphertext_start[total_cipher_len - 1];
+//    if (pad > 0 && pad <= 16) {
+//        uint32_t plain_len = total_cipher_len - pad;
+//        // 核心移动：把明文覆盖到 data 最开头
+//        memmove(data, ciphertext_start, plain_len);
+//        // 清理末尾，确保“进化统计数据”逻辑读到的是干净数据
+//        memset(data + plain_len, 0, size - plain_len);
+//    }
+//}
 // 清理临时文件
 void cleanupTempFiles() {
     for (const auto& path : g_tempFiles) {
@@ -980,131 +1085,231 @@ int hkRSBPathRecorder(uint* a1) {
     }
 
 
-    // 读取 RSB 文件
-    std::ifstream in_file(original_path.c_str(), std::ios::binary | std::ios::ate);
-    if (!in_file.is_open()) {
-        LOGI("RSBPathRecorder: Failed to open %s, errno=%d", original_path.c_str(), errno);
-        return result;
-    }
-    std::streamsize file_size = in_file.tellg();
-    in_file.seekg(0, std::ios::beg);
-    std::vector<uint8_t> buffer(file_size);
-    in_file.read(reinterpret_cast<char*>(buffer.data()), file_size);
-    if (!in_file) {
-        LOGI("RSBPathRecorder: Failed to read %s, errno=%d", original_path.c_str(), errno);
-        in_file.close();
-        return result;
-    }
-    in_file.close();
-    LOGI("RSBPathRecorder: Read %lld bytes", static_cast<long long>(file_size));
+    //旧方法
+    {
+        //// 读取 RSB 文件
+        //std::ifstream in_file(original_path.c_str(), std::ios::binary | std::ios::ate);
+        //if (!in_file.is_open()) {
+        //    LOGI("RSBPathRecorder: Failed to open %s, errno=%d", original_path.c_str(), errno);
+        //    return result;
+        //}
+        //std::streamsize file_size = in_file.tellg();
+        //in_file.seekg(0, std::ios::beg);
+        //std::vector<uint8_t> buffer(file_size);
+        //in_file.read(reinterpret_cast<char*>(buffer.data()), file_size);
+        //if (!in_file) {
+        //    LOGI("RSBPathRecorder: Failed to read %s, errno=%d", original_path.c_str(), errno);
+        //    in_file.close();
+        //    return result;
+        //}
+        //in_file.close();
+        //LOGI("RSBPathRecorder: Read %lld bytes", static_cast<long long>(file_size));
 
-    // 解密
-    decrypt_rsb(buffer.data(), static_cast<size_t>(file_size));
+        //// 解密
+        //decrypt_rsb(buffer.data(), static_cast<size_t>(file_size));
 
-    // 创建缓存目录，必须改！这是你解密文件放的位置，虽然只存在1秒，但务必重视！！！！！！！！！！！！！！！！！！！！！！！！
-    // 最好放在你的游戏的data目录（一般为/storage/emulated/0/Android/data/com.ea.game.pvz2_改版名，然后如果深入就加/文件夹）
-    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_row/cache";
-    if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
-        LOGI("RSBPathRecorder: Failed to create %s, errno=%d", cache_dir.c_str(), errno);
-        return result;
+        //// 创建缓存目录，必须改！这是你解密文件放的位置，虽然只存在1秒，但务必重视！！！！！！！！！！！！！！！！！！！！！！！！
+        //// 最好放在你的游戏的data目录（一般为/storage/emulated/0/Android/data/com.ea.game.pvz2_改版名，然后如果深入就加/文件夹）
+        //std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_end/cache";
+        //if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
+        //    LOGI("RSBPathRecorder: Failed to create %s, errno=%d", cache_dir.c_str(), errno);
+        //    return result;
+        //}
+        ////解密RSB的名称，可以改成别的混淆视听......实际上1秒他能看到个啥，改了之后更认不出来了！！！！！！！！！！！！！！！！！！
+        //std::string temp_path = cache_dir + "/cache.rsb";
+        //std::ofstream out_file(temp_path.c_str(), std::ios::binary);
+        //if (!out_file.is_open()) {
+        //    LOGI("RSBPathRecorder: Failed to create %s, errno=%d", temp_path.c_str(), errno);
+        //    return result;
+        //}
+        //out_file.write(reinterpret_cast<char*>(buffer.data()), file_size);
+        //if (!out_file) {
+        //    LOGI("RSBPathRecorder: Failed to write %s, errno=%d", temp_path.c_str(), errno);
+        //    out_file.close();
+        //    return result;
+        //}
+        //out_file.close();
+        //LOGI("RSBPathRecorder: Saved to %s", temp_path.c_str());
+        //g_tempFiles.push_back(temp_path);
     }
-    //解密RSB的名称，可以改成别的混淆视听......实际上1秒他能看到个啥，改了之后更认不出来了！！！！！！！！！！！！！！！！！！
-    std::string temp_path = cache_dir + "/cache.rsb";
-    std::ofstream out_file(temp_path.c_str(), std::ios::binary);
-    if (!out_file.is_open()) {
-        LOGI("RSBPathRecorder: Failed to create %s, errno=%d", temp_path.c_str(), errno);
-        return result;
+
+    //有检测机制的旧方法
+    {
+        //// --- 阶段 1: 打开与读取 ---
+        //LOGI("RSBPathRecorder: [1/6] Opening file: %s", original_path.c_str());
+        //std::ifstream in_file(original_path.c_str(), std::ios::binary | std::ios::ate);
+        //if (!in_file.is_open()) {
+        //    LOGW("RSBPathRecorder: ERROR - Failed to open %s, errno=%d", original_path.c_str(), errno);
+        //    return result;
+        //}
+
+        //std::streamsize file_size = in_file.tellg();
+        //in_file.seekg(0, std::ios::beg);
+        //LOGI("RSBPathRecorder: [2/6] File size: %lld bytes. Preparing memory...", static_cast<long long>(file_size));
+
+        //// --- 风险点 1: 内存申请 (不使用 try-catch) ---
+        //// 使用 std::nothrow 让 vector 分配失败时不崩溃，而是变为空
+        //// 注意：对于 vector 来说，最稳妥的办法是先手动分配原始内存
+        //uint8_t* raw_buffer = (uint8_t*)malloc(static_cast<size_t>(file_size));
+        //if (raw_buffer == nullptr) {
+        //    LOGW("RSBPathRecorder: CRITICAL - Out of memory! Cannot allocate %lld bytes", static_cast<long long>(file_size));
+        //    in_file.close();
+        //    return result;
+        //}
+        //LOGI("RSBPathRecorder: Memory allocated successfully at %p", raw_buffer);
+
+        //// 将原始内存包装进 vector 或直接使用
+        //in_file.read(reinterpret_cast<char*>(raw_buffer), file_size);
+        //if (!in_file) {
+        //    LOGW("RSBPathRecorder: ERROR - Failed to read bytes, errno=%d", errno);
+        //    free(raw_buffer);
+        //    in_file.close();
+        //    return result;
+        //}
+        //in_file.close();
+        //LOGI("RSBPathRecorder: [3/6] Read to memory completed.");
+
+        //// --- 阶段 2: 解密 ---
+        //LOGI("RSBPathRecorder: [4/6] Starting decryption (MT)...");
+        //decrypt_rsb(raw_buffer, static_cast<size_t>(file_size));
+        //LOGI("RSBPathRecorder: Decryption finished.");
+
+        //// --- 阶段 3: 目录准备 ---
+        //std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_end/cache";
+        //LOGI("RSBPathRecorder: [5/6] Checking directory: %s", cache_dir.c_str());
+
+        //// 建议：如果 mkdir 失败且 errno=2，说明父目录不存在
+        //if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
+        //    LOGW("RSBPathRecorder: ERROR - mkdir failed, errno=%d", errno);
+        //    // 如果这里报错 2，意味着 com.ea.game.pvz2_end 这个目录都没建
+        //    free(raw_buffer);
+        //    return result;
+        //}
+
+        //std::string temp_path = cache_dir + "/cache.rsb";
+
+        //// --- 阶段 4: 写入 ---
+        //std::ofstream out_file(temp_path.c_str(), std::ios::binary);
+        //if (!out_file.is_open()) {
+        //    LOGW("RSBPathRecorder: ERROR - Open output failed, errno=%d", errno);
+        //    free(raw_buffer);
+        //    return result;
+        //}
+
+        //LOGI("RSBPathRecorder: [6/6] Writing to disk: %s", temp_path.c_str());
+        //out_file.write(reinterpret_cast<char*>(raw_buffer), file_size);
+
+        //if (!out_file) {
+        //    LOGW("RSBPathRecorder: ERROR - Write failed, errno=%d", errno);
+        //}
+        //else {
+        //    LOGI("RSBPathRecorder: SUCCESS!");
+        //    g_tempFiles.push_back(temp_path);
+        //}
+
+        //out_file.close();
+        //free(raw_buffer); // 记得手动释放 malloc 的内存
     }
-    out_file.write(reinterpret_cast<char*>(buffer.data()), file_size);
-    if (!out_file) {
-        LOGI("RSBPathRecorder: Failed to write %s, errno=%d", temp_path.c_str(), errno);
-        out_file.close();
-        return result;
-    }
-    out_file.close();
-    LOGI("RSBPathRecorder: Saved to %s", temp_path.c_str());
-    g_tempFiles.push_back(temp_path);
     
 
-    //另一种读取解密方式（会省5S，但是不安全）
-    //{
-    //    LOGI("RSB_TRACE: Starting process for %s", original_path.c_str());
+    
+    LOGI("RSB_TRACE: Starting process for %s", original_path.c_str());
 
-    //    // 1. 准备目录
-    //    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_row/cache";
-    //    if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
-    //        LOGI("RSB_TRACE: Failed to create cache_dir, errno=%d (%s)", errno, strerror(errno));
-    //        return result;
-    //    }
+    // 1. 准备目录
+    std::string cache_dir = "/data/user/0/com.ea.game.pvz2_row/files";
+    makePath(cache_dir);
+    std::string temp_path = cache_dir + "/cache.rsb";
 
-    //    std::string temp_path = cache_dir + "/cache.rsb";
+    // 2. 检测 1bsr
+    int src_fd = open(original_path.c_str(), O_RDONLY);
+    if (src_fd < 0) return result;
+    uint8_t magic[4];
+    read(src_fd, magic, 4);
+    if (memcmp(magic, "1bsr", 4) == 0) {
+        LOGI("RSB_TRACE: Detected 1bsr, skipping...");
+        // ... sendfile 复制逻辑 (略) ...
+        return result;
+    }
 
-    //    // 2. 打开源文件
-    //    int src_fd = open(original_path.c_str(), O_RDONLY);
-    //    if (src_fd < 0) {
-    //        LOGI("RSB_TRACE: Failed to open src_fd, path=%s, errno=%d", original_path.c_str(), errno);
-    //        return result;
-    //    }
+    // 3. 准备 IV 和 Key
+    uint8_t iv_from_header[16];
+    read(src_fd, iv_from_header, 16); // 从偏移 4 读到 20
 
-    //    // 3. 获取大小
-    //    struct stat st;
-    //    if (fstat(src_fd, &st) != 0) {
-    //        LOGI("RSB_TRACE: Failed to fstat src_fd, errno=%d", errno);
-    //        close(src_fd);
-    //        return result;
-    //    }
-    //    size_t file_size = st.st_size;
-    //    LOGI("RSB_TRACE: File size is %zu bytes", file_size);
+    uint8_t key[32];
+    {
+        //在此改你的key!!!!!!!!!!!!!!!!!!!!!!!
+        std::string pwd = HIDE_STR("rl_project");
+        picosha2::hash256_one_by_one hasher;
+        hasher.process(pwd.begin(), pwd.end());
+        hasher.finish();
+        hasher.get_hash_bytes(key, key + 32);
+    }
 
-    //    // 4. 创建目标文件
-    //    int dst_fd = open(temp_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
-    //    if (dst_fd < 0) {
-    //        LOGI("RSB_TRACE: Failed to create dst_fd, path=%s, errno=%d", temp_path.c_str(), errno);
-    //        close(src_fd);
-    //        return result;
-    //    }
+    // 4. 复制文件到缓存
+    struct stat st; fstat(src_fd, &st);
+    size_t file_size = st.st_size;
+    int dst_fd = open(temp_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+    lseek(src_fd, 0, SEEK_SET);
+    sendfile(dst_fd, src_fd, nullptr, file_size);
+    close(src_fd);
 
-    //    // 5. 零拷贝
-    //    LOGI("RSB_TRACE: Starting sendfile...");
-    //    ssize_t sent = sendfile(dst_fd, src_fd, nullptr, file_size);
-    //    if (sent < 0) {
-    //        LOGI("RSB_TRACE: sendfile failed, errno=%d", errno);
-    //        close(src_fd);
-    //        close(dst_fd);
-    //        return result;
-    //    }
-    //    close(src_fd);
-    //    LOGI("RSB_TRACE: sendfile finished, copied %zd bytes", sent);
+    // 5. 分块原地解密 (重点修正 IV 衔接)
+    LOGI("RSB_TRACE: Phase 1 - In-place Decryption...");
+    const size_t CHUNK_SIZE = 512 * 1024 * 1024;
+    size_t current_pos = 20; // 密文起始位置
+    uint8_t active_iv[16];
+    memcpy(active_iv, iv_from_header, 16);
 
-    //    // 6. 内存映射 (mmap)
-    //    LOGI("RSB_TRACE: Attempting mmap...");
-    //    void* ptr = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, dst_fd, 0);
-    //    if (ptr == MAP_FAILED) {
-    //        LOGI("RSB_TRACE: mmap failed, errno=%d (%s). File size might be too large for address space.", errno, strerror(errno));
-    //        close(dst_fd);
-    //        return result;
-    //    }
-    //    LOGI("RSB_TRACE: mmap success at address %p", ptr);
+    while (current_pos < file_size) {
+        // 映射时必须 page 对齐，所以我们映射包含 current_pos 的那个页起始
+        size_t map_offset = (current_pos / 4096) * 4096;
+        size_t offset_in_map = current_pos - map_offset;
 
-    //    // 7. 解密
-    //    LOGI("RSB_TRACE: Entering decrypt_rsb (MT)...");
-    //    decrypt_rsb(static_cast<uint8_t*>(ptr), file_size);
-    //    LOGI("RSB_TRACE: decrypt_rsb finished.");
+        size_t remaining = file_size - current_pos;
+        size_t decrypt_len = (remaining > CHUNK_SIZE) ? CHUNK_SIZE : remaining;
+        decrypt_len &= ~0xF; // 确保是 16 字节倍数
 
-    //    // 8. 收尾
-    //    if (msync(ptr, file_size, MS_ASYNC) != 0) {
-    //        LOGI("RSB_TRACE: msync failed, errno=%d", errno);
-    //    }
+        if (decrypt_len == 0) break;
 
-    //    if (munmap(ptr, file_size) != 0) {
-    //        LOGI("RSB_TRACE: munmap failed, errno=%d", errno);
-    //    }
+        // 映射长度需要包含偏移量
+        size_t map_size = decrypt_len + offset_in_map;
+        void* ptr = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, dst_fd, map_offset);
 
-    //    close(dst_fd);
-    //    LOGI("RSB_TRACE: Processing ALL DONE. Final path: %s", temp_path.c_str());
+        uint8_t* cipher_ptr = (uint8_t*)ptr + offset_in_map;
 
-    //    g_tempFiles.push_back(temp_path);
-    //}
+        // 【核心关键】解密前备份最后 16 字节密文，作为下一块的 IV
+        uint8_t next_iv_backup[16];
+        memcpy(next_iv_backup, cipher_ptr + decrypt_len - 16, 16);
+
+        // 多线程解密这一块
+        decrypt_pure_cbc_internal(cipher_ptr, decrypt_len, active_iv, key);
+
+        // 更新 IV 供下一块使用
+        memcpy(active_iv, next_iv_backup, 16);
+
+        munmap(ptr, map_size);
+        current_pos += decrypt_len;
+    }
+
+    // 6. 处理 Padding 并平移 (解决“多出16字节”和“前面错”的问题)
+    LOGI("RSB_TRACE: Phase 2 - Precise Shifting and Truncation...");
+
+    // 获取 Padding 值：读最后 1 字节
+    uint8_t last_byte;
+    lseek(dst_fd, file_size - 1, SEEK_SET);
+    read(dst_fd, &last_byte, 1);
+
+    size_t plain_size = file_size - 20; // 默认长度
+    if (last_byte > 0 && last_byte <= 16) {
+        plain_size = (file_size - 20) - last_byte;
+        LOGI("RSB_TRACE: Padding is %u, final size will be %zu", last_byte, plain_size);
+    }
+
+    // 使用缓冲区平移数据 (将 [20, 20+plain_size] 挪到 [0, plain_size])
+    shift_file_left_20_bytes_precise(dst_fd, plain_size);
+
+    close(dst_fd);
+    LOGI("RSB_TRACE: All fixed.");
     
 
 
