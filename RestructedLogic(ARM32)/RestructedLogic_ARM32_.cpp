@@ -16,7 +16,9 @@
 #include "Decrypt/aes.h"
 #include <thread>
 #include <vector>
-
+#include <sys/mman.h>
+#include <sys/sendfile.h>
+#include <fcntl.h>
 #pragma region Alias to ID
 
 class ZombieAlmanac
@@ -977,6 +979,7 @@ int hkRSBPathRecorder(uint* a1) {
         // 继续处理，允许非预期路径
     }
 
+
     // 读取 RSB 文件
     std::ifstream in_file(original_path.c_str(), std::ios::binary | std::ios::ate);
     if (!in_file.is_open()) {
@@ -1000,7 +1003,7 @@ int hkRSBPathRecorder(uint* a1) {
 
     // 创建缓存目录，必须改！这是你解密文件放的位置，虽然只存在1秒，但务必重视！！！！！！！！！！！！！！！！！！！！！！！！
     // 最好放在你的游戏的data目录（一般为/storage/emulated/0/Android/data/com.ea.game.pvz2_改版名，然后如果深入就加/文件夹）
-    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_na/cache";
+    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_end/cache";
     if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
         LOGI("RSBPathRecorder: Failed to create %s, errno=%d", cache_dir.c_str(), errno);
         return result;
@@ -1021,6 +1024,96 @@ int hkRSBPathRecorder(uint* a1) {
     out_file.close();
     LOGI("RSBPathRecorder: Saved to %s", temp_path.c_str());
     g_tempFiles.push_back(temp_path);
+    
+
+    //另一种读取解密方式（会省5S，但是不安全）
+    //{
+    //    LOGI("RSB_TRACE: Starting process for %s", original_path.c_str());
+
+    //    // 1. 准备目录
+    //    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_row/cache";
+    //    if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
+    //        LOGI("RSB_TRACE: Failed to create cache_dir, errno=%d (%s)", errno, strerror(errno));
+    //        return result;
+    //    }
+
+    //    std::string temp_path = cache_dir + "/cache.rsb";
+
+    //    // 2. 打开源文件
+    //    int src_fd = open(original_path.c_str(), O_RDONLY);
+    //    if (src_fd < 0) {
+    //        LOGI("RSB_TRACE: Failed to open src_fd, path=%s, errno=%d", original_path.c_str(), errno);
+    //        return result;
+    //    }
+
+    //    // 3. 获取大小
+    //    struct stat st;
+    //    if (fstat(src_fd, &st) != 0) {
+    //        LOGI("RSB_TRACE: Failed to fstat src_fd, errno=%d", errno);
+    //        close(src_fd);
+    //        return result;
+    //    }
+    //    size_t file_size = st.st_size;
+    //    LOGI("RSB_TRACE: File size is %zu bytes", file_size);
+
+    //    // 4. 创建目标文件
+    //    int dst_fd = open(temp_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+    //    if (dst_fd < 0) {
+    //        LOGI("RSB_TRACE: Failed to create dst_fd, path=%s, errno=%d", temp_path.c_str(), errno);
+    //        close(src_fd);
+    //        return result;
+    //    }
+
+    //    // 5. 零拷贝
+    //    LOGI("RSB_TRACE: Starting sendfile...");
+    //    ssize_t sent = sendfile(dst_fd, src_fd, nullptr, file_size);
+    //    if (sent < 0) {
+    //        LOGI("RSB_TRACE: sendfile failed, errno=%d", errno);
+    //        close(src_fd);
+    //        close(dst_fd);
+    //        return result;
+    //    }
+    //    close(src_fd);
+    //    LOGI("RSB_TRACE: sendfile finished, copied %zd bytes", sent);
+
+    //    // 6. 内存映射 (mmap)
+    //    LOGI("RSB_TRACE: Attempting mmap...");
+    //    void* ptr = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, dst_fd, 0);
+    //    if (ptr == MAP_FAILED) {
+    //        LOGI("RSB_TRACE: mmap failed, errno=%d (%s). File size might be too large for address space.", errno, strerror(errno));
+    //        close(dst_fd);
+    //        return result;
+    //    }
+    //    LOGI("RSB_TRACE: mmap success at address %p", ptr);
+
+    //    // 7. 解密
+    //    LOGI("RSB_TRACE: Entering decrypt_rsb (MT)...");
+    //    decrypt_rsb(static_cast<uint8_t*>(ptr), file_size);
+    //    LOGI("RSB_TRACE: decrypt_rsb finished.");
+
+    //    // 8. 收尾
+    //    if (msync(ptr, file_size, MS_ASYNC) != 0) {
+    //        LOGI("RSB_TRACE: msync failed, errno=%d", errno);
+    //    }
+
+    //    if (munmap(ptr, file_size) != 0) {
+    //        LOGI("RSB_TRACE: munmap failed, errno=%d", errno);
+    //    }
+
+    //    close(dst_fd);
+    //    LOGI("RSB_TRACE: Processing ALL DONE. Final path: %s", temp_path.c_str());
+
+    //    g_tempFiles.push_back(temp_path);
+    //}
+    
+
+
+
+
+
+
+
+
 
     // 替换路径
     char* new_path = strdup(temp_path.c_str());
