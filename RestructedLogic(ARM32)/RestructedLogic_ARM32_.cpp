@@ -1003,7 +1003,7 @@ int hkRSBPathRecorder(uint* a1) {
 
     // 创建缓存目录，必须改！这是你解密文件放的位置，虽然只存在1秒，但务必重视！！！！！！！！！！！！！！！！！！！！！！！！
     // 最好放在你的游戏的data目录（一般为/storage/emulated/0/Android/data/com.ea.game.pvz2_改版名，然后如果深入就加/文件夹）
-    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_end/cache";
+    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_row/cache";
     if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
         LOGI("RSBPathRecorder: Failed to create %s, errno=%d", cache_dir.c_str(), errno);
         return result;
