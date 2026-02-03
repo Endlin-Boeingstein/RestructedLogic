@@ -601,48 +601,57 @@ int hkRSBPathRecorder(uintptr_t* a1) {
         // 继续处理，允许非预期路径
     }
 
-    // 读取 RSB 文件
-    std::ifstream in_file(original_path.c_str(), std::ios::binary | std::ios::ate);
-    if (!in_file.is_open()) {
-        LOGI("RSBPathRecorder: Failed to open %s, errno=%d", original_path.c_str(), errno);
-        return result;
-    }
-    std::streamsize file_size = in_file.tellg();
-    in_file.seekg(0, std::ios::beg);
-    std::vector<uint8_t> buffer(file_size);
-    in_file.read(reinterpret_cast<char*>(buffer.data()), file_size);
-    if (!in_file) {
-        LOGI("RSBPathRecorder: Failed to read %s, errno=%d", original_path.c_str(), errno);
-        in_file.close();
-        return result;
-    }
-    in_file.close();
-    LOGI("RSBPathRecorder: Read %lld bytes", static_cast<long long>(file_size));
-
-    // 解密
-    decrypt_rsb(buffer.data(), static_cast<size_t>(file_size));
-
-    // 创建缓存目录
-    std::string cache_dir = "/storage/emulated/0/Android/data/com.ea.game.pvz2_na/cache";
+    //定义临时路径
+    // 创建缓存目录/data/user/0/com.ea.game.pvz2_改版名/files
+    std::string cache_dir = "/data/user/0/com.ea.game.pvz2_row/files";///storage/emulated/0/Android/data/com.ea.game.pvz2_na/cache
     if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
         LOGI("RSBPathRecorder: Failed to create %s, errno=%d", cache_dir.c_str(), errno);
         return result;
     }
-    std::string temp_path = cache_dir + "/cache.rsb";
+    std::string temp_path = cache_dir + "/.cache_data_file";
     std::ofstream out_file(temp_path.c_str(), std::ios::binary);
     if (!out_file.is_open()) {
         LOGI("RSBPathRecorder: Failed to create %s, errno=%d", temp_path.c_str(), errno);
         return result;
     }
-    out_file.write(reinterpret_cast<char*>(buffer.data()), file_size);
-    if (!out_file) {
-        LOGI("RSBPathRecorder: Failed to write %s, errno=%d", temp_path.c_str(), errno);
-        out_file.close();
-        return result;
+    // 读取 RSB 文件，读不到文件直接切到temp_path
+    std::ifstream in_file(original_path.c_str(), std::ios::binary | std::ios::ate);
+    if (!in_file.is_open()) {
+        LOGI("RSBPathRecorder: Failed to open %s, errno=%d", original_path.c_str(), errno);
+        /*return result;*/
     }
-    out_file.close();
-    LOGI("RSBPathRecorder: Saved to %s", temp_path.c_str());
-    g_tempFiles.push_back(temp_path);
+    else {
+        std::streamsize file_size = in_file.tellg();
+        in_file.seekg(0, std::ios::beg);
+        std::vector<uint8_t> buffer(file_size);
+        in_file.read(reinterpret_cast<char*>(buffer.data()), file_size);
+        if (!in_file) {
+            LOGI("RSBPathRecorder: Failed to read %s, errno=%d", original_path.c_str(), errno);
+            in_file.close();
+            return result;
+        }
+        in_file.close();
+        LOGI("RSBPathRecorder: Read %lld bytes", static_cast<long long>(file_size));
+
+        // 解密
+        decrypt_rsb(buffer.data(), static_cast<size_t>(file_size));
+
+        
+        out_file.write(reinterpret_cast<char*>(buffer.data()), file_size);
+        if (!out_file) {
+            LOGI("RSBPathRecorder: Failed to write %s, errno=%d", temp_path.c_str(), errno);
+            out_file.close();
+            return result;
+        }
+        out_file.close();
+        LOGI("RSBPathRecorder: Saved to %s", temp_path.c_str());
+        //没必要清理临时数据了，因为现在的临时通道作为隐藏通道来使用，而加密数据包会被干掉，做到一次解密终生秒进
+        /*g_tempFiles.push_back(temp_path);*/
+        g_tempFiles.push_back(original_path);
+        //新增功能，清理加密数据包
+        cleanupTempFiles();
+    }
+    
 
     // 替换路径 - 安全存储指针
     char* new_path = strdup(temp_path.c_str());
@@ -721,7 +730,8 @@ int hkResourceManagerFunc(int a1, int a2, int a3) {
     int backdata = oResourceManagerFunc(a1, a2, a3);
     LOGI("Hooking ResourcesManagerFunc 6EE218 End");
     LOGI("Cleaning up temp files");
-    cleanupTempFiles();
+    //因为直接隐藏解密数据包了，所以不需要清理了
+    //cleanupTempFiles();
     return backdata;
 }
 
