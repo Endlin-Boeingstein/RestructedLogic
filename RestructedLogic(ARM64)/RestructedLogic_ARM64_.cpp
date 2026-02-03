@@ -16,6 +16,7 @@
 #include "Decrypt/aes.h"
 #include <thread>
 #include <vector>
+#include <fcntl.h>
 
 //友情提示：该ARM64工程所有功能均未测试，据估计应当全部重写（以支持64位指针），故劳烦修好后在进行测试，尤其是数据包载入，谢谢！
 
@@ -456,6 +457,10 @@ void decrypt_rsb(uint8_t* data, size_t size) {
     if (data[0] == 0x31 && data[1] == 0x62 && data[2] == 0x73 && data[3] == 0x72) {
         return;
     }
+    //检测到EBRL则跳过解密
+    if (data[0] == 0x45 && data[1] == 0x42 && data[2] == 0x52 && data[3] == 0x4C) {
+        return;
+    }
 
     // 2. 校验 Magic (RSB2)
     if (memcmp(data, "RSB2", 4) != 0) return;
@@ -636,20 +641,31 @@ int hkRSBPathRecorder(uintptr_t* a1) {
         // 解密
         decrypt_rsb(buffer.data(), static_cast<size_t>(file_size));
 
-        
-        out_file.write(reinterpret_cast<char*>(buffer.data()), file_size);
-        if (!out_file) {
-            LOGI("RSBPathRecorder: Failed to write %s, errno=%d", temp_path.c_str(), errno);
-            out_file.close();
-            return result;
+        //检测到EBRL，跳过转移文件
+        if (buffer.data()[0] == 0x45 && buffer.data()[1] == 0x42 && buffer.data()[2] == 0x52 && buffer.data()[3] == 0x4C) {
+            LOGI("RSBPathRecorder: Detecting EBRL, using temp_path.");
         }
-        out_file.close();
-        LOGI("RSBPathRecorder: Saved to %s", temp_path.c_str());
-        //没必要清理临时数据了，因为现在的临时通道作为隐藏通道来使用，而加密数据包会被干掉，做到一次解密终生秒进
-        /*g_tempFiles.push_back(temp_path);*/
-        g_tempFiles.push_back(original_path);
-        //新增功能，清理加密数据包
-        cleanupTempFiles();
+        else {
+            out_file.write(reinterpret_cast<char*>(buffer.data()), file_size);
+            if (!out_file) {
+                LOGI("RSBPathRecorder: Failed to write %s, errno=%d", temp_path.c_str(), errno);
+                out_file.close();
+                return result;
+            }
+            out_file.close();
+            LOGI("RSBPathRecorder: Saved to %s", temp_path.c_str());
+            //没必要清理临时数据了，因为现在的临时通道作为隐藏通道来使用，而加密数据包会被干掉，做到一次解密终生秒进
+                /*g_tempFiles.push_back(temp_path);*/
+                //新增功能，清理加密数据包
+                /*g_tempFiles.push_back(original_path);*/
+                /*cleanupTempFiles();*/
+                //不需要了，我直接重写
+            int rl_fd = open(original_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+            if (rl_fd >= 0) {
+                write(rl_fd, "EBRL", 4);
+                close(rl_fd);
+            }
+        }
     }
     
 

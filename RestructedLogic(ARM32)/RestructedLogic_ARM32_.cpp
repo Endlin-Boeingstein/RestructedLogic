@@ -1239,94 +1239,104 @@ int hkRSBPathRecorder(uint* a1) {
             g_tempFiles.push_back(temp_path);*/
             return result;
         }
-
-        // 3. 准备 IV 和 Key (使用你的 HIDE_STR)
-        uint8_t iv_from_header[16];
-        read(src_fd, iv_from_header, 16);
-
-        uint8_t key[32];
-        {
-            //此处填写密钥!!!!!!!!!!!!!!!!!!!!!!!!!
-            std::string pwd = HIDE_STR("rl_key");
-            picosha2::hash256_one_by_one hasher;
-            hasher.process(pwd.begin(), pwd.end());
-            hasher.finish();
-            hasher.get_hash_bytes(key, key + 32);
+        if (memcmp(magic, "EBRL", 4) == 0) {
+            LOGI("RSB_TRACE: Detected EBRL, using temp_path...");
         }
+        else {
+            // 3. 准备 IV 和 Key (使用你的 HIDE_STR)
+            uint8_t iv_from_header[16];
+            read(src_fd, iv_from_header, 16);
 
-        // 4. 关键：利用内核 sendfile 完成第一次全量物理拷贝 (这是目前最快的读写方式)
-        struct stat st; fstat(src_fd, &st);
-        size_t file_size = st.st_size;
-        int dst_fd = open(temp_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
-        lseek(src_fd, 0, SEEK_SET);
-        sendfile(dst_fd, src_fd, nullptr, file_size);
-        close(src_fd);
-
-        // 5. 分块映射解密 + 即时覆盖平移
-        LOGI("RSB_TRACE: Phase: Mmap Decrypt + Immediate In-place Pwrite...");
-
-        const size_t CHUNK_SIZE = 256 * 1024 * 1024; // 256MB，平衡 32 位内存压力与效率
-        size_t current_cipher_pos = 20;
-        size_t total_plain_written = 0;
-        uint8_t active_iv[16];
-        memcpy(active_iv, iv_from_header, 16);
-
-        while (current_cipher_pos < file_size) {
-            // 计算页对齐的映射偏移
-            size_t map_offset = (current_cipher_pos / 4096) * 4096;
-            size_t in_map_offset = current_cipher_pos - map_offset;
-
-            size_t remaining = file_size - current_cipher_pos;
-            size_t decrypt_len = (remaining > CHUNK_SIZE) ? CHUNK_SIZE : remaining;
-            decrypt_len &= ~0xF; // 16字节对齐
-            if (decrypt_len == 0) break;
-
-            size_t map_size = decrypt_len + in_map_offset;
-            void* ptr = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, dst_fd, map_offset);
-            if (ptr == MAP_FAILED) {
-                LOGI("RSB_TRACE: mmap failed, errno=%d", errno);
-                break;
+            uint8_t key[32];
+            {
+                //此处填写密钥!!!!!!!!!!!!!!!!!!!!!!!!!
+                std::string pwd = HIDE_STR("rl_key");
+                picosha2::hash256_one_by_one hasher;
+                hasher.process(pwd.begin(), pwd.end());
+                hasher.finish();
+                hasher.get_hash_bytes(key, key + 32);
             }
 
-            uint8_t* cipher_ptr = (uint8_t*)ptr + in_map_offset;
+            // 4. 关键：利用内核 sendfile 完成第一次全量物理拷贝 (这是目前最快的读写方式)
+            struct stat st; fstat(src_fd, &st);
+            size_t file_size = st.st_size;
+            int dst_fd = open(temp_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0666);
+            lseek(src_fd, 0, SEEK_SET);
+            sendfile(dst_fd, src_fd, nullptr, file_size);
+            close(src_fd);
 
-            // 备份下一块密文 IV
-            uint8_t next_iv_backup[16];
-            memcpy(next_iv_backup, cipher_ptr + decrypt_len - 16, 16);
+            // 5. 分块映射解密 + 即时覆盖平移
+            LOGI("RSB_TRACE: Phase: Mmap Decrypt + Immediate In-place Pwrite...");
 
-            // 调用多线程解密 (直接操作映射内存，极致速度)
-            decrypt_pure_cbc_internal(cipher_ptr, decrypt_len, active_iv, key);
+            const size_t CHUNK_SIZE = 256 * 1024 * 1024; // 256MB，平衡 32 位内存压力与效率
+            size_t current_cipher_pos = 20;
+            size_t total_plain_written = 0;
+            uint8_t active_iv[16];
+            memcpy(active_iv, iv_from_header, 16);
 
-            // 更新当前链的 IV
-            memcpy(active_iv, next_iv_backup, 16);
+            while (current_cipher_pos < file_size) {
+                // 计算页对齐的映射偏移
+                size_t map_offset = (current_cipher_pos / 4096) * 4096;
+                size_t in_map_offset = current_cipher_pos - map_offset;
 
-            // 处理 Padding (最后一块)
-            size_t block_write_len = decrypt_len;
-            if (current_cipher_pos + decrypt_len >= file_size - 16) {
-                uint8_t pad = cipher_ptr[decrypt_len - 1];
-                if (pad > 0 && pad <= 16) block_write_len -= pad;
+                size_t remaining = file_size - current_cipher_pos;
+                size_t decrypt_len = (remaining > CHUNK_SIZE) ? CHUNK_SIZE : remaining;
+                decrypt_len &= ~0xF; // 16字节对齐
+                if (decrypt_len == 0) break;
+
+                size_t map_size = decrypt_len + in_map_offset;
+                void* ptr = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, dst_fd, map_offset);
+                if (ptr == MAP_FAILED) {
+                    LOGI("RSB_TRACE: mmap failed, errno=%d", errno);
+                    break;
+                }
+
+                uint8_t* cipher_ptr = (uint8_t*)ptr + in_map_offset;
+
+                // 备份下一块密文 IV
+                uint8_t next_iv_backup[16];
+                memcpy(next_iv_backup, cipher_ptr + decrypt_len - 16, 16);
+
+                // 调用多线程解密 (直接操作映射内存，极致速度)
+                decrypt_pure_cbc_internal(cipher_ptr, decrypt_len, active_iv, key);
+
+                // 更新当前链的 IV
+                memcpy(active_iv, next_iv_backup, 16);
+
+                // 处理 Padding (最后一块)
+                size_t block_write_len = decrypt_len;
+                if (current_cipher_pos + decrypt_len >= file_size - 16) {
+                    uint8_t pad = cipher_ptr[decrypt_len - 1];
+                    if (pad > 0 && pad <= 16) block_write_len -= pad;
+                }
+
+                // 【提速】利用 pwrite 将解密好的明文直接写回到文件开头的正确位置
+                // 因为这块内存就在 Page Cache 里，pwrite 此时基本等同于内存拷贝，极快
+                pwrite(dst_fd, cipher_ptr, block_write_len, total_plain_written);
+
+                total_plain_written += block_write_len;
+                munmap(ptr, map_size);
+                current_cipher_pos += decrypt_len;
             }
 
-            // 【提速】利用 pwrite 将解密好的明文直接写回到文件开头的正确位置
-            // 因为这块内存就在 Page Cache 里，pwrite 此时基本等同于内存拷贝，极快
-            pwrite(dst_fd, cipher_ptr, block_write_len, total_plain_written);
+            // 6. 最终裁剪：一秒搞定
+            ftruncate(dst_fd, total_plain_written);
+            fdatasync(dst_fd); // 确保元数据和数据写回
+            close(dst_fd);
 
-            total_plain_written += block_write_len;
-            munmap(ptr, map_size);
-            current_cipher_pos += decrypt_len;
+            LOGI("RSB_TRACE: All Done. Optimized Path Taken.");
+            //没必要清理临时数据了，因为现在的临时通道作为隐藏通道来使用，而加密数据包会被干掉，做到一次解密终生秒进
+            /*g_tempFiles.push_back(temp_path);*/
+            //新增功能，清理加密数据包
+            /*g_tempFiles.push_back(original_path);*/
+            /*cleanupTempFiles();*/
+            //不需要了，我直接重写
+            int rl_fd = open(original_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+            if (rl_fd >= 0) {
+                write(rl_fd, "EBRL", 4);
+                close(rl_fd);
+            }
         }
-
-        // 6. 最终裁剪：一秒搞定
-        ftruncate(dst_fd, total_plain_written);
-        fdatasync(dst_fd); // 确保元数据和数据写回
-        close(dst_fd);
-
-        LOGI("RSB_TRACE: All Done. Optimized Path Taken.");
-        //没必要清理临时数据了，因为现在的临时通道作为隐藏通道来使用，而加密数据包会被干掉，做到一次解密终生秒进
-        /*g_tempFiles.push_back(temp_path);*/
-        g_tempFiles.push_back(original_path);
-        //新增功能，清理加密数据包
-        cleanupTempFiles();
     }
     else {
         /*return result;*/
