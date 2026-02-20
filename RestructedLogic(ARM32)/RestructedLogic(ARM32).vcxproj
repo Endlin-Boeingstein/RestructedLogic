@@ -158,12 +158,17 @@
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Customize\Projectile\GridItemRaiserProjectile.cpp" />
     <ClCompile Include="Decrypt\aes.cpp" />
     <ClCompile Include="memUtils.cpp" />
+    <ClCompile Include="PvZ2\LevelModuleManager.cpp" />
+    <ClCompile Include="Reflection\ReflectionBuilder.cpp" />
     <ClCompile Include="RestructedLogic_ARM32_.cpp" />
+    <ClCompile Include="Sexy\RtClass.cpp" />
     <ClCompile Include="x32\jni\libs\GlossHook\Gloss.cpp" />
     <ClCompile Include="x32\jni\libs\KittyMemory\KittyMemory.cpp" />
     <ClCompile Include="x32\jni\libs\KittyMemory\MemoryPatch.cpp" />
@@ -172,15 +177,63 @@
     <ClCompile Include="x32\jni\libs\Substrate\SubstratePosixMemory.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Customize\Projectile\GridItemRaiserProjectile.h" />
     <ClInclude Include="Decrypt\aes.h" />
     <ClInclude Include="Decrypt\picosha2.h" />
     <ClInclude Include="Logging.h" />
     <ClInclude Include="memUtils.h" />
+    <ClInclude Include="PvZ2\AttachedEffectManager.h" />
     <ClInclude Include="PvZ2\Board.h" />
+    <ClInclude Include="PvZ2\BoardEntity.h" />
+    <ClInclude Include="PvZ2\CollisionTypeFlags.h" />
+    <ClInclude Include="PvZ2\Component.h" />
+    <ClInclude Include="PvZ2\DamageInfo.h" />
+    <ClInclude Include="PvZ2\DamageTypeFlags.h" />
+    <ClInclude Include="PvZ2\EntityConditions.h" />
+    <ClInclude Include="PvZ2\GameObject.h" />
+    <ClInclude Include="PvZ2\GridItem.h" />
+    <ClInclude Include="PvZ2\GridItemPropertySheet.h" />
+    <ClInclude Include="PvZ2\LevelDefinition.h" />
+    <ClInclude Include="PvZ2\LevelModule.h" />
+    <ClInclude Include="PvZ2\LevelModuleManager.h" />
+    <ClInclude Include="PvZ2\LevelModuleProperties.h" />
+    <ClInclude Include="PvZ2\ModularRealObject.h" />
+    <ClInclude Include="PvZ2\ObjectTypeDescriptor.h" />
+    <ClInclude Include="PvZ2\Plant.h" />
+    <ClInclude Include="PvZ2\PlantAction.h" />
+    <ClInclude Include="PvZ2\PlantFramework.h" />
+    <ClInclude Include="PvZ2\PlantPropertySheet.h" />
+    <ClInclude Include="PvZ2\Projectile.h" />
+    <ClInclude Include="PvZ2\ProjectilePropertySheet.h" />
+    <ClInclude Include="PvZ2\PropertySheetBase.h" />
+    <ClInclude Include="PvZ2\RealObject.h" />
+    <ClInclude Include="PvZ2\StageModuleProperties.h" />
+    <ClInclude Include="PvZ2\StringRestrictionSet.h" />
     <ClInclude Include="PvZ2\WorldMap.h" />
+    <ClInclude Include="PvZ2\Zombie.h" />
+    <ClInclude Include="PvZ2\ZombieConditions.h" />
+    <ClInclude Include="PvZ2\ZombiePropertySheet.h" />
+    <ClInclude Include="PvZ2\ZombieType.h" />
+    <ClInclude Include="Reflection\CRefManualSymbolBuilder.h" />
+    <ClInclude Include="Reflection\RClass.h" />
+    <ClInclude Include="Reflection\RClassRef.h" />
+    <ClInclude Include="Reflection\RCustomType\TStdVectorManipulator.h" />
+    <ClInclude Include="Reflection\ReflectionBuilder.h" />
+    <ClInclude Include="Reflection\ReflectionFieldType.h" />
+    <ClInclude Include="Reflection\RField.h" />
+    <ClInclude Include="Reflection\RSimpleType.h" />
+    <ClInclude Include="Reflection\RSymbol.h" />
+    <ClInclude Include="Reflection\RType.h" />
     <ClInclude Include="RestructedLogic_ARM32_.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SexyTypes.h" />
+    <ClInclude Include="Sexy\Color.h" />
+    <ClInclude Include="Sexy\DelegateBase.h" />
+    <ClInclude Include="Sexy\Event.h" />
+    <ClInclude Include="Sexy\Graphics.h" />
+    <ClInclude Include="Sexy\RtClass.h" />
+    <ClInclude Include="Sexy\RtObject.h" />
+    <ClInclude Include="Sexy\RtWeakPtr.h" />
     <ClInclude Include="VersionAddresses.h" />
     <ClInclude Include="x32\jni\include\Utils.h" />
     <ClInclude Include="x32\jni\libs\GlossHook\Gloss.h" />

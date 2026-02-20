@@ -7,182 +7,680 @@
 #ifndef VERSIONADDRESSES_H
 #define VERSIONADDRESSES_H
 
-uint ZombieAlmanacAddr;
-uint PlantNameMapperAddr;
-uint CamelZombieAddr;
-uint camelMinigameModuleFuncAddr;
-uint WorldMapDoMovementAddr;
-uint ZombiePianoAddr;
-uint ZombiePianoListAddr;
-uint ReinitForSurfaceChangedAddr;
-uint BoardAddr;
-uint ZombieCarnieMagician__IsImmuneToShrinkAddr;
-uint ZombieRomanHealer__IsImmuneToShrinkAddr;
-uint ZombieCarnieMagician__ConditionFuncAddr;
-uint ZombieRomanHealer__ConditionFuncAddr;
-uint ZombieRomanHealer__InitializeFamilyImmunitiesAddr;
-uint zFamilyFuncAddr;
-uint LawnAppAddr;
-uint SexyAppAddr;
-//禁用
-//uint RSBReadAddr;
-uint ForceResources1536Addr;
-uint LogOutputFuncAddr;
-uint RSBPathRecorderAddr;
-uint MainLoadFuncAddr;
-uint ResourceManagerFuncAddr;
-uint ResourceReadFuncAddr;
-uint RSBTestAndReadFuncAddr;
+#define GAME_VERSION 1030//填入版本号，为去掉小数点的版本号
 
-//第一个自定义的植物ID
-uint firstFreePlantID;
+#if GAME_VERSION==940
+#define ZombieAlmanacAddr  0x00
+#define PlantNameMapperAddr  0x1157778//
+#define CamelZombieAddr  0x00
+#define camelMinigameModuleFuncAddr  0x00
+#define WorldMapDoMovementAddr  0x00
+#define ZombiePianoAddr  0x00
+#define ZombiePianoListAddr  0x00
+#define ReinitForSurfaceChangedAddr  0x164C580
+#define BoardAddr  0xA94604//
+#define ZombieCarnieMagician__IsImmuneToShrinkAddr  0x00
+#define ZombieRomanHealer__IsImmuneToShrinkAddr  0x00
+#define ZombieCarnieMagician__ConditionFuncAddr  0x00
+#define ZombieRomanHealer__ConditionFuncAddr  0x00
+#define ZombieRomanHealer__InitializeFamilyImmunitiesAddr  0x00
+#define zFamilyFuncAddr  0x00
+#define LawnAppAddr  NULL
+#define SexyAppAddr  NULL
+ /*#define RSBReadAddr  NULL*/
+#define RSBPathRecorderAddr  NULL
+#define ForceResources1536Addr  NULL
+#define LogOutputFuncAddrSimpleAddr NULL
+#define LogOutputFuncAddr  NULL
+#define MainLoadFuncAddr  NULL
+#define ResourceManagerFuncAddr  NULL
+#define ResourceReadFuncAddr  NULL
+#define RSBTestAndReadFuncAddr  NULL
 
-enum VersionOfGame
-{
-    v9_4 = 940,
-    v9_6 = 960,
-    v9_8 = 980,
-    v10_3 = 1030
-    //仿照上面添加版本号
-};
 
-#pragma region Auto Select Addresses
-int version_code = v10_3;//在此处修改版本号
-void AddressesChangedByVersion() {
-    switch (version_code)
-    {
-    case v9_4:
-    {
-        //部分偏移由某神秘大佬查找得来，但是由于v7a和v8a函数结构不同，还有新的库的未知什么导致的闪退问题，故v8a方案已废弃
-        ZombieAlmanacAddr = 0x00;
-        PlantNameMapperAddr = 0x1157778;//
-        CamelZombieAddr = 0x00;
-        camelMinigameModuleFuncAddr = 0x00;
-        WorldMapDoMovementAddr = 0x00;
-        ZombiePianoAddr = 0x00;
-        ZombiePianoListAddr = 0x00;
-        ReinitForSurfaceChangedAddr = 0x164C580;
-        BoardAddr = 0xA94604;//
-        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x00;
-        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x00;
-        ZombieCarnieMagician__ConditionFuncAddr = 0x00;
-        ZombieRomanHealer__ConditionFuncAddr = 0x00;
-        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
-        zFamilyFuncAddr = 0x00;
-        LawnAppAddr = NULL;
-        SexyAppAddr = NULL;
-        /*RSBReadAddr = NULL;*/
-        RSBPathRecorderAddr = NULL;
-        ForceResources1536Addr = NULL;
-        LogOutputFuncAddr = NULL;
-        MainLoadFuncAddr = NULL;
-        ResourceManagerFuncAddr = NULL;
-        ResourceReadFuncAddr = NULL;
-        RSBTestAndReadFuncAddr = NULL;
 
-        firstFreePlantID = 185;
-        break;
-    }
-    case v9_6:
-    {
-        ZombieAlmanacAddr = 0x00;
-        PlantNameMapperAddr = 0x00;//
-        CamelZombieAddr = 0x00;
-        camelMinigameModuleFuncAddr = 0x00;
-        WorldMapDoMovementAddr = 0x00;
-        ZombiePianoAddr = 0x00;
-        ZombiePianoListAddr = 0x00;
-        ReinitForSurfaceChangedAddr = 0x00;
-        BoardAddr = 0x00;//
-        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x00;
-        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x00;
-        ZombieCarnieMagician__ConditionFuncAddr = 0x00;
-        ZombieRomanHealer__ConditionFuncAddr = 0x00;
-        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
-        zFamilyFuncAddr = 0x00;
-        LawnAppAddr = 0x2593760;
-        SexyAppAddr = 0x25A4618;
-        /*RSBReadAddr = NULL;*/
-        RSBPathRecorderAddr = NULL;
-        ForceResources1536Addr = NULL;
-        LogOutputFuncAddr = NULL;
-        MainLoadFuncAddr = NULL;
-        ResourceManagerFuncAddr = NULL;
-        ResourceReadFuncAddr = NULL;
-        RSBTestAndReadFuncAddr = NULL;
 
-        firstFreePlantID = 188;
-        break;
-    }
-    case v9_8:
-    {
-        ZombieAlmanacAddr = 0x00;
-        PlantNameMapperAddr = 0x00;//
-        CamelZombieAddr = 0x00;
-        camelMinigameModuleFuncAddr = 0x00;
-        WorldMapDoMovementAddr = 0x00;
-        ZombiePianoAddr = 0x00;
-        ZombiePianoListAddr = 0x00;
-        ReinitForSurfaceChangedAddr = 0x00;
-        BoardAddr = 0x00;//
-        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x00;
-        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x00;
-        ZombieCarnieMagician__ConditionFuncAddr = 0x00;
-        ZombieRomanHealer__ConditionFuncAddr = 0x00;
-        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
-        zFamilyFuncAddr = 0x00;
-        LawnAppAddr = NULL;
-        SexyAppAddr = NULL;
-        /*RSBReadAddr = NULL;*/
-        RSBPathRecorderAddr = NULL;
-        ForceResources1536Addr = NULL;
-        LogOutputFuncAddr = NULL;
-        MainLoadFuncAddr = NULL;
-        ResourceManagerFuncAddr = NULL;
-        ResourceReadFuncAddr = NULL;
-        RSBTestAndReadFuncAddr = NULL;
+#define DelegateBase_SEXYDELEGATE_VTBLAddr  NULL
+#define Graphics_UNK_GRAPHICSFUNC2Addr  NULL
+#define Graphics_UNK_GRAPHICSFUNCAddr  NULL
+#define RtClass_rtClassCtorFuncAddr  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_GETREGISTRY  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_COPYWEAKPTR  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_GETTABLEOFTYPE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_EQUALS  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_ISVALIDPTR  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_RESOLVE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_FROMOTHER  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_MOVE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_SETWEAKPTR  NULL
 
-        firstFreePlantID = 191;
-        break;
-    }
-    case v10_3:
-    {
-        ZombieAlmanacAddr = NULL;  // NULL means I don't know what it is.
-        PlantNameMapperAddr = NULL;  // 10.3 Don't need it.
-        CamelZombieAddr = NULL;
-        camelMinigameModuleFuncAddr = NULL;
-        WorldMapDoMovementAddr = NULL;
-        ZombiePianoAddr = NULL;
-        ZombiePianoListAddr = NULL;
-        ReinitForSurfaceChangedAddr = NULL;
-        BoardAddr = NULL;
-        ZombieCarnieMagician__IsImmuneToShrinkAddr = NULL;
-        ZombieRomanHealer__IsImmuneToShrinkAddr = NULL;
-        ZombieCarnieMagician__ConditionFuncAddr = NULL;
-        ZombieRomanHealer__ConditionFuncAddr = NULL;
-        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = NULL;
-        zFamilyFuncAddr = NULL;
-        LawnAppAddr = NULL;
-        SexyAppAddr = NULL;
-        /*RSBReadAddr = NULL;*/
-        RSBPathRecorderAddr = NULL;
-        ForceResources1536Addr = NULL;
-        LogOutputFuncAddr = NULL;
-        MainLoadFuncAddr = NULL;
-        ResourceManagerFuncAddr = NULL;
-        ResourceReadFuncAddr = NULL;
-        RSBTestAndReadFuncAddr = NULL;
 
-        firstFreePlantID = 0;  // 10.3 Don't need it.
-        break;
-    }
-    //仿照上述case添加版本偏移
-    default:
-    {
-        break;
-    }
-    }
-}
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC1Addr NULL
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC2Addr NULL
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC3Addr NULL
+#define CRefManualSymbolBuilder_OFFSET_REFLECTION_CREFMANUALSYMBOLBUILDER_GEINNERTEMPLATETYPENAMEAddr NULL
+#define CRefManualSymbolBuilder_OFFSET_REFLECTION_CREFMANUALSYMBOLBUILDER_GEMAPINNERTEMPLATETYPENAMEAddr NULL
+#define ReflectionBuilder_RT_BUILDER_REGISTERCLASS_FUNC1Addr NULL
+#define ReflectionBuilder_RT_BUILDER_REGISTERCLASS_FUNC2Addr NULL
+#define ReflectionBuilder_rtClassGetClassFuncAddr NULL
+
+
+
+#define BoardEntity_OFFSET_BOARDENTITY_DIEAddr NULL
+#define GameObject_GAMEOBJECT_CONSTRUCTOR_OFFSETAddr NULL
+#define GameObject_GAMEOBJECT_GETTYPE_OFFSETAddr NULL
+#define GameObject_GAMEOBJECT_FUNCTION_DIE_OFFSETAddr GameObject_GAMEOBJECT_CONSTRUCTOR_OFFSETAddr
+#define GridItem_SpawnGridItemAtAddr NULL
+#define LevelModule_LEVELMODULE_DTOR_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_CTOR_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_GETCLASS_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_VTBLAddr NULL
+#define LevelModuleManager_getModuleAddr NULL
+#define LevelModuleManager_AddDelegateAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_CTOR_ADDRAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_DTOR_ADDRAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_VTBLAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_GETCLASS_ADDRAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_CTORAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_VFTABLEAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_GETTYPEAddr NULL
+#define PlantPropertySheet_PLANTPROPS_CTORAddr NULL
+#define PlantPropertySheet_PLANTPROPS_VFTABLEAddr NULL
+#define PlantPropertySheet_PLANTPROPS_GETTYPEAddr NULL
+#define Projectile_OFFSET_PROJECTILE_PLAY_IMPACTAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_CTORAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_VFTABLEAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_GETTYPEAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_CTORAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_DTORAddr PropertySheetBase_PROPSHEETBASE_CTORAddr
+#define PropertySheetBase_PROPSHEETBASE_DestructorAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_VFTABLEAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_GETTYPEAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_CONSTRUCT_ADDRAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_VTBLAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_GETCLASS_ADDRAddr NULL
+#define Zombie_ZOMBIE_CTOR_ADDRAddr NULL
+#define Zombie_ZOMBIE_DTOR_ADDRAddr NULL
+#define Zombie_ZOMBIE_VFTABLE_ADDRAddr NULL
+#define Zombie_OFFSET_ZOMBIE_GETTYPEAddr NULL
+#define Zombie_ZOMBIE_GET_RTCLASSAddr Zombie_OFFSET_ZOMBIE_GETTYPEAddr
+#define Zombie_ZOMBIE_ISDEADORDYING_ADDRAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_CTORAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_VFTABLEAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_GETTYPEAddr NULL
+#define ZombieType_ZOMBIETYPEDIRECTORY_GETAddr NULL
+#define ZombieType_ZOMBIETYPEDIRECTORY_GETTYPEAddr NULL
+
+
+
+
+
+#define Customize_Projectile_GridItemRaiserProjectile_DEFINE_RT_CLASS_CONSTRUCT_FUNCTION_BEGINAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_DEFINE_RT_CLASS_GET_CLASS_FUNCTIONAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_GetBoardAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_SpawnGridItemOnBoardAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_SetTeamFlagAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_ProjectileVFTableAddr NULL
+
+
+
+
+
+
+#define firstFreePlantID  185
+
+#endif
+
+#if GAME_VERSION==960
+#define ZombieAlmanacAddr  0x00
+#define PlantNameMapperAddr  0x00//
+#define CamelZombieAddr  0x00
+#define camelMinigameModuleFuncAddr  0x00
+#define WorldMapDoMovementAddr  0x00
+#define ZombiePianoAddr  0x00
+#define ZombiePianoListAddr  0x00
+#define ReinitForSurfaceChangedAddr  0x00
+#define BoardAddr  0x00//
+#define ZombieCarnieMagician__IsImmuneToShrinkAddr  0x00
+#define ZombieRomanHealer__IsImmuneToShrinkAddr  0x00
+#define ZombieCarnieMagician__ConditionFuncAddr  0x00
+#define ZombieRomanHealer__ConditionFuncAddr  0x00
+#define ZombieRomanHealer__InitializeFamilyImmunitiesAddr  0x00
+#define zFamilyFuncAddr  0x00
+#define LawnAppAddr  0x2593760
+#define SexyAppAddr  0x25A4618
+/*#define RSBReadAddr  NULL*/
+#define RSBPathRecorderAddr  NULL
+#define ForceResources1536Addr  NULL
+#define LogOutputFuncAddrSimpleAddr NULL
+#define LogOutputFuncAddr  NULL
+#define MainLoadFuncAddr  NULL
+#define ResourceManagerFuncAddr  NULL
+#define ResourceReadFuncAddr  NULL
+#define RSBTestAndReadFuncAddr  NULL
+
+
+
+
+#define DelegateBase_SEXYDELEGATE_VTBLAddr  NULL
+#define Graphics_UNK_GRAPHICSFUNC2Addr  NULL
+#define Graphics_UNK_GRAPHICSFUNCAddr  NULL
+#define RtClass_rtClassCtorFuncAddr  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_GETREGISTRY  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_COPYWEAKPTR  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_GETTABLEOFTYPE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_EQUALS  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_ISVALIDPTR  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_RESOLVE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_FROMOTHER  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_MOVE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_SETWEAKPTR  NULL
+
+
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC1Addr NULL
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC2Addr NULL
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC3Addr NULL
+#define CRefManualSymbolBuilder_OFFSET_REFLECTION_CREFMANUALSYMBOLBUILDER_GEINNERTEMPLATETYPENAMEAddr NULL
+#define CRefManualSymbolBuilder_OFFSET_REFLECTION_CREFMANUALSYMBOLBUILDER_GEMAPINNERTEMPLATETYPENAMEAddr NULL
+#define ReflectionBuilder_RT_BUILDER_REGISTERCLASS_FUNC1Addr NULL
+#define ReflectionBuilder_RT_BUILDER_REGISTERCLASS_FUNC2Addr NULL
+#define ReflectionBuilder_rtClassGetClassFuncAddr NULL
+
+
+
+#define BoardEntity_OFFSET_BOARDENTITY_DIEAddr NULL
+#define GameObject_GAMEOBJECT_CONSTRUCTOR_OFFSETAddr NULL
+#define GameObject_GAMEOBJECT_GETTYPE_OFFSETAddr NULL
+#define GameObject_GAMEOBJECT_FUNCTION_DIE_OFFSETAddr GameObject_GAMEOBJECT_CONSTRUCTOR_OFFSETAddr
+#define GridItem_SpawnGridItemAtAddr NULL
+#define LevelModule_LEVELMODULE_DTOR_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_CTOR_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_GETCLASS_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_VTBLAddr NULL
+#define LevelModuleManager_getModuleAddr NULL
+#define LevelModuleManager_AddDelegateAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_CTOR_ADDRAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_DTOR_ADDRAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_VTBLAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_GETCLASS_ADDRAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_CTORAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_VFTABLEAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_GETTYPEAddr NULL
+#define PlantPropertySheet_PLANTPROPS_CTORAddr NULL
+#define PlantPropertySheet_PLANTPROPS_VFTABLEAddr NULL
+#define PlantPropertySheet_PLANTPROPS_GETTYPEAddr NULL
+#define Projectile_OFFSET_PROJECTILE_PLAY_IMPACTAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_CTORAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_VFTABLEAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_GETTYPEAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_CTORAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_DTORAddr PropertySheetBase_PROPSHEETBASE_CTORAddr
+#define PropertySheetBase_PROPSHEETBASE_DestructorAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_VFTABLEAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_GETTYPEAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_CONSTRUCT_ADDRAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_VTBLAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_GETCLASS_ADDRAddr NULL
+#define Zombie_ZOMBIE_CTOR_ADDRAddr NULL
+#define Zombie_ZOMBIE_DTOR_ADDRAddr NULL
+#define Zombie_ZOMBIE_VFTABLE_ADDRAddr NULL
+#define Zombie_OFFSET_ZOMBIE_GETTYPEAddr NULL
+#define Zombie_ZOMBIE_GET_RTCLASSAddr Zombie_OFFSET_ZOMBIE_GETTYPEAddr
+#define Zombie_ZOMBIE_ISDEADORDYING_ADDRAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_CTORAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_VFTABLEAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_GETTYPEAddr NULL
+#define ZombieType_ZOMBIETYPEDIRECTORY_GETAddr NULL
+#define ZombieType_ZOMBIETYPEDIRECTORY_GETTYPEAddr NULL
+
+
+
+
+
+#define Customize_Projectile_GridItemRaiserProjectile_DEFINE_RT_CLASS_CONSTRUCT_FUNCTION_BEGINAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_DEFINE_RT_CLASS_GET_CLASS_FUNCTIONAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_GetBoardAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_SpawnGridItemOnBoardAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_SetTeamFlagAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_ProjectileVFTableAddr NULL
+
+
+
+
+
+
+#define firstFreePlantID  188
+
+#endif
+
+#if GAME_VERSION==980
+#define ZombieAlmanacAddr  0x00
+#define PlantNameMapperAddr  0x00//
+#define CamelZombieAddr  0x00
+#define camelMinigameModuleFuncAddr  0x00
+#define WorldMapDoMovementAddr  0x00
+#define ZombiePianoAddr  0x00
+#define ZombiePianoListAddr  0x00
+#define ReinitForSurfaceChangedAddr  0x00
+#define BoardAddr  0x00//
+#define ZombieCarnieMagician__IsImmuneToShrinkAddr  0x00
+#define ZombieRomanHealer__IsImmuneToShrinkAddr  0x00
+#define ZombieCarnieMagician__ConditionFuncAddr  0x00
+#define ZombieRomanHealer__ConditionFuncAddr  0x00
+#define ZombieRomanHealer__InitializeFamilyImmunitiesAddr  0x00
+#define zFamilyFuncAddr  0x00
+#define LawnAppAddr  NULL
+#define SexyAppAddr  NULL
+/*#define RSBReadAddr  NULL*/
+#define RSBPathRecorderAddr  NULL
+#define ForceResources1536Addr  NULL
+#define LogOutputFuncAddrSimpleAddr NULL
+#define LogOutputFuncAddr  NULL
+#define MainLoadFuncAddr  NULL
+#define ResourceManagerFuncAddr  NULL
+#define ResourceReadFuncAddr  NULL
+#define RSBTestAndReadFuncAddr  NULL
+
+
+
+
+#define DelegateBase_SEXYDELEGATE_VTBLAddr  NULL
+#define Graphics_UNK_GRAPHICSFUNC2Addr  NULL
+#define Graphics_UNK_GRAPHICSFUNCAddr  NULL
+#define RtClass_rtClassCtorFuncAddr  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_GETREGISTRY  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_COPYWEAKPTR  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_GETTABLEOFTYPE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_EQUALS  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_ISVALIDPTR  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_RESOLVE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_FROMOTHER  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_MOVE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_SETWEAKPTR  NULL
+
+
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC1Addr NULL
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC2Addr NULL
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC3Addr NULL
+#define CRefManualSymbolBuilder_OFFSET_REFLECTION_CREFMANUALSYMBOLBUILDER_GEINNERTEMPLATETYPENAMEAddr NULL
+#define CRefManualSymbolBuilder_OFFSET_REFLECTION_CREFMANUALSYMBOLBUILDER_GEMAPINNERTEMPLATETYPENAMEAddr NULL
+#define ReflectionBuilder_RT_BUILDER_REGISTERCLASS_FUNC1Addr NULL
+#define ReflectionBuilder_RT_BUILDER_REGISTERCLASS_FUNC2Addr NULL
+#define ReflectionBuilder_rtClassGetClassFuncAddr NULL
+
+
+
+#define BoardEntity_OFFSET_BOARDENTITY_DIEAddr NULL
+#define GameObject_GAMEOBJECT_CONSTRUCTOR_OFFSETAddr NULL
+#define GameObject_GAMEOBJECT_GETTYPE_OFFSETAddr NULL
+#define GameObject_GAMEOBJECT_FUNCTION_DIE_OFFSETAddr GameObject_GAMEOBJECT_CONSTRUCTOR_OFFSETAddr
+#define GridItem_SpawnGridItemAtAddr NULL
+#define LevelModule_LEVELMODULE_DTOR_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_CTOR_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_GETCLASS_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_VTBLAddr NULL
+#define LevelModuleManager_getModuleAddr NULL
+#define LevelModuleManager_AddDelegateAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_CTOR_ADDRAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_DTOR_ADDRAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_VTBLAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_GETCLASS_ADDRAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_CTORAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_VFTABLEAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_GETTYPEAddr NULL
+#define PlantPropertySheet_PLANTPROPS_CTORAddr NULL
+#define PlantPropertySheet_PLANTPROPS_VFTABLEAddr NULL
+#define PlantPropertySheet_PLANTPROPS_GETTYPEAddr NULL
+#define Projectile_OFFSET_PROJECTILE_PLAY_IMPACTAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_CTORAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_VFTABLEAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_GETTYPEAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_CTORAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_DTORAddr PropertySheetBase_PROPSHEETBASE_CTORAddr
+#define PropertySheetBase_PROPSHEETBASE_DestructorAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_VFTABLEAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_GETTYPEAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_CONSTRUCT_ADDRAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_VTBLAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_GETCLASS_ADDRAddr NULL
+#define Zombie_ZOMBIE_CTOR_ADDRAddr NULL
+#define Zombie_ZOMBIE_DTOR_ADDRAddr NULL
+#define Zombie_ZOMBIE_VFTABLE_ADDRAddr NULL
+#define Zombie_OFFSET_ZOMBIE_GETTYPEAddr NULL
+#define Zombie_ZOMBIE_GET_RTCLASSAddr Zombie_OFFSET_ZOMBIE_GETTYPEAddr
+#define Zombie_ZOMBIE_ISDEADORDYING_ADDRAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_CTORAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_VFTABLEAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_GETTYPEAddr NULL
+#define ZombieType_ZOMBIETYPEDIRECTORY_GETAddr NULL
+#define ZombieType_ZOMBIETYPEDIRECTORY_GETTYPEAddr NULL
+
+
+
+
+
+#define Customize_Projectile_GridItemRaiserProjectile_DEFINE_RT_CLASS_CONSTRUCT_FUNCTION_BEGINAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_DEFINE_RT_CLASS_GET_CLASS_FUNCTIONAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_GetBoardAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_SpawnGridItemOnBoardAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_SetTeamFlagAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_ProjectileVFTableAddr NULL
+
+
+
+
+
+
+
+
+
+
+
+
+#define firstFreePlantID  191
+
+#endif
+
+#if GAME_VERSION==1030
+#define ZombieAlmanacAddr  NULL  // NULL means I don't know what it is.
+#define PlantNameMapperAddr  NULL  // 10.3 Don't need it.
+#define CamelZombieAddr  NULL
+#define camelMinigameModuleFuncAddr  NULL
+#define WorldMapDoMovementAddr  NULL
+#define ZombiePianoAddr  NULL
+#define ZombiePianoListAddr  NULL
+#define ReinitForSurfaceChangedAddr  NULL
+#define BoardAddr  NULL
+#define ZombieCarnieMagician__IsImmuneToShrinkAddr  NULL
+#define ZombieRomanHealer__IsImmuneToShrinkAddr  NULL
+#define ZombieCarnieMagician__ConditionFuncAddr  NULL
+#define ZombieRomanHealer__ConditionFuncAddr  NULL
+#define ZombieRomanHealer__InitializeFamilyImmunitiesAddr  NULL
+#define zFamilyFuncAddr  NULL
+#define LawnAppAddr  NULL
+#define SexyAppAddr  NULL
+/*#define RSBReadAddr  NULL*/
+#define RSBPathRecorderAddr  NULL
+#define ForceResources1536Addr  NULL
+#define LogOutputFuncAddrSimpleAddr NULL
+#define LogOutputFuncAddr  NULL
+#define MainLoadFuncAddr  NULL
+#define ResourceManagerFuncAddr  NULL
+#define ResourceReadFuncAddr  NULL
+#define RSBTestAndReadFuncAddr  NULL
+
+
+
+
+#define DelegateBase_SEXYDELEGATE_VTBLAddr  NULL
+#define Graphics_UNK_GRAPHICSFUNC2Addr  NULL
+#define Graphics_UNK_GRAPHICSFUNCAddr  NULL
+#define RtClass_rtClassCtorFuncAddr  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_GETREGISTRY  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_COPYWEAKPTR  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_GETTABLEOFTYPE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_EQUALS  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_ISVALIDPTR  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_RESOLVE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_FROMOTHER  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_MOVE  NULL
+#define RtWeakPtr_OFFSET_RTWEAKPTR_SETWEAKPTR  NULL
+
+
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC1Addr NULL
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC2Addr NULL
+#define TStdVectorManipulator_OFFSET_REFLECTION_RCUSTOMTYPE_TSTDVECTORMANIPULATOR_FUNC3Addr NULL
+#define CRefManualSymbolBuilder_OFFSET_REFLECTION_CREFMANUALSYMBOLBUILDER_GEINNERTEMPLATETYPENAMEAddr NULL
+#define CRefManualSymbolBuilder_OFFSET_REFLECTION_CREFMANUALSYMBOLBUILDER_GEMAPINNERTEMPLATETYPENAMEAddr NULL
+#define ReflectionBuilder_RT_BUILDER_REGISTERCLASS_FUNC1Addr NULL
+#define ReflectionBuilder_RT_BUILDER_REGISTERCLASS_FUNC2Addr NULL
+#define ReflectionBuilder_rtClassGetClassFuncAddr NULL
+
+
+
+#define BoardEntity_OFFSET_BOARDENTITY_DIEAddr NULL
+#define GameObject_GAMEOBJECT_CONSTRUCTOR_OFFSETAddr NULL
+#define GameObject_GAMEOBJECT_GETTYPE_OFFSETAddr NULL
+#define GameObject_GAMEOBJECT_FUNCTION_DIE_OFFSETAddr GameObject_GAMEOBJECT_CONSTRUCTOR_OFFSETAddr
+#define GridItem_SpawnGridItemAtAddr NULL
+#define LevelModule_LEVELMODULE_DTOR_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_CTOR_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_GETCLASS_ADDRAddr NULL
+#define LevelModule_LEVELMODULE_VTBLAddr NULL
+#define LevelModuleManager_getModuleAddr NULL
+#define LevelModuleManager_AddDelegateAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_CTOR_ADDRAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_DTOR_ADDRAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_VTBLAddr NULL
+#define LevelModuleProperties_LEVELMODULEPROPS_GETCLASS_ADDRAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_CTORAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_VFTABLEAddr NULL
+#define PlantFramework_PLANTFRAMEWORK_GETTYPEAddr NULL
+#define PlantPropertySheet_PLANTPROPS_CTORAddr NULL
+#define PlantPropertySheet_PLANTPROPS_VFTABLEAddr NULL
+#define PlantPropertySheet_PLANTPROPS_GETTYPEAddr NULL
+#define Projectile_OFFSET_PROJECTILE_PLAY_IMPACTAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_CTORAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_VFTABLEAddr NULL
+#define ProjectilePropertySheet_PROJECTILEPROPS_GETTYPEAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_CTORAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_DTORAddr PropertySheetBase_PROPSHEETBASE_CTORAddr
+#define PropertySheetBase_PROPSHEETBASE_DestructorAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_VFTABLEAddr NULL
+#define PropertySheetBase_PROPSHEETBASE_GETTYPEAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_CONSTRUCT_ADDRAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_VTBLAddr NULL
+#define StageModuleProperties_STAGEMODULEPROPS_GETCLASS_ADDRAddr NULL
+#define Zombie_ZOMBIE_CTOR_ADDRAddr NULL
+#define Zombie_ZOMBIE_DTOR_ADDRAddr NULL
+#define Zombie_ZOMBIE_VFTABLE_ADDRAddr NULL
+#define Zombie_OFFSET_ZOMBIE_GETTYPEAddr NULL
+#define Zombie_ZOMBIE_GET_RTCLASSAddr Zombie_OFFSET_ZOMBIE_GETTYPEAddr
+#define Zombie_ZOMBIE_ISDEADORDYING_ADDRAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_CTORAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_VFTABLEAddr NULL
+#define ZombiePropertySheet_ZOMBIEPROPS_GETTYPEAddr NULL
+#define ZombieType_ZOMBIETYPEDIRECTORY_GETAddr NULL
+#define ZombieType_ZOMBIETYPEDIRECTORY_GETTYPEAddr NULL
+
+
+
+
+
+#define Customize_Projectile_GridItemRaiserProjectile_DEFINE_RT_CLASS_CONSTRUCT_FUNCTION_BEGINAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_DEFINE_RT_CLASS_GET_CLASS_FUNCTIONAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_GetBoardAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_SpawnGridItemOnBoardAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_SetTeamFlagAddr NULL
+#define Customize_Projectile_GridItemRaiserProjectile_ProjectileVFTableAddr NULL
+
+
+
+
+
+#define firstFreePlantID  0  // 10.3 Don't need it.
+#endif
+
+//在此仿照如上格式再续写所需版本号偏移分类
+
+#pragma region OldFunctionRegion
+//uint ZombieAlmanacAddr;
+//uint PlantNameMapperAddr;
+//uint CamelZombieAddr;
+//uint camelMinigameModuleFuncAddr;
+//uint WorldMapDoMovementAddr;
+//uint ZombiePianoAddr;
+//uint ZombiePianoListAddr;
+//uint ReinitForSurfaceChangedAddr;
+//uint BoardAddr;
+//uint ZombieCarnieMagician__IsImmuneToShrinkAddr;
+//uint ZombieRomanHealer__IsImmuneToShrinkAddr;
+//uint ZombieCarnieMagician__ConditionFuncAddr;
+//uint ZombieRomanHealer__ConditionFuncAddr;
+//uint ZombieRomanHealer__InitializeFamilyImmunitiesAddr;
+//uint zFamilyFuncAddr;
+//uint LawnAppAddr;
+//uint SexyAppAddr;
+////禁用
+////uint RSBReadAddr;
+//uint ForceResources1536Addr;
+//uint LogOutputFuncAddr;
+//uint RSBPathRecorderAddr;
+//uint MainLoadFuncAddr;
+//uint ResourceManagerFuncAddr;
+//uint ResourceReadFuncAddr;
+//uint RSBTestAndReadFuncAddr;
+//
+////第一个自定义的植物ID
+//uint firstFreePlantID;
+
+//enum VersionOfGame
+//{
+//    v9_4 = 940,
+//    v9_6 = 960,
+//    v9_8 = 980,
+//    v10_3 = 1030
+//    //仿照上面添加版本号
+//};
+//
+//#pragma region Auto Select Addresses
+//int version_code = v10_3;//在此处修改版本号
+//void AddressesChangedByVersion() {
+//    switch (version_code)
+//    {
+//    case v9_4:
+//    {
+//        //部分偏移由某神秘大佬查找得来，但是由于v7a和v8a函数结构不同，还有新的库的未知什么导致的闪退问题，故v8a方案已废弃
+//        ZombieAlmanacAddr = 0x00;
+//        PlantNameMapperAddr = 0x1157778;//
+//        CamelZombieAddr = 0x00;
+//        camelMinigameModuleFuncAddr = 0x00;
+//        WorldMapDoMovementAddr = 0x00;
+//        ZombiePianoAddr = 0x00;
+//        ZombiePianoListAddr = 0x00;
+//        ReinitForSurfaceChangedAddr = 0x164C580;
+//        BoardAddr = 0xA94604;//
+//        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x00;
+//        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x00;
+//        ZombieCarnieMagician__ConditionFuncAddr = 0x00;
+//        ZombieRomanHealer__ConditionFuncAddr = 0x00;
+//        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
+//        zFamilyFuncAddr = 0x00;
+//        LawnAppAddr = NULL;
+//        SexyAppAddr = NULL;
+//        /*RSBReadAddr = NULL;*/
+//        RSBPathRecorderAddr = NULL;
+//        ForceResources1536Addr = NULL;
+//        LogOutputFuncAddr = NULL;
+//        MainLoadFuncAddr = NULL;
+//        ResourceManagerFuncAddr = NULL;
+//        ResourceReadFuncAddr = NULL;
+//        RSBTestAndReadFuncAddr = NULL;
+//
+//        firstFreePlantID = 185;
+//        break;
+//    }
+//    case v9_6:
+//    {
+//        ZombieAlmanacAddr = 0x00;
+//        PlantNameMapperAddr = 0x00;//
+//        CamelZombieAddr = 0x00;
+//        camelMinigameModuleFuncAddr = 0x00;
+//        WorldMapDoMovementAddr = 0x00;
+//        ZombiePianoAddr = 0x00;
+//        ZombiePianoListAddr = 0x00;
+//        ReinitForSurfaceChangedAddr = 0x00;
+//        BoardAddr = 0x00;//
+//        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x00;
+//        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x00;
+//        ZombieCarnieMagician__ConditionFuncAddr = 0x00;
+//        ZombieRomanHealer__ConditionFuncAddr = 0x00;
+//        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
+//        zFamilyFuncAddr = 0x00;
+//        LawnAppAddr = 0x2593760;
+//        SexyAppAddr = 0x25A4618;
+//        /*RSBReadAddr = NULL;*/
+//        RSBPathRecorderAddr = NULL;
+//        ForceResources1536Addr = NULL;
+//        LogOutputFuncAddr = NULL;
+//        MainLoadFuncAddr = NULL;
+//        ResourceManagerFuncAddr = NULL;
+//        ResourceReadFuncAddr = NULL;
+//        RSBTestAndReadFuncAddr = NULL;
+//
+//        firstFreePlantID = 188;
+//        break;
+//    }
+//    case v9_8:
+//    {
+//        ZombieAlmanacAddr = 0x00;
+//        PlantNameMapperAddr = 0x00;//
+//        CamelZombieAddr = 0x00;
+//        camelMinigameModuleFuncAddr = 0x00;
+//        WorldMapDoMovementAddr = 0x00;
+//        ZombiePianoAddr = 0x00;
+//        ZombiePianoListAddr = 0x00;
+//        ReinitForSurfaceChangedAddr = 0x00;
+//        BoardAddr = 0x00;//
+//        ZombieCarnieMagician__IsImmuneToShrinkAddr = 0x00;
+//        ZombieRomanHealer__IsImmuneToShrinkAddr = 0x00;
+//        ZombieCarnieMagician__ConditionFuncAddr = 0x00;
+//        ZombieRomanHealer__ConditionFuncAddr = 0x00;
+//        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = 0x00;
+//        zFamilyFuncAddr = 0x00;
+//        LawnAppAddr = NULL;
+//        SexyAppAddr = NULL;
+//        /*RSBReadAddr = NULL;*/
+//        RSBPathRecorderAddr = NULL;
+//        ForceResources1536Addr = NULL;
+//        LogOutputFuncAddr = NULL;
+//        MainLoadFuncAddr = NULL;
+//        ResourceManagerFuncAddr = NULL;
+//        ResourceReadFuncAddr = NULL;
+//        RSBTestAndReadFuncAddr = NULL;
+//
+//        firstFreePlantID = 191;
+//        break;
+//    }
+//    case v10_3:
+//    {
+//        ZombieAlmanacAddr = NULL;  // NULL means I don't know what it is.
+//        PlantNameMapperAddr = NULL;  // 10.3 Don't need it.
+//        CamelZombieAddr = NULL;
+//        camelMinigameModuleFuncAddr = NULL;
+//        WorldMapDoMovementAddr = NULL;
+//        ZombiePianoAddr = NULL;
+//        ZombiePianoListAddr = NULL;
+//        ReinitForSurfaceChangedAddr = NULL;
+//        BoardAddr = NULL;
+//        ZombieCarnieMagician__IsImmuneToShrinkAddr = NULL;
+//        ZombieRomanHealer__IsImmuneToShrinkAddr = NULL;
+//        ZombieCarnieMagician__ConditionFuncAddr = NULL;
+//        ZombieRomanHealer__ConditionFuncAddr = NULL;
+//        ZombieRomanHealer__InitializeFamilyImmunitiesAddr = NULL;
+//        zFamilyFuncAddr = NULL;
+//        LawnAppAddr = NULL;
+//        SexyAppAddr = NULL;
+//        /*RSBReadAddr = NULL;*/
+//        RSBPathRecorderAddr = NULL;
+//        ForceResources1536Addr = NULL;
+//        LogOutputFuncAddr = NULL;
+//        MainLoadFuncAddr = NULL;
+//        ResourceManagerFuncAddr = NULL;
+//        ResourceReadFuncAddr = NULL;
+//        RSBTestAndReadFuncAddr = NULL;
+//
+//        firstFreePlantID = 0;  // 10.3 Don't need it.
+//        break;
+//    }
+//    //仿照上述case添加版本偏移
+//    default:
+//    {
+//        break;
+//    }
+//    }
+//}
+//#pragma endregion
 #pragma endregion
 
 #pragma region DeleteRegion

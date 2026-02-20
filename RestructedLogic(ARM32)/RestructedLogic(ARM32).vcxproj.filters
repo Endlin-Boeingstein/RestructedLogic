@@ -24,6 +24,18 @@
     <ClCompile Include="Decrypt\aes.cpp">
       <Filter>Decrypt</Filter>
     </ClCompile>
+    <ClCompile Include="Reflection\ReflectionBuilder.cpp">
+      <Filter>Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="Sexy\RtClass.cpp">
+      <Filter>Sexy</Filter>
+    </ClCompile>
+    <ClCompile Include="PvZ2\LevelModuleManager.cpp">
+      <Filter>PvZ2</Filter>
+    </ClCompile>
+    <ClCompile Include="Customize\Projectile\GridItemRaiserProjectile.cpp">
+      <Filter>Customize\Projectile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RestructedLogic_ARM32_.h" />
@@ -80,6 +92,150 @@
     <ClInclude Include="Decrypt\picosha2.h">
       <Filter>Decrypt</Filter>
     </ClInclude>
+    <ClInclude Include="Reflection\CRefManualSymbolBuilder.h">
+      <Filter>Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="Reflection\RClass.h">
+      <Filter>Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="Reflection\RClassRef.h">
+      <Filter>Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="Reflection\ReflectionBuilder.h">
+      <Filter>Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="Reflection\ReflectionFieldType.h">
+      <Filter>Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="Reflection\RField.h">
+      <Filter>Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="Reflection\RSimpleType.h">
+      <Filter>Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="Reflection\RSymbol.h">
+      <Filter>Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="Reflection\RType.h">
+      <Filter>Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="Reflection\RCustomType\TStdVectorManipulator.h">
+      <Filter>Reflection\RCustomType</Filter>
+    </ClInclude>
+    <ClInclude Include="Sexy\Color.h">
+      <Filter>Sexy</Filter>
+    </ClInclude>
+    <ClInclude Include="Sexy\DelegateBase.h">
+      <Filter>Sexy</Filter>
+    </ClInclude>
+    <ClInclude Include="Sexy\RtClass.h">
+      <Filter>Sexy</Filter>
+    </ClInclude>
+    <ClInclude Include="Sexy\RtObject.h">
+      <Filter>Sexy</Filter>
+    </ClInclude>
+    <ClInclude Include="Sexy\RtWeakPtr.h">
+      <Filter>Sexy</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\AttachedEffectManager.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\BoardEntity.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\CollisionTypeFlags.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\Component.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\DamageInfo.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\DamageTypeFlags.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\EntityConditions.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\GameObject.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\GridItem.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\GridItemPropertySheet.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\ModularRealObject.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\ObjectTypeDescriptor.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\Projectile.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\ProjectilePropertySheet.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\PropertySheetBase.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\RealObject.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\StringRestrictionSet.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\ZombieConditions.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="Sexy\Graphics.h">
+      <Filter>Sexy</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\LevelDefinition.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\LevelModule.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\LevelModuleProperties.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\Plant.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\PlantAction.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\PlantFramework.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\PlantPropertySheet.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\StageModuleProperties.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\Zombie.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\ZombiePropertySheet.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\ZombieType.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="PvZ2\LevelModuleManager.h">
+      <Filter>PvZ2</Filter>
+    </ClInclude>
+    <ClInclude Include="Sexy\Event.h">
+      <Filter>Sexy</Filter>
+    </ClInclude>
+    <ClInclude Include="Customize\Projectile\GridItemRaiserProjectile.h">
+      <Filter>Customize\Projectile</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x32">
@@ -114,6 +270,21 @@
     </Filter>
     <Filter Include="Decrypt">
       <UniqueIdentifier>{998aadfa-bdd8-47a4-9248-7affc34d4eae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sexy">
+      <UniqueIdentifier>{5d3c7b3d-0e5c-41e0-a7c0-e8519ce2236d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Reflection">
+      <UniqueIdentifier>{efbe67f1-e95e-4e86-aa12-ed2e31a853e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Reflection\RCustomType">
+      <UniqueIdentifier>{e464cd03-6610-4d4a-808b-66a066dd8300}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Customize">
+      <UniqueIdentifier>{4a8fa872-2183-4469-98fd-e9abd2a97ff8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Customize\Projectile">
+      <UniqueIdentifier>{cf0721f2-84bd-417b-8b62-a387f6fa8be5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

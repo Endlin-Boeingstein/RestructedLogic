@@ -904,6 +904,32 @@ int hkLogOutputFunc(char* format, ...) {
 
 #pragma endregion
 
+#pragma region LogOutputHook_Simple
+
+typedef int (*LogOutputFunc_Simple)(const char*);
+LogOutputFunc_Simple oLogOutputFunc_Simple = NULL;
+std::mutex g_logMutex_Simple;
+
+int hkLogOutputFunc_Simple(const char* text) {
+    if (!oLogOutputFunc_Simple) {
+        LOGI("LogOutputFunc_Simple: Original function pointer is null");
+        return -1;
+    }
+
+    // 预检逻辑（模仿 IDA 中的 if(!v2)）
+    if (text && *text != '\0') {
+        std::lock_guard<std::mutex> lock(g_logMutex_Simple);
+
+        // 直接打印传入的字符串，无需 vsnprintf，因为这不是可变参数函数
+        LOGI("LogOutputFunc_Simple [PvZ2Debug]: %s", text);
+    }
+
+    // 调用原函数
+    return oLogOutputFunc_Simple(text);
+}
+
+#pragma endregion
+
 
 //友情提示：该ARM64工程所有功能均未测试，据估计应当全部重写（以支持64位指针），故劳烦修好后在进行测试，尤其是数据包载入，谢谢！
 
@@ -913,8 +939,8 @@ __attribute__((constructor))
 void libRestructedLogic_ARM64__main()
 {
     LOGI("Initializing %s", LIB_TAG);
-    //根据版本修改偏移
-    AddressesChangedByVersion();
+    //根据版本修改偏移——已经不需要了
+    /*AddressesChangedByVersion();*/
     // New, easier to manage way of adding typenames to the plant/zombie name mapper
     REGISTER_PLANT_TYPENAME("funny_tomato");
     for (int i = 0; i < 109; i++) {
@@ -939,7 +965,8 @@ void libRestructedLogic_ARM64__main()
     //PVZ2HookFunction(ZombieRomanHealer__InitializeFamilyImmunitiesAddr, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");
     //PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
 
-    if (version_code < v10_3) {
+    /*if (version_code < v10_3) {*/
+    if (GAME_VERSION < 1030) {
         /*PVZ2HookFunction(ZombieAlmanacAddr, (void*)hkCreateZombieTypenameMap, (void**)&oZombieAlmanacCtor, "ZombieAlmanac::ZombieAlamanc");
         PVZ2HookFunction(PlantNameMapperAddr, (void*)hkCreatePlantNameMapper, (void**)&oPlantNameMapperCtor, "PlantNameMapper::PlantNameMapper");
         PVZ2HookFunction(CamelZombieAddr, (void*)hkCamelZombieFunc, (void**)&oCamelZombieFunc, "CamelZombie::vftable_func_0xEC");
@@ -951,6 +978,8 @@ void libRestructedLogic_ARM64__main()
         PVZ2HookFunction(ZombieRomanHealer__ConditionFuncAddr, (void*)hkMagicianHealerConditionFunc, (void**)&dispose, "ZombieRomanHealer::ConditionFunc");
         PVZ2HookFunction(ZombieRomanHealer__InitializeFamilyImmunitiesAddr, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");*/
     }
+    //输出简要日志
+    PVZ2HookFunction(LogOutputFuncAddrSimpleAddr, (void*)hkLogOutputFunc_Simple, (void**)&oLogOutputFunc_Simple, "LogOutputFunc_Simple");
     //输出日志
     PVZ2HookFunction(LogOutputFuncAddr, (void*)hkLogOutputFunc, (void**)&oLogOutputFunc, "LogOutputFunc");
     PVZ2HookFunction(MainLoadFuncAddr, (void*)hkMainLoadFunc, (void**)&oMainLoadFunc, "ResourceManager::MainLoadFunc");

@@ -11,10 +11,21 @@ namespace Sexy
 	typedef unsigned int uint;
 	typedef unsigned long ulong;
 
-	struct SexyVector2 {
+	// idfk i found this in Board's buildSymbols
+	// its probably just a float
+	typedef float pvztime_t;
+
+	struct SexyVector2
+	{
 		float mX, mY;
-		SexyVector2() : mX(0), mY(0) {};
-		SexyVector2(float x, float y) : mX(x), mY(y) {};
+
+		SexyVector2() : mX(0), mY(0) {}
+
+		SexyVector2(float x, float y)
+		{
+			this->mX = x;
+			this->mY = y;
+		}
 	};
 
 	struct SexyVector3
@@ -30,75 +41,58 @@ namespace Sexy
 			mZ = z;
 		}
 	};
-
-	struct Point {
-		int x;
-		int y;
+	struct Point
+	{
+		int mX;
+		int mY;
 
 		Point() {};
 
-		Point(int x, int y) : x(x), y(y) {};
+		Point(int x, int y) : mX(x), mY(y) {};
 	};
 
-	struct FPoint {
-		float x;
-		float y;
+	struct FPoint
+	{
+		float mX;
+		float mY;
 
 		FPoint() {};
 
-		FPoint(float x, float y) : x(x), y(y) {};
+		FPoint(float x, float y) : mX(x), mY(y) {};
 	};
-}
+};
 
 struct Rect
 {
 	int mX, mY, mWidth, mHeight;
 
-	Rect() {
-		this->mX = 0;
-		this->mY = 0;
-		this->mWidth = 0;
-		this->mHeight = 0;
-	}
+	Rect() : mX(0), mY(0), mWidth(0), mHeight(0) {}
 
-	Rect(int mX, int mY, int mWidth, int mHeight) {
-		this->mX = mX;
-		this->mY = mY;
-		this->mWidth = mWidth;
-		this->mHeight = mHeight;
+	Rect(int x, int y, int width, int height)
+	{
+		mX = x;
+		mY = y;
+		mWidth = width;
+		mHeight = height;
 	}
 };
 
-struct FRect {
+struct FRect
+{
 	float mX, mY, mWidth, mHeight;
 
-	FRect() {
-		this->mX = 0;
-		this->mY = 0;
-		this->mWidth = 0;
-		this->mHeight = 0;
-	}
+	FRect() : mX(0), mY(0), mWidth(0), mHeight(0) {}
 
-	FRect(float mX, float mY, float mWidth, float mHeight) {
-		this->mX = mX;
-		this->mY = mY;
-		this->mWidth = mWidth;
-		this->mHeight = mHeight;
+	FRect(float x, float y, float width, float height)
+	{
+		mX = x;
+		mY = y;
+		mWidth = width;
+		mHeight = height;
 	}
 };
 
-struct CornerRect {
-	Sexy::FPoint topLeft;
-	Sexy::FPoint topRight;
-	Sexy::FPoint bottomLeft;
-	Sexy::FPoint bottomRight;
 
-	CornerRect() {}
-
-	CornerRect(Sexy::FPoint&& topLeft, Sexy::FPoint&& topRight, Sexy::FPoint&& bottomLeft, Sexy::FPoint&& bottomRight) :
-		topLeft(topLeft), topRight(topRight), bottomLeft(bottomLeft), bottomRight(bottomRight) {
-	};
-};
 
 struct ValueRange
 {

@@ -172,6 +172,10 @@ inline int worldMapBoundaryMovement(WorldMap* self, float fX, float fY, bool all
         fY = self->m_boundaryY + self->m_boundaryHeight;
     }
 
+    //地图垂直移动修复
+    self->m_posX = fX;
+    self->m_posY = fY;
+
     return 1;
 }
 
@@ -183,6 +187,31 @@ int hkWorldMapDoMovement(WorldMap* map, int64_t x, int64_t y)
     LOGI("Doing map movement: x - %d, y - %d", x, y);
     return worldMapBoundaryMovement(map, x, y,g_allowVerticalMovement);
 }
+//这个还不能用
+//void hkWorldMapDoMovement(WorldMap* self, float fX, float fY, bool disableBoundaryChecks)
+//{
+//    if (!disableBoundaryChecks)
+//    {
+//        if (fX <= self->m_boundaryX) {
+//            fX = self->m_boundaryX;
+//        }
+//
+//        if (fX >= self->m_boundaryX + self->m_boundaryWidth) {
+//            fX = self->m_boundaryX + self->m_boundaryWidth;
+//        }
+//
+//        if (fY <= self->m_boundaryY) {
+//            fY = self->m_boundaryY;
+//        }
+//
+//        if (fY >= self->m_boundaryY + self->m_boundaryHeight) {
+//            fY = self->m_boundaryY + self->m_boundaryHeight;
+//        }
+//    }
+//
+//    self->m_posX = fX;
+//    self->m_posY = fY;
+//}
 
 
 
@@ -1216,7 +1245,7 @@ int hkRSBPathRecorder(uint* a1) {
     LOGI("RSB_TRACE: Starting Hybrid Mmap-Stream Process...");
 
     // 一定要改！！！！！把你的地址改成/data/user/0/com.ea.game.pvz2_改版名/files！！！！！
-    std::string cache_dir = "/data/user/0/com.ea.game.pvz2_row/files";
+    std::string cache_dir = "/data/user/0/com.ea.game.pvz2_row/files";///storage/emulated/0/Android/data/com.ea.game.pvz2_row/cache
     makePath(cache_dir);
     //这个地方可以随意写，这样别人就认不出来了
     std::string temp_path = cache_dir + "/.cache_data_file";
@@ -1606,6 +1635,32 @@ int hkLogOutputFunc(char* format, ...) {
 
 #pragma endregion
 
+#pragma region LogOutputHook_Simple
+
+typedef int (*LogOutputFunc_Simple)(const char*);
+LogOutputFunc_Simple oLogOutputFunc_Simple = NULL;
+std::mutex g_logMutex_Simple;
+
+int hkLogOutputFunc_Simple(const char* text) {
+    if (!oLogOutputFunc_Simple) {
+        LOGI("LogOutputFunc_Simple: Original function pointer is null");
+        return -1;
+    }
+
+    // 预检逻辑（模仿 IDA 中的 if(!v2)）
+    if (text && *text != '\0') {
+        std::lock_guard<std::mutex> lock(g_logMutex_Simple);
+
+        // 直接打印传入的字符串，无需 vsnprintf，因为这不是可变参数函数
+        LOGI("LogOutputFunc_Simple [PvZ2Debug]: %s", text);
+    }
+
+    // 调用原函数
+    return oLogOutputFunc_Simple(text);
+}
+
+#pragma endregion
+
 
 
 
@@ -1615,8 +1670,8 @@ __attribute__((constructor))
 void libRestructedLogic_ARM32__main()
 {
     LOGI("Initializing %s", LIB_TAG);
-    //根据版本修改偏移
-    AddressesChangedByVersion();
+    //根据版本修改偏移——已经不需要了
+    /*AddressesChangedByVersion();*/
     
     
 
@@ -1624,7 +1679,8 @@ void libRestructedLogic_ARM32__main()
     //No need to use///REGISTER_ZOMBIE_TYPENAME("steam");
 
     // Function hooks
-    if (version_code < v10_3) {
+    /*if (version_code < v10_3) {*/
+    if (GAME_VERSION < 1030) {
         //PVZ2HookFunction(ZombieAlmanacAddr, (void*)hkCreateZombieTypenameMap, (void**)&oZombieAlmanacCtor, "ZombieAlmanac::ZombieAlamanc");
         PVZ2HookFunction(PlantNameMapperAddr, (void*)hkCreatePlantNameMapper, (void**)&oPlantNameMapperCtor, "PlantNameMapper::PlantNameMapper");
         PVZ2HookFunction(CamelZombieAddr, (void*)hkCamelZombieFunc, (void**)&oCamelZombieFunc, "CamelZombie::vftable_func_0xEC");
@@ -1637,6 +1693,8 @@ void libRestructedLogic_ARM32__main()
         PVZ2HookFunction(ZombieRomanHealer__InitializeFamilyImmunitiesAddr, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");
         
     }
+    //输出简要日志
+    PVZ2HookFunction(LogOutputFuncAddrSimpleAddr, (void*)hkLogOutputFunc_Simple, (void**)&oLogOutputFunc_Simple, "LogOutputFunc_Simple");
     //输出日志
     PVZ2HookFunction(LogOutputFuncAddr, (void*)hkLogOutputFunc, (void**)&oLogOutputFunc, "LogOutputFunc");
     //Hook主函数、RSB读取函数、资源组读取函数、资源分布读取函数
