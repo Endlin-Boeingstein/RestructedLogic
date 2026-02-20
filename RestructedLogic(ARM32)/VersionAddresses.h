@@ -39,6 +39,7 @@
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
 #define BoardInitAddr  NULL
+#define CDNLoadAddr NULL
 
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  NULL
@@ -159,6 +160,7 @@
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
 #define BoardInitAddr  NULL
+#define CDNLoadAddr NULL
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  0x1C5C758
 #define Graphics_UNK_GRAPHICSFUNC2Addr  0x1124784
@@ -276,6 +278,7 @@
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
 #define BoardInitAddr  NULL
+#define CDNLoadAddr NULL
 
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  NULL
@@ -394,6 +397,7 @@
 #define ResourceReadFuncAddr  0x16228F0
 #define RSBTestAndReadFuncAddr  0x16303BC
 #define BoardInitAddr  0x6E65AC
+#define CDNLoadAddr 0x876CB0
 
 
 

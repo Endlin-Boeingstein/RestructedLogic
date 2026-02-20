@@ -29,6 +29,7 @@
 #define SexyAppAddr  NULL
  /*#define RSBReadAddr  NULL*/
 #define RSBPathRecorderAddr  NULL
+#define PrimeGlyphCacheAddr  NULL
 #define ForceResources1536Addr  NULL
 #define LogOutputFuncAddrSimpleAddr NULL
 #define LogOutputFuncAddr  NULL
@@ -36,6 +37,7 @@
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
+#define CDNLoadAddr NULL
 
 
 
@@ -151,6 +153,7 @@
 #define SexyAppAddr  0x25A4618
 /*#define RSBReadAddr  NULL*/
 #define RSBPathRecorderAddr  NULL
+#define PrimeGlyphCacheAddr  NULL
 #define ForceResources1536Addr  NULL
 #define LogOutputFuncAddrSimpleAddr NULL
 #define LogOutputFuncAddr  NULL
@@ -158,6 +161,7 @@
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
+#define CDNLoadAddr NULL
 
 
 
@@ -273,6 +277,7 @@
 #define SexyAppAddr  NULL
 /*#define RSBReadAddr  NULL*/
 #define RSBPathRecorderAddr  NULL
+#define PrimeGlyphCacheAddr  NULL
 #define ForceResources1536Addr  NULL
 #define LogOutputFuncAddrSimpleAddr NULL
 #define LogOutputFuncAddr  NULL
@@ -280,6 +285,7 @@
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
+#define CDNLoadAddr NULL
 
 
 
@@ -401,6 +407,7 @@
 #define SexyAppAddr  NULL
 /*#define RSBReadAddr  NULL*/
 #define RSBPathRecorderAddr  NULL
+#define PrimeGlyphCacheAddr  NULL
 #define ForceResources1536Addr  NULL
 #define LogOutputFuncAddrSimpleAddr NULL
 #define LogOutputFuncAddr  NULL
@@ -408,6 +415,7 @@
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
+#define CDNLoadAddr NULL
 
 
 

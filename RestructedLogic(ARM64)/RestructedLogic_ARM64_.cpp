@@ -324,6 +324,133 @@ bool hkMagicianInitializeFamilyImmunities(int a1, int64_t a2)
 
 #pragma endregion
 
+#pragma region PrimeGlyphCacheLimitationDescription
+//此代码为融小宝对RestructedLogic工程的私有化改造功能之一，并未根据RestructedLogic的GPL-3.0协议进行公开，我已拥有相关证据，你不守规矩，就别怪我强制公开了，并且我也没用你的写法，自己写的
+//也不是啥秘密，按照一般查找流程都能找到
+//再不济你去https://www.bilibili.com/opus/657868413102718978一路大佬的帖子，打开IDA PRO就知道怎么找了
+//实际上我是先去找RSB读取函数，然后再找这里的，一路大佬的帖子有一个地方会卡住人（实际上是你不会确认位置），所以使用RSB主读取函数寻找法就能找到了。
+//你要是恼羞成怒，还以为我偷别人的抢别人的，那好，这段的伪C代码（10.3版本）我贴在这了
+//int __fastcall sub_1697E88(_DWORD* a1, int a2)
+//{
+//    int v4; // r7
+//    int* v5; // r6
+//    int v6; // r1
+//    int v7; // r3
+//    int v8; // r0
+//    int v9; // r0
+//    int v10; // r0
+//    int v11; // r0
+//    int v12; // r5
+//    int v13; // r0
+//    int v14; // r0
+//    __int64 v15; // r0
+//    __int64 v16; // r0
+//    int v17; // r7
+//    int v18; // r5
+//    int v20[2]; // [sp+10h] [bp-2F8h] BYREF
+//    void* v21; // [sp+18h] [bp-2F0h]
+//    char v22[16]; // [sp+20h] [bp-2E8h] BYREF
+//    char v23[536]; // [sp+30h] [bp-2D8h] BYREF
+//    int v24; // [sp+248h] [bp-C0h]
+//    int v25; // [sp+2A4h] [bp-64h]
+//    int v26; // [sp+2ECh] [bp-1Ch]
+//
+//    sub_1716838(sub_169B238, sub_169B248, j_realloc);
+//    v4 = *(_DWORD*)(a2 + 1304);
+//    if (*(_DWORD*)(a2 + 1300) < v4)
+//        v4 = *(_DWORD*)(a2 + 1300);
+//    v5 = (int*)operator new(0x130u);
+//    v6 = ((int (*)(void))sub_169B258)();
+//    v7 = 2048;
+//    if (v4 <= 1024)
+//        v7 = 1024;
+//    if (v4 <= 640)
+//        v7 = 512;
+//    sub_177ECF4(v5, v6, a2, v7);
+//    a1[1] = v5;
+//    v8 = *v5;
+//    v5[59] = 1;
+//    v9 = (*(int(__fastcall**)(int*, int, int))(v8 + 12))(v5, 1, 1);
+//    v10 = sub_169B258(v9);
+//    v11 = sub_16CF03C(v10);
+//    sub_16CF08C(v11);
+//    v12 = operator new(0xB500u);
+//    v13 = sub_16D901C(v12, 0);
+//    *a1 = v12;
+//    v14 = sub_169B258(v13);
+//    sub_16DA6F8(v12, v14);
+//    sub_16CF418(*a1);
+//    (*(void(__fastcall**)(_DWORD))(*(_DWORD*)*a1 + 8))(*a1);
+//    v21 = 0;
+//    v20[1] = 0;
+//    v20[0] = 0;
+//    sub_2F06A8((int)v20, (wchar_t*)&off_20381A8, 8u);
+//    v15 = sub_14E138C(v22, 1);
+//    sub_1698158(v23, HIDWORD(v15), v20, 7, v15);
+//    if ((v20[0] & 1) != 0)
+//        operator delete(v21);
+//    v16 = sub_14E138C(v20, 0);
+//    v25 = sub_14E1548(v16, HIDWORD(v16));
+//    v24 = 1;
+//    v17 = (*(int(__fastcall**)(_DWORD, char*, _DWORD, _DWORD, int, int, int))(*(_DWORD*)*a1 + 32))(
+//        *a1,
+//        v23,
+//        0,
+//        0,
+//        0xFFFF,
+//        -1,
+//        1);
+//    v18 = operator new(0x2C8u);
+//    sub_1694728(v18, v17, v23);
+//    a1[2] = v18;
+//    a1[3] = v18;
+//    return _stack_chk_guard - v26;
+//}
+//还有这个，这个就是最终的地址，看看，看看，是不是和下面实装的代码很像？
+//我半年来我就看看，这破圈子把在国内打破so代码垄断的人赶走后，会发展成什么样
+//结果呢？维护垄断并攻击技术开放的人成了最大受益者，甚至RestructedLogic都变成了某些人私有的玩物！！！！！
+//这大半年来国内已经非常落后了！有些人都投奔国外了！国内的人都开始为这些垄断付费了！
+//故特实装该代码以大白于天下，勿忘开源之精神，与垄断者抗争到底！！！！！
+//_DWORD* __fastcall sub_177ECF4(_DWORD* a1, int a2, int a3, int a4)
+//{
+//    _DWORD* result; // r0
+//
+//    sub_17A97BC();
+//    *a1 = off_21E8698;
+//    memset(a1 + 66, 0, 0x24u);
+//    result = a1;
+//    a1[22] = a4;
+//    a1[75] = a3;
+//    return result;
+//}
+#pragma endregion
+
+#pragma region PrimeGlyphCacheLimitation
+//无语了，连Limitation都能打成Limination，还得我去修正
+typedef uint* (*PrimeGlyphCacheLimitation)(uint*, int, int, int);
+PrimeGlyphCacheLimitation oPrimeGlyphCacheLimitation = NULL;
+
+//一路：高端设备缓冲大小为2048，中端设备为1024，低端设备为512。经过测试，缓冲大小最大只能设为2048，设为更高值，会导致进入游戏后文字渲染全为空白，这与设为0的效果一致。
+uint* hkPrimeGlyphCacheLimitation(uint* a1, int a2, int a3, int a4)
+{
+    //typedef int(*Func1)(int a1, int a2);
+    //Func1 func = (Func1)getActualOffset(0x141D75C);
+    //func((uint)a1, a2);
+    //*a1 = getActualOffset(0x1DDB7B8);
+    //memset(a1 + 66, 0, 0x24u);
+    //a1[22] = 2048; //缓冲区大小
+    //a1[75] = a3;
+    //return a1;
+    //你知不知道，你这样做是非常垃圾的做法？还是看我这个RL的创始人怎么改的吧！学着点！
+    uint* result = oPrimeGlyphCacheLimitation(a1, a2, a3, a4);
+    a1[22] = 2048;
+    LOGI("Hooked sub_177ECF4: Modified a1[22] to %d", a1[22]);
+    return result;
+
+}
+
+#pragma endregion
+
 //已探明RSB读取入口（废了老大劲拿IDA PRO搁那推），先进行测试（目前为XOR加密未测试）
 #pragma region RSB Decrypt
 //// RSB decryption function (replace with your actual decryption algorithm)
@@ -784,6 +911,83 @@ int hkForceResources1536(int a1)
 }
 #pragma endregion
 
+//在此感谢CZ的技术专栏分享，我将变量名和一些方式进行了小小的改变，但依旧需要对其为技术的分享表达感谢！！！！！
+#pragma region CDNExpansion
+typedef int (*CDNExpand)(int* a1, const Sexy::SexyString& i_rtonName, int i_table, int a4);
+CDNExpand oCDNLoad = NULL;
+
+std::atomic<bool> executed(false);
+
+void hkCDNLoad(int* a1, const Sexy::SexyString& rtonName, int rtonTable, int a4)
+
+{
+
+    if (!oCDNLoad)
+    {
+        return;
+    }
+    //至于这个偏移怎么查.........很简单，HEX搜products.rton
+    //然后根据products.rton的"p"的偏移地址，用ida pro跳转到该地址
+    //你会发现一堆的rton（绿色）右侧都用同一个DATA XREF地址跳转（引用偏移地址）
+    //双击那个地址，你就会到达CZ讲的那个大函数，跳转后按F5，然后向下翻就能看到
+    //那些rton下面都有同一个函数，就是那个函数需要hook
+    //然后原理CZ讲过了，我也是直接拿来用，没啥丢脸的，有公开的好东西不用才是固执嘛......
+    //不过，CZ拿64位演示，推荐的bb2和jay krow的32位工程，对于一些萌新来说可不友好哦......
+    //原理很简单（如果这都要拿AI去查什么意思的话，那我可要数落你了啊）
+    //executed一开始为false，我们在塞入rton之前的第一步就是检测executed是否为true
+    //executed你可以比喻为一个罐子，打开了就是true，没打开就是false，我们只需要打开一次就不需要打开了
+    //所以第一次我们打开之前，罐子是未开封状态，打开了就是开封状态
+    //未开封状态我们要打开罐子拿出东西塞别的里面去，我们塞过之后就不需要再塞重复的了
+    //所以一看到开封的状态我们就知道不需要在这个罐子里面拿东西了
+    //所以executed在我们塞rton之前是false，塞rton时候就已经变true了，就不需要再塞了
+    if (!executed.exchange(true))
+    {
+        const struct
+        {
+            const char* name;
+            int table;
+        } rtonFiles[] = {
+            {"PropertySheets.rton", 9},
+            {"PlantProperties.rton", 16},
+            {"PlantTypes.rton", 11},
+            {"PlantAlmanacData.rton", 15},
+            {"ZombieTypes.rton", 18},
+            {"ZombieActions.rton", 19},
+            {"ZombieProperties.rton", 20},
+            {"ProjectileTypes.rton", 22},
+            {"GridItemTypes.rton", 23},
+            {"LevelModules.rton", 38},
+            {"Powers.rton", 17},
+            {"PinataTypes.rton", 10},
+            {"CreatureTypes.rton", 21},
+            {"ItemGroups.rton", 24},
+            {"EffectObjectTypes.rton", 25},
+            {"CollectableTypes.rton", 26},
+            {"PresentTables.rton", 27},
+            {"PresentTypes.rton", 28},
+            {"PlantFamilyTypes.rton", 29},
+            {"Quest_Categories.rton", 31},
+            {"Quest_Themes.rton", 32},
+            {"ArmorTypes.rton", 55},
+            {"NPCS.rton", 37},
+            {"GameFeatures.rton", 40},
+            {"ToolPackets.rton", 41},
+            {"BoardGridMaps.rton", 48},
+            {"LevelModulesDifficulty.rton", 49},
+            {"LevelMutatorModules.rton", 50},
+            {"LevelMutatorTables.rton", 51},
+            {"LevelScoringRules.rton", 52},
+            {"HotUIConfig.rton", 53},
+            {"WorldMapData.rton", 132} };
+        for (const auto& file : rtonFiles)
+        {
+            oCDNLoad(a1, file.name, file.table, 1);
+        }
+    }
+    oCDNLoad(a1, rtonName, rtonTable, a4);
+}
+#pragma endregion
+
 #pragma region LoaderTest
 //探测开启游戏时到底载入了哪些函数
 typedef int (*MainLoadFunc)(int, int, int);
@@ -1046,10 +1250,15 @@ void libRestructedLogic_ARM64__main()
     PVZ2HookFunction(RSBTestAndReadFuncAddr, (void*)hkRSBTestAndReadFunc, (void**)&oRSBTestAndReadFunc, "ResourceManager::RSBTestAndReadFunc");
     //自主开发强制1536
     PVZ2HookFunction(ForceResources1536Addr, (void*)hkForceResources1536, (void**)&oForceResources1536, "ForceResources1536");
+
+    //CDN读取rton，感谢CZ技术专栏分享技术！！！
+    PVZ2HookFunction(CDNLoadAddr, (void*)hkCDNLoad, (void**)&oCDNLoad, "CDNLoadExpansion");
     // Hook RSBRead (replace original)
     //禁用禁用PVZ2HookFunction(RSBReadAddr, (void*)hkRSBRead, nullptr, "ResourceManager::Init");
     //RSB解密
     PVZ2HookFunction(RSBPathRecorderAddr, (void*)hkRSBPathRecorder, (void**)&oRSBPathRecorder, "ResourceManager::RSBPathRecorder");
+    //此代码为融小宝对RestructedLogic工程的私有化改造功能之一，并未根据RestructedLogic的GPL-3.0协议进行公开，我已拥有相关证据，你不守规矩，就别怪我强制公开了，并且我也没用你的写法，自己写的
+    PVZ2HookFunction(PrimeGlyphCacheAddr, (void*)hkPrimeGlyphCacheLimitation, (void**)&oPrimeGlyphCacheLimitation, "PrimeGlyphCache::PrimeGlyphCacheLimitation");
     /*PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)HkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
     PVZ2HookFunction(BoardAddr, (void*)hkBoardCtor, (void**)&oBoardCtor, "Board::Board");*/
 

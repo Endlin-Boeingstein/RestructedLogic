@@ -1476,6 +1476,84 @@ int hkRSBPathRecorder(uint* a1) {
 
 #pragma endregion
 
+
+//在此感谢CZ的技术专栏分享，我将变量名和一些方式进行了小小的改变，但依旧需要对其为技术的分享表达感谢！！！！！
+#pragma region CDNExpansion
+typedef int (*CDNExpand)(int* a1, const Sexy::SexyString& i_rtonName, int i_table, int a4);
+CDNExpand oCDNLoad = NULL;
+
+std::atomic<bool> executed(false);
+
+void hkCDNLoad(int* a1, const Sexy::SexyString& rtonName, int rtonTable, int a4)
+
+{
+
+    if (!oCDNLoad)
+    {
+        return;
+    }
+    //至于这个偏移怎么查.........很简单，HEX搜products.rton
+    //然后根据products.rton的"p"的偏移地址，用ida pro跳转到该地址
+    //你会发现一堆的rton（绿色）右侧都用同一个DATA XREF地址跳转（引用偏移地址）
+    //双击那个地址，你就会到达CZ讲的那个大函数，跳转后按F5，然后向下翻就能看到
+    //那些rton下面都有同一个函数，就是那个函数需要hook
+    //然后原理CZ讲过了，我也是直接拿来用，没啥丢脸的，有公开的好东西不用才是固执嘛......
+    //不过，CZ拿64位演示，推荐的bb2和jay krow的32位工程，对于一些萌新来说可不友好哦......
+    //原理很简单（如果这都要拿AI去查什么意思的话，那我可要数落你了啊）
+    //executed一开始为false，我们在塞入rton之前的第一步就是检测executed是否为true
+    //executed你可以比喻为一个罐子，打开了就是true，没打开就是false，我们只需要打开一次就不需要打开了
+    //所以第一次我们打开之前，罐子是未开封状态，打开了就是开封状态
+    //未开封状态我们要打开罐子拿出东西塞别的里面去，我们塞过之后就不需要再塞重复的了
+    //所以一看到开封的状态我们就知道不需要在这个罐子里面拿东西了
+    //所以executed在我们塞rton之前是false，塞rton时候就已经变true了，就不需要再塞了
+    if (!executed.exchange(true))
+    {
+        const struct
+        {
+            const char* name;
+            int table;
+        } rtonFiles[] = {
+            {"PropertySheets.rton", 9},
+            {"PlantProperties.rton", 16},
+            {"PlantTypes.rton", 11},
+            {"PlantAlmanacData.rton", 15},
+            {"ZombieTypes.rton", 18},
+            {"ZombieActions.rton", 19},
+            {"ZombieProperties.rton", 20},
+            {"ProjectileTypes.rton", 22},
+            {"GridItemTypes.rton", 23},
+            {"LevelModules.rton", 38},
+            {"Powers.rton", 17},
+            {"PinataTypes.rton", 10},
+            {"CreatureTypes.rton", 21},
+            {"ItemGroups.rton", 24},
+            {"EffectObjectTypes.rton", 25},
+            {"CollectableTypes.rton", 26},
+            {"PresentTables.rton", 27},
+            {"PresentTypes.rton", 28},
+            {"PlantFamilyTypes.rton", 29},
+            {"Quest_Categories.rton", 31},
+            {"Quest_Themes.rton", 32},
+            {"ArmorTypes.rton", 55},
+            {"NPCS.rton", 37},
+            {"GameFeatures.rton", 40},
+            {"ToolPackets.rton", 41},
+            {"BoardGridMaps.rton", 48},
+            {"LevelModulesDifficulty.rton", 49},
+            {"LevelMutatorModules.rton", 50},
+            {"LevelMutatorTables.rton", 51},
+            {"LevelScoringRules.rton", 52},
+            {"HotUIConfig.rton", 53},
+            {"WorldMapData.rton", 132} };
+        for (const auto& file : rtonFiles)
+        {
+            oCDNLoad(a1, file.name, file.table, 1);
+        }
+    }
+    oCDNLoad(a1, rtonName, rtonTable, a4);
+}
+#pragma endregion
+
 //强制1536
 #pragma region ForceResources1536
 //此代码自主查找并转译得来
@@ -1780,7 +1858,8 @@ void libRestructedLogic_ARM32__main()
     PVZ2HookFunction(RSBPathRecorderAddr, (void*)hkRSBPathRecorder, (void**)&oRSBPathRecorder, "ResourceManager::RSBPathRecorder");
     //此代码为融小宝对RestructedLogic工程的私有化改造功能之一，并未根据RestructedLogic的GPL-3.0协议进行公开，我已拥有相关证据，你不守规矩，就别怪我强制公开了，并且我也没用你的写法，自己写的
     PVZ2HookFunction(PrimeGlyphCacheAddr, (void*)hkPrimeGlyphCacheLimitation, (void**)&oPrimeGlyphCacheLimitation, "PrimeGlyphCache::PrimeGlyphCacheLimitation");
-
+    //CDN读取rton，感谢CZ技术专栏分享技术！！！
+    PVZ2HookFunction(CDNLoadAddr, (void*)hkCDNLoad, (void**)&oCDNLoad, "CDNLoadExpansion");
 
     //PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)hkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
     //弃用，缩放率，没多大用PVZ2HookFunction(0x16460F0, (void*)hkSub_16460F0, (void**)&oSub_16460F0, "Sub_16460F0");
