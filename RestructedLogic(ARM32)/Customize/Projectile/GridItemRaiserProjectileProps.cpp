@@ -1,13 +1,13 @@
-#include "GridItemRaiserProjectile.h"
+#include "GridItemRaiserProjectileProps.h"
 #include "../../PvZ2/GridItem.h"
 
-void* GridItemRaiserProjectile::vftable = nullptr;
-Sexy::RtClass* GridItemRaiserProjectile::s_rtClass = nullptr;
+void* GridItemRaiserProjectileProps::vftable = nullptr;
+Sexy::RtClass* GridItemRaiserProjectileProps::s_rtClass = nullptr;
 
 #pragma region hk SpawnGridItem Proj
 
 // the anim and sound code can be used in ImpactPAM and ImpactSoundEvent, i don't need to recreate any of them
-uintptr_t hkSpawnGridItem(GridItemRaiserProjectile* self)
+uintptr_t hkSpawnGridItem(GridItemRaiserProjectileProps* self)
 {
     typedef int (*board1)();
     //寻找该偏移方法：
@@ -145,7 +145,7 @@ uintptr_t hkSpawnGridItem(GridItemRaiserProjectile* self)
     //}
 
     //其中sub_949EFC即int board = ((board1)getActualOffset(填入))();
-    int board = ((board1)getActualOffset(Customize_Projectile_GridItemRaiserProjectile_GetBoardAddr))();
+    int board = ((board1)getActualOffset(Customize_Projectile_GridItemRaiserProjectileProps_GetBoardAddr))();
 
     typedef GridItem* (*func716690)(int, Sexy::SexyString, int, int);
     func716690 func_716690 = (func716690)getActualOffset(GridItem_SpawnGridItemAtAddr);
@@ -156,9 +156,15 @@ uintptr_t hkSpawnGridItem(GridItemRaiserProjectile* self)
     int gridPosY = (((int)posY - 540) / 76) + 4;
     int gridPosX = (int)((posX - 200.0f) / 64.0f);
 
+    //获取所有属性
+    auto* props = reinterpret_cast<GridItemRaiserProjectileProps*>(self->m_propertySheetPtr.Get());
+    /*Sexy::SexyString gridType = "gravestone_egypt";*/
+    std::string gridType = props->GridItemType;
+    if (gridType.empty()) {
+        //设置默认生成的障碍物
+        gridType = "gravestone_egypt";
 
-    Sexy::SexyString gridType = "molten_pool";
-
+    }
     typedef bool (*func716FA4)(int, uint, uint, int, int);
     //寻找该偏移方法：
     //HEX搜索文本POPANIM_EFFECTS_ZOMBIE_EGYPT_TOMBRAISER_BONE_HIT
@@ -248,12 +254,13 @@ uintptr_t hkSpawnGridItem(GridItemRaiserProjectile* self)
     //}
 
     //其中sub_716FA4即auto* fun716FA4 = ((func716FA4)getActualOffset(填入));
-    auto* fun716FA4 = ((func716FA4)getActualOffset(Customize_Projectile_GridItemRaiserProjectile_SpawnGridItemOnBoardAddr));
+    auto* fun716FA4 = ((func716FA4)getActualOffset(Customize_Projectile_GridItemRaiserProjectileProps_SpawnGridItemOnBoardAddr));
 
     if (fun716FA4(board, gridPosX, gridPosY, 0, 1) == true)
     {
         GridItem* gridItem = func_716690(board, gridType, gridPosX, gridPosY);
 
+        //获取并设定障碍物阵营
         typedef void (*funcCEB640)(GridItem*, int);
         //寻找该偏移方法：
         //HEX搜索文本future_jetpack_disco
@@ -434,7 +441,7 @@ uintptr_t hkSpawnGridItem(GridItemRaiserProjectile* self)
         //}
         
         //其中sub_CEB640即auto* setTeamFlag = ((funcCEB640)getActualOffset(填入));
-        auto* setTeamFlag = ((funcCEB640)getActualOffset(Customize_Projectile_GridItemRaiserProjectile_SetTeamFlagAddr));
+        auto* setTeamFlag = ((funcCEB640)getActualOffset(Customize_Projectile_GridItemRaiserProjectileProps_SetTeamFlagAddr));
         setTeamFlag(gridItem, 1);
 
     }
@@ -448,8 +455,8 @@ uintptr_t hkSpawnGridItem(GridItemRaiserProjectile* self)
     int result = func(self, 0);
     return result;
 }
-void GridItemRaiserProjectile::modInit() {
-    LOGI("GridItemRaiserProjectile init");
+void GridItemRaiserProjectileProps::modInit() {
+    LOGI("GridItemRaiserProjectileProps init");
     //寻找该偏移方法：
     //由于Projectile这个字符串遍布so，所以非常之刻要用非常之法
     //HEX搜索16进制数值003F3F50726F6A656374696C6500，选中作为通配符，通配符填入3F
@@ -561,13 +568,13 @@ void GridItemRaiserProjectile::modInit() {
     /*.data.rel.ro:01CB00D4 C4 01 CB 01                   DCD _ZTI10Projectile                    ; `typeinfo for'Projectile
 .data.rel.ro:01CB00D8 24 5A 90 00                   DCD sub_905A24*/
     //部分的.data.rel.ro:01CB00D8的01CB00D8即vftable = copyVFTable(getActualOffset(填入), 53);
-    vftable = copyVFTable(getActualOffset(Customize_Projectile_GridItemRaiserProjectile_ProjectileVFTableAddr), 53);
+    vftable = copyVFTable(getActualOffset(Customize_Projectile_GridItemRaiserProjectileProps_ProjectileVFTableAddr), 53);
 
-    patchVFTable(vftable, (void*)GridItemRaiserProjectile::getRtClass, 0);
+    patchVFTable(vftable, (void*)GridItemRaiserProjectileProps::getRtClass, RTOBJECT_GETTYPE_INDEX);
 
     patchVFTable(vftable, (void*)hkSpawnGridItem, 36);
 
-    GridItemRaiserProjectile::getRtClass();
+    GridItemRaiserProjectileProps::getRtClass();
 
-    LOGI("GridItemRaiserProjectile finish init");
+    LOGI("GridItemRaiserProjectileProps finish init");
 }

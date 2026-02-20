@@ -19,6 +19,8 @@
 #include <sys/mman.h>
 #include <sys/sendfile.h>
 #include <fcntl.h>
+#include "Customize/Projectile/GridItemRaiserProjectileProps.h"
+//#include "Customize/Projectile/GridItemRaiserProjectile.cpp"
 #pragma region Alias to ID
 
 class ZombieAlmanac
@@ -955,6 +957,35 @@ void decrypt_pure_cbc_internal(uint8_t* data, size_t size, const uint8_t* start_
 }
 
 
+//将文件头部替换为可识别四字节
+bool maskFileHeader(const std::string& filePath,std::string tagstr) {
+    // 1. 以读写模式打开文件 (注意不要加 O_TRUNC，否则文件会被清空！)
+    int fd = open(filePath.c_str(), O_RDWR);
+    if (fd < 0) return false;
+
+    // 2. 准备新的 4 字节头
+    const char* tag = tagstr.c_str();
+
+    // 3. 使用 pwrite 直接覆盖偏移量为 0 的位置
+    // 这一步是原子操作，只改动磁盘上最开始的 4 个字节
+    ssize_t bytes = pwrite(fd, tag, 4, 0);
+
+    // 4. 强制将修改刷入磁盘（防止断电丢失）
+    fdatasync(fd);
+    close(fd);
+
+    return bytes == 4;
+}
+
+//检测是否ROOT
+bool isRooted() {
+    // 检查常见的 Root 路径和文件
+    const char* paths[] = { "/system/app/Superuser.apk", "/sbin/su", "/system/bin/su", "/system/xbin/su" };
+    for (auto path : paths) {
+        if (access(path, F_OK) == 0) return true;
+    }
+    return false;
+}
 
 // 临时文件路径列表
 static std::vector<std::string> g_tempFiles;
@@ -1268,6 +1299,15 @@ int hkRSBPathRecorder(uint* a1) {
             g_tempFiles.push_back(temp_path);*/
             return result;
         }
+        if (memcmp(magic, "EBRL", 4) == 0 && isRooted()) {
+            //是ROOT重写数据包头
+            if (!maskFileHeader(original_path.c_str(), "RSB2")) {
+                //重写失败报错
+                LOGI("RSB_TRACE: RSB2 overrides failed.");
+                return result;
+            }
+            else LOGI("RSB_TRACE: RSB2 overrides succeed.");
+        }
         if (memcmp(magic, "EBRL", 4) == 0) {
             LOGI("RSB_TRACE: Detected EBRL, using temp_path...");
         }
@@ -1360,11 +1400,29 @@ int hkRSBPathRecorder(uint* a1) {
             /*g_tempFiles.push_back(original_path);*/
             /*cleanupTempFiles();*/
             //不需要了，我直接重写
-            int rl_fd = open(original_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+            //这个也不需要了，直接把头重写就行了
+            /*int rl_fd = open(original_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
             if (rl_fd >= 0) {
                 write(rl_fd, "EBRL", 4);
                 close(rl_fd);
+            }*/
+            //重写数据包头部为EBRL
+            if (!isRooted()) {
+                //没ROOT重写数据包头
+                if (!maskFileHeader(original_path.c_str(), "EBRL")) {
+                    //重写失败报错
+                    LOGI("RSB_TRACE: EBRL overrides failed.");
+                    return result;
+                }
+                else LOGI("RSB_TRACE: EBRL overrides succeed.");
             }
+            //ROOT警报
+            else {
+                //记录需要删除的解密数据包（因为需要防ROOT）
+                g_tempFiles.push_back(temp_path);
+                LOGI("RSB_TRACE: Warning! Device rooted.");
+            }
+            
         }
     }
     else {
@@ -1478,8 +1536,8 @@ int hkResourceManagerFunc(int a1, int a2, int a3) {
     int backdata= oResourceManagerFunc(a1, a2, a3);
     LOGI("Hooking ResourcesManagerFunc 6EE218 End");
     LOGI("Cleaning up temp files");
-    //因为直接隐藏解密数据包了，所以不需要清理了
-    //cleanupTempFiles();
+    //如果检测到ROOT，则进入秒删模式
+    if(isRooted()) cleanupTempFiles();
     return backdata;
 }
 
@@ -1661,6 +1719,15 @@ int hkLogOutputFunc_Simple(const char* text) {
 
 #pragma endregion
 
+#pragma region Build Symbol Funcs
+
+//Reflection::CRefManualSymbolBuilder::BuildSymbolsFunc PlantType::oPlantTypeBuildSymbols = nullptr;
+//Reflection::CRefManualSymbolBuilder::ConstructFunc PlantType::oPlantTypeConstruct = nullptr;
+//Reflection::CRefManualSymbolBuilder::BuildSymbolsFunc ZombieType::oZombieTypeBuildSymbols = nullptr;
+//Reflection::CRefManualSymbolBuilder::ConstructFunc ZombieType::oZombieTypeConstruct = nullptr;
+
+#pragma endregion
+
 
 
 
@@ -1722,7 +1789,7 @@ void libRestructedLogic_ARM32__main()
     
     PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
     
-    
+    GridItemRaiserProjectileProps::modInit();
 
     LOGI("Finished initializing");
 }
