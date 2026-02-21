@@ -944,12 +944,17 @@ void hkCDNLoad(int* a1, const Sexy::SexyString& rtonName, int rtonTable, int a4)
     if (!executed.exchange(true))
     {
         //载入各版本RtonTableID
-        rtonTableIDsLoader();
-        // 遍历载入
-        for (const auto& file : rtonTableIDs) {
-            oCDNLoad(a1, file.first, file.second, 1);
+        if (rtonTableIDsLoader()) {
+            LOGI("Rton Table IDs Load succeed.");
+            // 遍历载入
+            for (const auto& rtonfile : rtonTableIDs) {
+                oCDNLoad(a1, rtonfile.first, rtonfile.second, 1);
+                LOGI("%s:%d is loaded", (rtonfile.first).c_str(), rtonfile.second);
+            }
         }
+        else LOGI("Rton Table IDs Load failed.");
     }
+    LOGI("%s:%d is loaded", rtonName.c_str(), rtonTable);
     oCDNLoad(a1, rtonName, rtonTable, a4);
 }
 #pragma endregion
