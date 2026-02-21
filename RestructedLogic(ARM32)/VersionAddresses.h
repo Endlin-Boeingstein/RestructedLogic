@@ -497,10 +497,8 @@
 
 
 #define firstFreePlantID  0  // 10.3 Don't need it.
-    
-    
-    
-    
+
+
 #endif
 
 //在此仿照如上格式再续写所需版本号偏移分类

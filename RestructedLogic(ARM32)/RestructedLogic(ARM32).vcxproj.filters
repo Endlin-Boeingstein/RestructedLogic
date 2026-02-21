@@ -33,7 +33,7 @@
     <ClCompile Include="PvZ2\LevelModuleManager.cpp">
       <Filter>PvZ2</Filter>
     </ClCompile>
-    <ClCompile Include="Customize\Projectile\GridItemRaiserProjectile.cpp">
+    <ClCompile Include="Customize\Projectile\GridItemRaiserProjectileProps.cpp">
       <Filter>Customize\Projectile</Filter>
     </ClCompile>
   </ItemGroup>
@@ -233,7 +233,7 @@
     <ClInclude Include="Sexy\Event.h">
       <Filter>Sexy</Filter>
     </ClInclude>
-    <ClInclude Include="Customize\Projectile\GridItemRaiserProjectile.h">
+    <ClInclude Include="Customize\Projectile\GridItemRaiserProjectileProps.h">
       <Filter>Customize\Projectile</Filter>
     </ClInclude>
   </ItemGroup>

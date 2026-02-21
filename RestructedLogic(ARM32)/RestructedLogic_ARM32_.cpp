@@ -1479,7 +1479,7 @@ int hkRSBPathRecorder(uint* a1) {
 
 //在此感谢CZ的技术专栏分享，我将变量名和一些方式进行了小小的改变，但依旧需要对其为技术的分享表达感谢！！！！！
 #pragma region CDNExpansion
-typedef int (*CDNExpand)(int* a1, const Sexy::SexyString& i_rtonName, int i_table, int a4);
+typedef int (*CDNExpand)(int* a1, const Sexy::SexyString& rtonName, int rtonTable, int a4);
 CDNExpand oCDNLoad = NULL;
 
 std::atomic<bool> executed(false);
@@ -1512,6 +1512,20 @@ void hkCDNLoad(int* a1, const Sexy::SexyString& rtonName, int rtonTable, int a4)
         {
             const char* name;
             int table;
+            //警告：不同版本应该RTON编号不同，请自行寻找！！！！！
+            //你只需要在HEX搜索ui_layout
+            //单击ui_layout的"u"，看其偏移后使用ida pro跳转到对应的偏移地址
+            //然后观察周围的偏移引用地址，附近那些的几乎是一样的，随便选一个双击进入
+            //按F5后就可以看了
+            /*strcpy((char*)v1420 + 1, "CDN Config");
+            LOBYTE(v1420[0]) = 20;
+            v1409 = 20;
+            strcpy(v1410, "cdn_config");
+            memset(&v1471[1], 0, 16);
+            v1471[0] = (int)off_21C1B24;
+            sub_10CBCD8(&v1476, 4, &v1265, v1420, 0, 0, &v1409, v1471);*/
+            //如上所示，基本上这样为一组，有的会没有第二个小写的字符串
+            //然后sub_10CBCD8(&v1476, 4, &v1265, v1420, 0, 0, &v1409, v1471);这个函数的第二个参数即RTON编号
         } rtonFiles[] = {
             {"PropertySheets.rton", 9},
             {"PlantProperties.rton", 16},
