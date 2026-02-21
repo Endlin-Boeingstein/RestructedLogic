@@ -17,6 +17,7 @@
 #include <thread>
 #include <vector>
 #include <fcntl.h>
+#include "VersionRtonIDs.h"
 
 //友情提示：该ARM64工程所有功能均未测试，据估计应当全部重写（以支持64位指针），故劳烦修好后在进行测试，尤其是数据包载入，谢谢！
 
@@ -913,7 +914,7 @@ int hkForceResources1536(int a1)
 
 //在此感谢CZ的技术专栏分享，我将变量名和一些方式进行了小小的改变，但依旧需要对其为技术的分享表达感谢！！！！！
 #pragma region CDNExpansion
-typedef int (*CDNExpand)(int* a1, const Sexy::SexyString& i_rtonName, int i_table, int a4);
+typedef int (*CDNExpand)(int* a1, const Sexy::SexyString& rtonName, int rtonTable, int a4);
 CDNExpand oCDNLoad = NULL;
 
 std::atomic<bool> executed(false);
@@ -942,46 +943,11 @@ void hkCDNLoad(int* a1, const Sexy::SexyString& rtonName, int rtonTable, int a4)
     //所以executed在我们塞rton之前是false，塞rton时候就已经变true了，就不需要再塞了
     if (!executed.exchange(true))
     {
-        const struct
-        {
-            const char* name;
-            int table;
-        } rtonFiles[] = {
-            {"PropertySheets.rton", 9},
-            {"PlantProperties.rton", 16},
-            {"PlantTypes.rton", 11},
-            {"PlantAlmanacData.rton", 15},
-            {"ZombieTypes.rton", 18},
-            {"ZombieActions.rton", 19},
-            {"ZombieProperties.rton", 20},
-            {"ProjectileTypes.rton", 22},
-            {"GridItemTypes.rton", 23},
-            {"LevelModules.rton", 38},
-            {"Powers.rton", 17},
-            {"PinataTypes.rton", 10},
-            {"CreatureTypes.rton", 21},
-            {"ItemGroups.rton", 24},
-            {"EffectObjectTypes.rton", 25},
-            {"CollectableTypes.rton", 26},
-            {"PresentTables.rton", 27},
-            {"PresentTypes.rton", 28},
-            {"PlantFamilyTypes.rton", 29},
-            {"Quest_Categories.rton", 31},
-            {"Quest_Themes.rton", 32},
-            {"ArmorTypes.rton", 55},
-            {"NPCS.rton", 37},
-            {"GameFeatures.rton", 40},
-            {"ToolPackets.rton", 41},
-            {"BoardGridMaps.rton", 48},
-            {"LevelModulesDifficulty.rton", 49},
-            {"LevelMutatorModules.rton", 50},
-            {"LevelMutatorTables.rton", 51},
-            {"LevelScoringRules.rton", 52},
-            {"HotUIConfig.rton", 53},
-            {"WorldMapData.rton", 132} };
-        for (const auto& file : rtonFiles)
-        {
-            oCDNLoad(a1, file.name, file.table, 1);
+        //载入各版本RtonTableID
+        rtonTableIDsLoader();
+        // 遍历载入
+        for (const auto& file : rtonTableIDs) {
+            oCDNLoad(a1, file.first, file.second, 1);
         }
     }
     oCDNLoad(a1, rtonName, rtonTable, a4);

@@ -5,8 +5,6 @@
 #include "LevelModuleManager.h"
 #include "Zombie.h"
 
-#include "../Sexy/RtWeakPtr.h"
-#include "../Sexy/RtObject.h"
 
 #define GRID_TILE_WIDTH 64.0f
 #define GRID_TILE_HEIGHT 76.0f

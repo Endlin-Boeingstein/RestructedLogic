@@ -47,6 +47,7 @@
     <ClInclude Include="Decrypt\picosha2.h">
       <Filter>Decrypt</Filter>
     </ClInclude>
+    <ClInclude Include="VersionRtonIDs.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x64">

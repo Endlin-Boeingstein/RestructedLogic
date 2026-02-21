@@ -185,6 +185,7 @@
     <ClInclude Include="RestructedLogic_ARM64_.h" />
     <ClInclude Include="SexyTypes.h" />
     <ClInclude Include="VersionAddresses.h" />
+    <ClInclude Include="VersionRtonIDs.h" />
     <ClInclude Include="x64\jni\include\Utils.h" />
     <ClInclude Include="x64\jni\libs\64InlineHook\And64InlineHook.hpp" />
     <ClInclude Include="x64\jni\libs\KittyMemory\KittyMemory.h" />

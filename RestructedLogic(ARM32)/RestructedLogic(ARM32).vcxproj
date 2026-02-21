@@ -235,6 +235,7 @@
     <ClInclude Include="Sexy\RtObject.h" />
     <ClInclude Include="Sexy\RtWeakPtr.h" />
     <ClInclude Include="VersionAddresses.h" />
+    <ClInclude Include="VersionRtonIDs.h" />
     <ClInclude Include="x32\jni\include\Utils.h" />
     <ClInclude Include="x32\jni\libs\GlossHook\Gloss.h" />
     <ClInclude Include="x32\jni\libs\KittyMemory\KittyMemory.h" />

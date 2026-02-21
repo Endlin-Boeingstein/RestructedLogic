@@ -1,6 +1,4 @@
 #pragma once
-#include "../Sexy/RtWeakPtr.h"
-#include "../Sexy/RtObject.h"
 #include "../PvZ2/GameObject.h"
 
 class ComponentBase : public GameObject

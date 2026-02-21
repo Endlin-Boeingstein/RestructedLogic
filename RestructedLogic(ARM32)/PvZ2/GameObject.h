@@ -1,6 +1,4 @@
 #pragma once
-#include "../Sexy/RtObject.h"
-#include "../Sexy/RtWeakPtr.h"
 #include "../Reflection/ReflectionBuilder.h"
 
 
