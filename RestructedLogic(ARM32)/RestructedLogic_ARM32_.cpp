@@ -1491,6 +1491,7 @@ void hkCDNLoad(int* a1, const Sexy::SexyString& rtonName, int rtonTable, int a4)
 
     if (!oCDNLoad)
     {
+        LOGI("Rton Table IDs Old Load failed.");
         return;
     }
     //至于这个偏移怎么查.........很简单，HEX搜products.rton
@@ -1761,7 +1762,7 @@ int hkLogOutputFunc_Simple(const char* text) {
         std::lock_guard<std::mutex> lock(g_logMutex_Simple);
 
         // 直接打印传入的字符串，无需 vsnprintf，因为这不是可变参数函数
-        LOGI("LogOutputFunc_Simple [PvZ2Debug]: %s", text);
+        LOGI("LogOutputFunc_Simple: %s", text);
     }
 
     // 调用原函数
@@ -1769,6 +1770,366 @@ int hkLogOutputFunc_Simple(const char* text) {
 }
 
 #pragma endregion
+
+#pragma region LogOutputHook_Struct
+
+// 参数是 int (寄存器 r0)，在 Hook 中我们定义为 void* 或 long
+typedef int (*LogOutputFunc_Struct)(void*);
+LogOutputFunc_Struct oLogOutputFunc_Struct = NULL;
+std::mutex g_logMutex_Struct;
+
+int hkLogOutputFunc_Struct(void* result) {
+    if (!oLogOutputFunc_Struct) {
+        LOGI("LogOutputFunc_Struct: Original function pointer is null");
+        return -1;
+    }
+
+    if (result) {
+        const char* v1 = NULL;
+        // 模仿 IDA 逻辑：检查标志位
+        // 如果 (*(unsigned char*)result & 1) != 0
+        if ((*((unsigned char*)result) & 1) != 0) {
+            // 长字符串逻辑：从偏移 8 处取指针
+            v1 = *(const char**)((uintptr_t)result + 8);
+        }
+        else {
+            // 短字符串逻辑：从偏移 1 处取内容
+            v1 = (const char*)((uintptr_t)result + 1);
+        }
+
+        // 如果指针不为空且内容不为空字符串
+        if (v1 && *v1 != '\0') {
+            std::lock_guard<std::mutex> lock(g_logMutex_Struct);
+            LOGI("LogOutputFunc_Struct: %s", v1);
+        }
+    }
+
+    // 调用原函数并返回其结果
+    return oLogOutputFunc_Struct(result);
+}
+
+#pragma endregion
+
+#pragma region LogOutputHook_v2
+
+typedef int (*LogOutputFunc_v2)(int a1, ...);
+LogOutputFunc_v2 oLogOutputFunc_v2 = NULL;
+std::mutex g_logMutex_v2;
+
+int hkLogOutputFunc_v2(int a1, ...) {
+    if (!oLogOutputFunc_v2) {
+        LOGI("LogOutputFunc_v2: Original function pointer is null");
+        return -1;
+    }
+
+    std::lock_guard<std::mutex> lock(g_logMutex_v2);
+
+    va_list va, va_copy;
+    va_start(va, a1);
+    va_copy(va_copy, va);
+
+    // 1. 尝试格式化字符串用于拦截打印
+    // 注意：a1 在这里通常是 format 字符串的指针
+    const char* format = (const char*)a1;
+
+    char* buffer = nullptr;
+    // 计算所需长度
+    char temp[1];
+    int len = vsnprintf(temp, 0, format, va);
+    va_end(va);
+
+    if (len >= 0) {
+        // 分配内存并格式化
+        int buf_size = (len < 1024) ? 1024 : (len + 1);
+        buffer = new char[buf_size];
+
+        va_start(va, a1);
+        vsnprintf(buffer, buf_size, format, va);
+        va_end(va);
+
+        // 输出到我们的日志
+        LOGI("LogOutputFunc_v2: %s", buffer);
+    }
+    else {
+        LOGI("LogOutputFunc_v2: Failed to format, a1=%p", (void*)a1);
+    }
+
+    // 2. 调用原始函数
+    // 同样注意：C语言中无法直接将 va_list 传给 ...，这里取决于你的 Hook 框架支持
+    // 如果是 Dobby/Substrate，通常建议转发参数
+    int result = oLogOutputFunc_v2(a1, va_copy);
+
+    va_end(va_copy);
+    if (buffer) delete[] buffer;
+
+    return result;
+}
+
+#pragma endregion
+
+
+
+
+#pragma region Board Zoom Test
+
+//typedef int (*UIWidgetScale)(int a1, int a2);
+//UIWidgetScale oUIWidgetScale = NULL;
+//
+//// 假设这些变量在你的全局上下文或 LawnApp 中可以获取
+//extern int realPhysicalHeight=1220; // 实际屏幕物理像素高度
+//
+//int hkUIWidgetScale(int a1, int a2) {
+//    if (!oUIWidgetScale) {
+//        LOGI("UIWidgetScalingHook: Original function pointer is null");
+//        return 0;
+//    }
+//
+//    // 1. 调用原始函数完成基础注册逻辑
+//    // 必须先让原函数运行，因为它会先执行序列化和内存初始化
+//    int result = oUIWidgetScale(a1, a2);
+//
+//    // 2. 检查 a2 指针有效性
+//    if (a2 == 0) return result;
+//
+//    // --- 仿照 LogOutputHook 风格的拦截修正逻辑 ---
+//
+//    // A. 修正“免疫设备缩放” (Offset 137)
+//    // 逻辑：强制设为 0 (false)，允许 UI 随屏幕高度拉伸
+//    *(unsigned char*)(a2 + 137) = 0;
+//
+//    // B. 修正“忽略安全区” (Offset 168)
+//    // 逻辑：强制设为 1 (true)，允许渲染延伸至刘海屏/挖孔区域
+//    *(unsigned char*)(a2 + 168) = 1;
+//
+//    // C. 动态计算缩放比例
+//    // 基于你提到的 600 逻辑高度基准
+//    float logicBaseHeight = 1536.0f;
+//    float deviceScale = (float)realPhysicalHeight / logicBaseHeight;
+//
+//    // D. 修正虚拟高度 (VirtualHeight Offset 78)
+//    // 根据 sub_FB0288 的 STRH 指令，这里是 2 字节存储
+//    unsigned short* pVirtualHeight = (unsigned short*)(a2 + 78);
+//    unsigned short oldVHeight = *pVirtualHeight;
+//    *pVirtualHeight = (unsigned short)((float)oldVHeight * deviceScale);
+//
+//    // E. 修正棋盘虚拟宽度 (BoardScaledVirtualWidth Offset 126)
+//    // 这是你最关心的棋盘拉伸关键位
+//    unsigned short* pBoardVWidth = (unsigned short*)(a2 + 126);
+//    if (*pBoardVWidth > 0) {
+//        *pBoardVWidth = (unsigned short)((float)(*pBoardVWidth) * deviceScale);
+//    }
+//
+//    // F. 修正虚拟宽度 (VirtualWidth Offset 76)
+//    // 保持纵横比一致，同步缩放宽度
+//    unsigned short* pVirtualWidth = (unsigned short*)(a2 + 76);
+//    *pVirtualWidth = (unsigned short)((float)(*pVirtualWidth) * deviceScale);
+//
+//    // 3. 拦截打印（可选，方便在 logcat 确认是否生效）
+//    // LOGI("UIWidgetHook: a2=%p, BaseScale=%.2f, VHeight:%d->%d", 
+//    //      (void*)a2, deviceScale, oldVHeight, *pVirtualHeight);
+//
+//    return result;
+//}
+
+
+
+////部分钱袋钻石叶绿素UI缩放
+//#pragma region UniversalZoomHook
+//
+//// 定义原函数原型
+//typedef float (*UniversalZoom)();
+//UniversalZoom oUniversalZoom = nullptr;
+//
+//// 你的 Hook 函数
+//float hkUniversalZoom() {
+//    if (!oUniversalZoom) {
+//        return 1.0f; // 安全退路
+//    }
+//
+//    // 1. 获取原版的缩放比例
+//    float originalZoom = oUniversalZoom();
+//
+//    // 2. 1.0倍缩放
+//    // 这样既保留了游戏原本的自适应比例，又整体放大了
+//    float finalZoom = originalZoom * 1.0f;
+//
+//    // 调试日志（可选，按你提供的样式）
+//    LOGI("LawnZoom: Original=%f, Modified=%f", originalZoom, finalZoom);
+//
+//    return finalZoom;
+//}
+//
+//
+//// 定义原函数原型
+//typedef int (*UniversalZoom1)(int a1,int a2);
+//UniversalZoom1 oUniversalZoom1 = nullptr;
+//
+//// 你的 Hook 函数
+//int hkUniversalZoom1(int a1,int a2) {
+//    if (!oUniversalZoom1) {
+//        return 1; // 安全退路
+//    }
+//
+//    // 1. 获取原版的缩放比例
+//    int originalZoom = oUniversalZoom1(a1,a2);
+//
+//    // 2. 1.5倍缩放
+//    // 这样既保留了游戏原本的自适应比例，又整体放大了
+//    int finalZoom = originalZoom * 1.0f;
+//
+//    // 调试日志（可选，按你提供的样式）
+//    LOGI("LawnZoom: Original=%d, Modified=%d", originalZoom, finalZoom);
+//
+//    return finalZoom;
+//}
+
+
+//获取设备分辨率和结果分辨率
+// 原函数签名
+typedef int (*LawnAppScreenWidthHeight)(float* a1, int a2);
+LawnAppScreenWidthHeight oLawnAppScreenWidthHeight = nullptr;
+
+//设备分辨率 根据 sub_1482320: 1448字节 = 偏移362, 1452字节 = 偏移363
+int mOrigScreenWidth;
+int mOrigScreenHeight;
+
+//游戏分辨率 根据 sub_6E4030 反汇编:
+int mWidth;
+int mHeight;
+
+//缩放后结果 float 成员
+float m_contentResWidth;
+float m_contentResHeight;
+
+float zoomScale;
+
+int hkLawnAppScreenWidthHeight(float* a1, int a2) {
+    // 1. 先执行原函数，让内部逻辑完成内存写入
+    int result = oLawnAppScreenWidthHeight(a1, a2);
+
+    if (a1 == nullptr) return result;
+
+    // 2. 根据偏移直接提取数据
+    // 注意：a1 是 float*，偏移计算需小心转换
+    int* iPtr = (int*)a1;
+
+    // 根据 sub_1482320: 1448字节 = 偏移362, 1452字节 = 偏移363
+    mOrigScreenWidth = iPtr[362];
+    mOrigScreenHeight = iPtr[363];
+
+    // 根据 sub_6E4030 反汇编:
+    mWidth = iPtr[25];
+    mHeight = iPtr[26];
+
+    // float 成员
+    m_contentResWidth = a1[394];
+    m_contentResHeight = a1[395];
+
+    // 3. 仿照你的 LogOutputFunc 风格进行输出
+    // 使用 snprintf 格式化到局部 buffer
+    char buffer[512];
+    int len = snprintf(buffer, sizeof(buffer),
+        "\n--- LawnApp::SetWidthHeight Hook ---\n"
+        "mOrigSize: %d x %d\n"
+        "mSize:     %d x %d\n"
+        "mContent:  %.2f x %.2f\n"
+        "Result:    %d",
+        mOrigScreenWidth, mOrigScreenHeight,
+        mWidth, mHeight,
+        m_contentResWidth, m_contentResHeight,
+        result);
+
+    if (len > 0) {
+        LOGI("%s", buffer);
+    }
+    zoomScale = ((float)mOrigScreenHeight / (float)mHeight);
+    return result;
+}
+
+
+
+
+// 定义原函数的函数原型 (32位 ARM 中 __fastcall 通常对应 r0, r1...)
+typedef int (*OrigBoardZoom)(uintptr_t a1);
+OrigBoardZoom oBoardZoom = nullptr;
+
+int hkBoardZoom(uintptr_t a1) {
+    //// 1. 先运行原函数，获取原始返回值和计算结果
+    //// 原函数会填充 a1+872, a1+876 等位置
+    //int result = o_sub_88D3EC(a1);
+
+    //// 2. 检查 a1 是否有效 (防御性编程)
+    //if (!a1) return result;
+
+    //// 2. 获取当前缩放因子 (a1 + 860)
+    //float zoom = *(float*)(a1 + 860);
+
+    //// 3. 修改 Y 坐标 (a1 + 872)
+    //// 如果你想让它更高或更低，可以在这里乘倍数
+    //int32_t original_y = *(int32_t*)(a1 + 872);
+    //*(int32_t*)(a1 + 872) = (int32_t)(original_y * 1.0f); // 保持原样或微调
+
+    //// 4. 修改 X 坐标 (a1 + 876) —— 这是你最想改的地方
+    //// 原函数计算出的 X 存储在 +876，我们在此基础上乘以 1.5 倍修正
+    //int32_t original_x = *(int32_t*)(a1 + 876);
+    //*(int32_t*)(a1 + 876) = (int32_t)(original_x * 1.0f);
+
+    //// 5. 修改边界限制 (防止黑边或镜头锁死)
+    //// +880 是垂直边界，+884 是水平边界
+    //// 如果 X 坐标扩大了，边界通常也需要相应扩大
+    //*(int32_t*)(a1 + 884) = (int32_t)(*(int32_t*)(a1 + 884) * 1.5f);
+    //*(int32_t*)(a1 + 880) = (int32_t)(*(int32_t*)(a1 + 880) * 1.2f); // 适度增加
+
+    //// 6. 返回原函数的执行结果（保持游戏流程正常）
+    //return result;
+
+    // 1. 先跑原函数
+    int result = oBoardZoom(a1);
+
+    // 2. 取出原函数辛苦算出来的总宽度 (v11 + v12)
+    int32_t total_width = *(int32_t*)(a1 + 44);
+    //缩放系数
+    float zoom = *(float*)(a1 + 860);
+    //打印zoom值//没用，打印出来是0
+    /*LOGI("ZOOM = %f",zoom);*/
+    //需要乘俩分辨率的除数（实际/模拟调用）
+    *(float*)(a1 + 860) = (float)zoom * zoomScale;
+    // 3. 【核心逻辑】（已废弃）
+    // 既然原函数直接搬运 a1+824 给 876，那我们就手动覆盖它
+    // 我们用 (总宽度 / 某系数) 来模拟居中，并乘以 0.5
+    // 这里的 1200 是一个常见的屏幕参考值，用来代替去读 result+1260
+
+    //解释：board于屏幕右下角为原点生成，所以运算基于该原点
+    /*int32_t simulated_center = (total_width / 2);
+    *(int32_t*)(a1 + 876) = (int32_t)((zoom * (float)simulated_center) * 0.5f);*/
+    int32_t simulated_center = (total_width / 2);
+    
+    //向右滑动的距离
+    int32_t board_x = *(int32_t*)(a1 + 876);
+    *(int32_t*)(a1 + 876) = (int32_t)(3955*(zoomScale+0.035)- mOrigScreenWidth);
+
+    int32_t board_block = *(int32_t*)(a1 + 884);
+    // 4. 选卡后向左为正滑动的距离
+    *(int32_t*)(a1 + 884) = (int32_t)(board_block* zoomScale * 1.0f);
+    //高度无法调整，只能靠缩放
+    
+    //// 4. 【高度缩放处理】 (新增)
+    //// 直接对原函数算出来的 Y 坐标进行增强
+    //int32_t raw_y = *(int32_t*)(a1 + 872);
+    //*(int32_t*)(a1 + 872) = (int32_t)(raw_y * 1.2f); // 1.2 是示例，你可以根据需要调整
+
+    //// 垂直边界 (对应高度缩放)
+    //int32_t raw_v_limit = *(int32_t*)(a1 + 880);
+    //*(int32_t*)(a1 + 880) = (int32_t)((raw_v_limit-480) * 1.2f); // 保持和 Y 坐标倍率一致
+
+    return result;
+}
+#pragma endregion
+
+
+
+
+
 
 #pragma region Build Symbol Funcs
 
@@ -1815,6 +2176,10 @@ void libRestructedLogic_ARM32__main()
     PVZ2HookFunction(LogOutputFuncAddrSimpleAddr, (void*)hkLogOutputFunc_Simple, (void**)&oLogOutputFunc_Simple, "LogOutputFunc_Simple");
     //输出日志
     PVZ2HookFunction(LogOutputFuncAddr, (void*)hkLogOutputFunc, (void**)&oLogOutputFunc, "LogOutputFunc");
+    //输出结构日志
+    PVZ2HookFunction(LogOutputFuncAddr_Struct, (void*)hkLogOutputFunc_Struct, (void**)&oLogOutputFunc_Struct, "LogOutputFunc_Struct");
+    //输出v2日志
+    PVZ2HookFunction(LogOutputFuncAddr_v2, (void*)hkLogOutputFunc_v2, (void**)&oLogOutputFunc_v2, "LogOutputFunc_v2");
     //Hook主函数、RSB读取函数、资源组读取函数、资源分布读取函数
     PVZ2HookFunction(MainLoadFuncAddr, (void*)hkMainLoadFunc, (void**)&oMainLoadFunc, "ResourceManager::MainLoadFunc");
     PVZ2HookFunction(ResourceManagerFuncAddr, (void*)hkResourceManagerFunc, (void**)&oResourceManagerFunc, "ResourceManager::ResourceManagerFunc");
@@ -1833,7 +2198,14 @@ void libRestructedLogic_ARM32__main()
     PVZ2HookFunction(PrimeGlyphCacheAddr, (void*)hkPrimeGlyphCacheLimitation, (void**)&oPrimeGlyphCacheLimitation, "PrimeGlyphCache::PrimeGlyphCacheLimitation");
     //CDN读取rton，感谢CZ技术专栏分享技术！！！
     PVZ2HookFunction(CDNLoadAddr, (void*)hkCDNLoad, (void**)&oCDNLoad, "CDNLoadExpansion");
-
+    ////控制屏幕缩放
+    //PVZ2HookFunction(0x2F9F40, (void*)hkUniversalZoom, (void**)&oUniversalZoom, "UniversalZoom");
+    ////控制屏幕缩放
+    //PVZ2HookFunction(0x7013C0, (void*)hkUniversalZoom1, (void**)&oUniversalZoom1, "UniversalZoom1");
+    //得到缩放前后尺寸
+    PVZ2HookFunction(LawnAppScreenWidthHeightAddr, (void*)hkLawnAppScreenWidthHeight, (void**)&oLawnAppScreenWidthHeight, "LawnApp:SetScreenWidthHeight");
+    //控制屏幕缩放
+    PVZ2HookFunction(BoardZoomAddr, (void*)hkBoardZoom, (void**)&oBoardZoom, "BoardZoom");
     //PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)hkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
     //弃用，缩放率，没多大用PVZ2HookFunction(0x16460F0, (void*)hkSub_16460F0, (void**)&oSub_16460F0, "Sub_16460F0");
     //PVZ2HookFunction(BoardAddr, (void*)hkBoardCtor, (void**)&oBoardCtor, "Board::Board");

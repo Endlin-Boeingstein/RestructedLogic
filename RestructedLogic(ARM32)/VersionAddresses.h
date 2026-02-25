@@ -34,12 +34,16 @@
 #define ProjectileSpawnZombieAddr  NULL
 #define LogOutputFuncAddrSimpleAddr NULL
 #define LogOutputFuncAddr  NULL
+#define LogOutputFuncAddr_Struct  NULL
+#define LogOutputFuncAddr_v2  NULL
 #define MainLoadFuncAddr  NULL
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
 #define BoardInitAddr  NULL
 #define CDNLoadAddr NULL
+#define BoardZoomAddr NULL
+#define LawnAppScreenWidthHeightAddr NULL
 
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  NULL
@@ -155,12 +159,16 @@
 #define ProjectileSpawnZombieAddr  NULL
 #define LogOutputFuncAddrSimpleAddr NULL
 #define LogOutputFuncAddr  NULL
+#define LogOutputFuncAddr_Struct  NULL
+#define LogOutputFuncAddr_v2  NULL
 #define MainLoadFuncAddr  NULL
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
 #define BoardInitAddr  NULL
 #define CDNLoadAddr NULL
+#define BoardZoomAddr NULL
+#define LawnAppScreenWidthHeightAddr NULL
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  0x1C5C758
 #define Graphics_UNK_GRAPHICSFUNC2Addr  0x1124784
@@ -273,12 +281,16 @@
 #define ProjectileSpawnZombieAddr  NULL
 #define LogOutputFuncAddrSimpleAddr NULL
 #define LogOutputFuncAddr  NULL
+#define LogOutputFuncAddr_Struct  NULL
+#define LogOutputFuncAddr_v2  NULL
 #define MainLoadFuncAddr  NULL
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
 #define BoardInitAddr  NULL
 #define CDNLoadAddr NULL
+#define BoardZoomAddr NULL
+#define LawnAppScreenWidthHeightAddr NULL
 
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  NULL
@@ -392,12 +404,16 @@
 #define ProjectileSpawnZombieAddr  0xE6B880
 #define LogOutputFuncAddrSimpleAddr 0x146E160
 #define LogOutputFuncAddr  0x146DE24
+#define LogOutputFuncAddr_Struct  0x146DFE4
+#define LogOutputFuncAddr_v2  0x146E028
 #define MainLoadFuncAddr  0x6F00A0
 #define ResourceManagerFuncAddr  0x6EE218
 #define ResourceReadFuncAddr  0x16228F0
 #define RSBTestAndReadFuncAddr  0x16303BC
 #define BoardInitAddr  0x6E65AC
 #define CDNLoadAddr 0x876CB0
+#define BoardZoomAddr 0x88D3EC
+#define LawnAppScreenWidthHeightAddr 0x6E4030
 
 
 

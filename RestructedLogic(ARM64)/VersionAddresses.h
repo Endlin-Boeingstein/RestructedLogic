@@ -33,11 +33,15 @@
 #define ForceResources1536Addr  NULL
 #define LogOutputFuncAddrSimpleAddr NULL
 #define LogOutputFuncAddr  NULL
+#define LogOutputFuncAddr_Struct  NULL
+#define LogOutputFuncAddr_v2  NULL
 #define MainLoadFuncAddr  NULL
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
 #define CDNLoadAddr NULL
+#define BoardZoomAddr NULL
+#define LawnAppScreenWidthHeightAddr NULL
 
 
 
@@ -157,11 +161,15 @@
 #define ForceResources1536Addr  NULL
 #define LogOutputFuncAddrSimpleAddr NULL
 #define LogOutputFuncAddr  NULL
+#define LogOutputFuncAddr_Struct  NULL
+#define LogOutputFuncAddr_v2  NULL
 #define MainLoadFuncAddr  NULL
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
 #define CDNLoadAddr NULL
+#define BoardZoomAddr NULL
+#define LawnAppScreenWidthHeightAddr NULL
 
 
 
@@ -281,11 +289,15 @@
 #define ForceResources1536Addr  NULL
 #define LogOutputFuncAddrSimpleAddr NULL
 #define LogOutputFuncAddr  NULL
+#define LogOutputFuncAddr_Struct  NULL
+#define LogOutputFuncAddr_v2  NULL
 #define MainLoadFuncAddr  NULL
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
 #define CDNLoadAddr NULL
+#define BoardZoomAddr NULL
+#define LawnAppScreenWidthHeightAddr NULL
 
 
 
@@ -411,11 +423,15 @@
 #define ForceResources1536Addr  NULL
 #define LogOutputFuncAddrSimpleAddr NULL
 #define LogOutputFuncAddr  NULL
+#define LogOutputFuncAddr_Struct  NULL
+#define LogOutputFuncAddr_v2  NULL
 #define MainLoadFuncAddr  NULL
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
 #define CDNLoadAddr NULL
+#define BoardZoomAddr NULL
+#define LawnAppScreenWidthHeightAddr NULL
 
 
 
