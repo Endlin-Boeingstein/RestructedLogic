@@ -1433,7 +1433,7 @@ int hkLawnAppScreenWidthHeight(float* a1, int a2) {
     if (len > 0) {
         LOGI("%s", buffer);
     }
-    zoomScale = ((float)mOrigScreenHeight / (float)mHeight);
+    zoomScale = ((float)mOrigScreenHeight / m_contentResHeight);
     return result;
 }
 
@@ -1445,76 +1445,87 @@ typedef int (*OrigBoardZoom)(uintptr_t a1);
 OrigBoardZoom oBoardZoom = nullptr;
 
 int hkBoardZoom(uintptr_t a1) {
-    //// 1. 先运行原函数，获取原始返回值和计算结果
-    //// 原函数会填充 a1+872, a1+876 等位置
-    //int result = o_sub_88D3EC(a1);
+    //集体注释（没用了，用了会起反作用）
+    {
+        ////缩放系数
+        //float zoom = *(float*)(a1 + 860);
+        ////乘宽高系数从而达到缩放目的
+        //*(float*)(a1 + 860) = (float)zoom * zoomScale;
+        //// 2. 取出原函数辛苦算出来的总宽度 (v11 + v12)
+        //int32_t total_width = *(int32_t*)(a1 + 44);
+        //*(int32_t*)(a1 + 44) = total_width * zoomScale;
 
-    //// 2. 检查 a1 是否有效 (防御性编程)
-    //if (!a1) return result;
 
-    //// 2. 获取当前缩放因子 (a1 + 860)
-    //float zoom = *(float*)(a1 + 860);
+        ////解释：board于屏幕右下角为原点生成，所以运算基于该原点
+        ////起始位置坐标
+        //int32_t texture_left = *(int32_t*)(a1 + 872);
+        //*(int32_t*)(a1 + 872) = (int32_t)(texture_left * zoomScale);
 
-    //// 3. 修改 Y 坐标 (a1 + 872)
-    //// 如果你想让它更高或更低，可以在这里乘倍数
-    //int32_t original_y = *(int32_t*)(a1 + 872);
-    //*(int32_t*)(a1 + 872) = (int32_t)(original_y * 1.0f); // 保持原样或微调
-
-    //// 4. 修改 X 坐标 (a1 + 876) —— 这是你最想改的地方
-    //// 原函数计算出的 X 存储在 +876，我们在此基础上乘以 1.5 倍修正
-    //int32_t original_x = *(int32_t*)(a1 + 876);
-    //*(int32_t*)(a1 + 876) = (int32_t)(original_x * 1.0f);
-
-    //// 5. 修改边界限制 (防止黑边或镜头锁死)
-    //// +880 是垂直边界，+884 是水平边界
-    //// 如果 X 坐标扩大了，边界通常也需要相应扩大
-    //*(int32_t*)(a1 + 884) = (int32_t)(*(int32_t*)(a1 + 884) * 1.5f);
-    //*(int32_t*)(a1 + 880) = (int32_t)(*(int32_t*)(a1 + 880) * 1.2f); // 适度增加
-
-    //// 6. 返回原函数的执行结果（保持游戏流程正常）
-    //return result;
-
+        ////选卡后向左滑动后停留的左侧坐标（0为距离屏幕左侧一个texture_left*自制缩放率开始的原点）
+        //int32_t board_x = *(int32_t*)(a1 + 876);
+        //*(int32_t*)(a1 + 876) = (total_width - mOrigScreenWidth) * zoomScale;
+        //// 4. 选卡前向右滑动的偏移（地图总长-屏幕总宽）
+        //int32_t board_block = *(int32_t*)(a1 + 884);
+        //*(int32_t*)(a1 + 884) = (int32_t)(total_width * zoomScale - mOrigScreenWidth);
+        ////选卡前向左滑动的距离
+        ///**(int32_t*)(a1 + 880) = (int32_t)( (* (int32_t*)(a1 + 880)+ mOrigScreenWidth -board_x )* zoomScale- mOrigScreenWidth+ board_x * zoomScale);*/
+    }
     // 1. 先跑原函数
     int result = oBoardZoom(a1);
 
-    // 2. 取出原函数辛苦算出来的总宽度 (v11 + v12)
-    int32_t total_width = *(int32_t*)(a1 + 44);
-    //缩放系数
-    float zoom = *(float*)(a1 + 860);
-    //打印zoom值//没用，打印出来是0
-    /*LOGI("ZOOM = %f",zoom);*/
-    //需要乘俩分辨率的除数（实际/模拟调用）
-    *(float*)(a1 + 860) = (float)zoom * zoomScale;
-    // 3. 【核心逻辑】（已废弃）
-    // 既然原函数直接搬运 a1+824 给 876，那我们就手动覆盖它
-    // 我们用 (总宽度 / 某系数) 来模拟居中，并乘以 0.5
-    // 这里的 1200 是一个常见的屏幕参考值，用来代替去读 result+1260
-
-    //解释：board于屏幕右下角为原点生成，所以运算基于该原点
-    /*int32_t simulated_center = (total_width / 2);
-    *(int32_t*)(a1 + 876) = (int32_t)((zoom * (float)simulated_center) * 0.5f);*/
-    int32_t simulated_center = (total_width / 2);
-
-    //向右滑动的距离
-    int32_t board_x = *(int32_t*)(a1 + 876);
-    *(int32_t*)(a1 + 876) = (int32_t)(3955 * (zoomScale + 0.035) - mOrigScreenWidth);
-
-    int32_t board_block = *(int32_t*)(a1 + 884);
-    // 4. 选卡后向左为正滑动的距离
-    *(int32_t*)(a1 + 884) = (int32_t)(board_block * zoomScale * 1.0f);
+    //改变选卡时向左滑动距离
+    *(int32_t*)(a1 + 880) = -(*(int32_t*)(a1 + 840)) + 20;
     //高度无法调整，只能靠缩放
-
-    //// 4. 【高度缩放处理】 (新增)
-    //// 直接对原函数算出来的 Y 坐标进行增强
-    //int32_t raw_y = *(int32_t*)(a1 + 872);
-    //*(int32_t*)(a1 + 872) = (int32_t)(raw_y * 1.2f); // 1.2 是示例，你可以根据需要调整
-
-    //// 垂直边界 (对应高度缩放)
-    //int32_t raw_v_limit = *(int32_t*)(a1 + 880);
-    //*(int32_t*)(a1 + 880) = (int32_t)((raw_v_limit-480) * 1.2f); // 保持和 Y 坐标倍率一致
-
     return result;
 }
+
+// 定义原函数的函数原型 (32位 ARM 中 __fastcall 通常对应 r0, r1...)
+typedef int (*OrigBoardZoom2)(uintptr_t a1);
+OrigBoardZoom2 oBoardZoom2 = nullptr;
+
+int hkBoardZoom2(uintptr_t a1) {
+
+
+
+    int result = oBoardZoom2(a1);
+    //缩放系数
+    float zoom = *(float*)(a1 + 860);
+    LOGI("zoom= %f", zoom);
+    *(float*)(a1 + 860) = 1.0f;
+
+    //俩半逻辑宽度
+    int32_t logicalA = *(int32_t*)(a1 + 832);
+    int32_t logicalB = *(int32_t*)(a1 + 840);
+    //改变左侧偏移(因为误差20像素，所以补上)
+    *(int32_t*)(a1 + 824) = (int32_t)logicalB - 20;/**(int32_t*)(a1 + 44)-mOrigScreenWidth;*///注释的是刘海屏留存的数值
+
+
+
+    //顶部基准线
+    *(int32_t*)(a1 + 868) = (int32_t)mOrigScreenHeight;
+
+    //右边界屏幕坐标
+    int32_t board_right = *(int32_t*)(a1 + 864);
+    /**(int32_t*)(a1 + 864) = board_right*zoomScale;*/
+    //高度无法调整，只能靠缩放
+    return result;
+}
+
+//防手机刘海（似乎没有用，已被注释掉）
+typedef int (*IgnoreSafeArea)(int a1, int a2);
+IgnoreSafeArea oIgnoreSafeArea = NULL;
+int hkIgnoreSafeArea(int a1, int a2) {
+    int result = oIgnoreSafeArea(a1, a2);
+    // A. 强制关闭“免疫缩放” (Offset 137)
+    // 这样 UI 才会跟随底层的缩放矩阵变动
+    /**(uint8_t*)(a2 + 137) = 0; */// ImmuneToDeviceScaling = false
+
+    // B. 强制修正“忽略安全区” (Offset 168) 
+    // 视情况开启，确保 UI 能填满刘海屏区域
+    *(uint8_t*)(a2 + 168) = 1; // IgnoreSafeArea = true
+    return result;
+}
+
 #pragma endregion
 
 
@@ -1597,6 +1608,9 @@ void libRestructedLogic_ARM64__main()
     PVZ2HookFunction(LawnAppScreenWidthHeightAddr, (void*)hkLawnAppScreenWidthHeight, (void**)&oLawnAppScreenWidthHeight, "LawnApp:SetScreenWidthHeight");
     //控制屏幕缩放
     PVZ2HookFunction(BoardZoomAddr, (void*)hkBoardZoom, (void**)&oBoardZoom, "BoardZoom");
+    PVZ2HookFunction(BoardZoom2Addr, (void*)hkBoardZoom2, (void**)&oBoardZoom2, "BoardZoom2");
+    //防手机刘海（似乎没有用）
+    /*PVZ2HookFunction(0xFB0288, (void*)hkIgnoreSafeArea, (void**)&oIgnoreSafeArea, "IgnoreSafeArea");*/
     // Hook RSBRead (replace original)
     //禁用禁用PVZ2HookFunction(RSBReadAddr, (void*)hkRSBRead, nullptr, "ResourceManager::Init");
     //RSB解密

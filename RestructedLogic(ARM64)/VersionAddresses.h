@@ -42,6 +42,7 @@
 #define CDNLoadAddr NULL
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
+#define BoardZoom2Addr NULL
 
 
 
@@ -170,6 +171,7 @@
 #define CDNLoadAddr NULL
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
+#define BoardZoom2Addr NULL
 
 
 
@@ -298,6 +300,7 @@
 #define CDNLoadAddr NULL
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
+#define BoardZoom2Addr NULL
 
 
 
@@ -432,6 +435,7 @@
 #define CDNLoadAddr NULL
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
+#define BoardZoom2Addr NULL
 
 
 

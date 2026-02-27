@@ -6,8 +6,6 @@ This project was compiled on April 11, 2024.
 
 ## Credits
 
-RenoJson's Deprecated-Lib hooking project: <https://github.com/RenoJson/Deprecated-Lib>.
-
 BreakfastBrainz2's lib.so hooking project: <https://github.com/BreakfastBrainz2/PVZ2ExampleMod>.
 
 Djngo's hooking project for many platforms: <https://github.com/Djngo/Hooking-and-Patching-android-template>.
@@ -18,6 +16,8 @@ XMDS's hooking project: <https://github.com/XMDS/GlossHook>.
 
 BlazeyLol's updated lib.so hooking project:
 <https://github.com/BlazeyLol/PVZ2ExampleMod>.
+
+RenoJson's Deprecated-Lib hooking project: <https://github.com/RenoJson/Deprecated-Lib>.
 
 ## Usage
 

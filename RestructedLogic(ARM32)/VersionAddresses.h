@@ -44,6 +44,9 @@
 #define CDNLoadAddr NULL
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
+#define BoardZoom2Addr NULL
+
+
 
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  NULL
@@ -169,6 +172,8 @@
 #define CDNLoadAddr NULL
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
+#define BoardZoom2Addr NULL
+
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  0x1C5C758
 #define Graphics_UNK_GRAPHICSFUNC2Addr  0x1124784
@@ -291,6 +296,7 @@
 #define CDNLoadAddr NULL
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
+#define BoardZoom2Addr NULL
 
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  NULL
@@ -414,7 +420,7 @@
 #define CDNLoadAddr 0x876CB0
 #define BoardZoomAddr 0x88D3EC
 #define LawnAppScreenWidthHeightAddr 0x6E4030
-
+#define BoardZoom2Addr 0x88D670
 
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  0x21263E8
