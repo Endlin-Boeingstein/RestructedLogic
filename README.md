@@ -6,7 +6,7 @@ This project was compiled on April 11, 2024.
 
 ## Acknowledgments
 
-- **MeteorFlower** – For refining and simplifying the project, correcting the documentation, and diligently searching for function offsets to enable multi-version support.
+- **MeteorFlower** –For refining and simplifying the project, correcting the documentation, and diligently searching for function offsets to enable multi-version support.
 
 ## Credits
 
