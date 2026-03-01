@@ -2,202 +2,88 @@
 #include <cstdint>
 #include <string>
 
-namespace Sexy
-{
-	typedef std::string SexyString;
+namespace Sexy {
+typedef std::string SexyString;
 
-	typedef uint8_t byte;
-	typedef unsigned short ushort;
-	typedef unsigned int uint;
-	typedef unsigned long ulong;
+typedef uint8_t byte;
+typedef unsigned short ushort;
+typedef unsigned int uint;
+typedef unsigned long ulong;
 
-	// idfk i found this in Board's buildSymbols
-	// its probably just a float
-	typedef float pvztime_t;
+typedef float pvztime_t;
 
-	/*struct SexyVector2 {
-		float mX, mY;
-		SexyVector2() : mX(0), mY(0) {};
-		SexyVector2(float x, float y) : mX(x), mY(y) {};
-	};
+struct SexyVector2 {
+  float mX, mY;
 
-	struct SexyVector3
-	{
-		float mX, mY, mZ;
+  SexyVector2() : mX(0), mY(0) {}
 
-		SexyVector3() : mX(0), mY(0), mZ(0) {};
+  SexyVector2(float x, float y) {
+    this->mX = x;
+    this->mY = y;
+  }
+};
 
-		SexyVector3(float x, float y, float z)
-		{
-			mX = x;
-			mY = y;
-			mZ = z;
-		}
-	};
+struct SexyVector3 {
+  float mX, mY, mZ;
 
-	struct Point {
-		int x;
-		int y;
+  SexyVector3() : mX(0), mY(0), mZ(0) {};
 
-		Point() {};
+  SexyVector3(float x, float y, float z) {
+    mX = x;
+    mY = y;
+    mZ = z;
+  }
+};
+struct Point {
+  int mX;
+  int mY;
 
-		Point(int x, int y) : x(x), y(y) {};
-	};
+  Point() {};
 
-	struct FPoint {
-		float x;
-		float y;
+  Point(int x, int y) : mX(x), mY(y) {};
+};
 
-		FPoint() {};
+struct FPoint {
+  float mX;
+  float mY;
 
-		FPoint(float x, float y) : x(x), y(y) {};
-	};
-}
+  FPoint() {};
 
-struct Rect
-{
-	int mX, mY, mWidth, mHeight;
+  FPoint(float x, float y) : mX(x), mY(y) {};
+};
+};  // namespace Sexy
 
-	Rect() {
-		this->mX = 0;
-		this->mY = 0;
-		this->mWidth = 0;
-		this->mHeight = 0;
-	}
+struct Rect {
+  int mX, mY, mWidth, mHeight;
 
-	Rect(int mX, int mY, int mWidth, int mHeight) {
-		this->mX = mX;
-		this->mY = mY;
-		this->mWidth = mWidth;
-		this->mHeight = mHeight;
-	}
+  Rect() : mX(0), mY(0), mWidth(0), mHeight(0) {}
+
+  Rect(int x, int y, int width, int height) {
+    mX = x;
+    mY = y;
+    mWidth = width;
+    mHeight = height;
+  }
 };
 
 struct FRect {
-	float mX, mY, mWidth, mHeight;
+  float mX, mY, mWidth, mHeight;
 
-	FRect() {
-		this->mX = 0;
-		this->mY = 0;
-		this->mWidth = 0;
-		this->mHeight = 0;
-	}
+  FRect() : mX(0), mY(0), mWidth(0), mHeight(0) {}
 
-	FRect(float mX, float mY, float mWidth, float mHeight) {
-		this->mX = mX;
-		this->mY = mY;
-		this->mWidth = mWidth;
-		this->mHeight = mHeight;
-	}
+  FRect(float x, float y, float width, float height) {
+    mX = x;
+    mY = y;
+    mWidth = width;
+    mHeight = height;
+  }
 };
 
-struct CornerRect {
-	Sexy::FPoint topLeft;
-	Sexy::FPoint topRight;
-	Sexy::FPoint bottomLeft;
-	Sexy::FPoint bottomRight;
+struct ValueRange {
+  float Min;
+  float Max;
 
-	CornerRect() {}
+  ValueRange() : Min(0), Max(0) {};
 
-	CornerRect(Sexy::FPoint&& topLeft, Sexy::FPoint&& topRight, Sexy::FPoint&& bottomLeft, Sexy::FPoint&& bottomRight) :
-		topLeft(topLeft), topRight(topRight), bottomLeft(bottomLeft), bottomRight(bottomRight) {
-	};
-};
-
-struct ValueRange
-{
-	float Min;
-	float Max;
-
-	ValueRange() : Min(0), Max(0) {};
-
-	ValueRange(float Min, float Max) : Min(Min), Max(Max) {};
-};*/
-	struct SexyVector2
-	{
-		float mX, mY;
-
-		SexyVector2() : mX(0), mY(0) {}
-
-		SexyVector2(float x, float y)
-		{
-			this->mX = x;
-			this->mY = y;
-		}
-	};
-
-	struct SexyVector3
-	{
-		float mX, mY, mZ;
-
-		SexyVector3() : mX(0), mY(0), mZ(0) {};
-
-		SexyVector3(float x, float y, float z)
-		{
-			mX = x;
-			mY = y;
-			mZ = z;
-		}
-	};
-	struct Point
-	{
-		int mX;
-		int mY;
-
-		Point() {};
-
-		Point(int x, int y) : mX(x), mY(y) {};
-	};
-
-	struct FPoint
-	{
-		float mX;
-		float mY;
-
-		FPoint() {};
-
-		FPoint(float x, float y) : mX(x), mY(y) {};
-	};
-};
-
-struct Rect
-{
-	int mX, mY, mWidth, mHeight;
-
-	Rect() : mX(0), mY(0), mWidth(0), mHeight(0) {}
-
-	Rect(int x, int y, int width, int height)
-	{
-		mX = x;
-		mY = y;
-		mWidth = width;
-		mHeight = height;
-	}
-};
-
-struct FRect
-{
-	float mX, mY, mWidth, mHeight;
-
-	FRect() : mX(0), mY(0), mWidth(0), mHeight(0) {}
-
-	FRect(float x, float y, float width, float height)
-	{
-		mX = x;
-		mY = y;
-		mWidth = width;
-		mHeight = height;
-	}
-};
-
-
-
-struct ValueRange
-{
-	float Min;
-	float Max;
-
-	ValueRange() : Min(0), Max(0) {};
-
-	ValueRange(float Min, float Max) : Min(Min), Max(Max) {};
+  ValueRange(float Min, float Max) : Min(Min), Max(Max) {};
 };
