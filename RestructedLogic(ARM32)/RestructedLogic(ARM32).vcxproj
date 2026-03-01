@@ -169,9 +169,6 @@
     <ClCompile Include="Reflection\ReflectionBuilder.cpp" />
     <ClCompile Include="RestructedLogic_ARM32_.cpp" />
     <ClCompile Include="Sexy\RtClass.cpp" />
-    <ClCompile Include="x32\jni\libs\GlossHook\Gloss.cpp" />
-    <ClCompile Include="x32\jni\libs\KittyMemory\KittyMemory.cpp" />
-    <ClCompile Include="x32\jni\libs\KittyMemory\MemoryPatch.cpp" />
     <ClCompile Include="x32\jni\libs\Substrate\SubstrateDebug.cpp" />
     <ClCompile Include="x32\jni\libs\Substrate\SubstrateHook.cpp" />
     <ClCompile Include="x32\jni\libs\Substrate\SubstratePosixMemory.cpp" />
@@ -237,9 +234,6 @@
     <ClInclude Include="VersionAddresses.h" />
     <ClInclude Include="VersionRtonIDs.h" />
     <ClInclude Include="x32\jni\include\Utils.h" />
-    <ClInclude Include="x32\jni\libs\GlossHook\Gloss.h" />
-    <ClInclude Include="x32\jni\libs\KittyMemory\KittyMemory.h" />
-    <ClInclude Include="x32\jni\libs\KittyMemory\MemoryPatch.h" />
     <ClInclude Include="x32\jni\libs\Substrate\Buffer.hpp" />
     <ClInclude Include="x32\jni\libs\Substrate\CydiaSubstrate.h" />
     <ClInclude Include="x32\jni\libs\Substrate\SubstrateARM.hpp" />

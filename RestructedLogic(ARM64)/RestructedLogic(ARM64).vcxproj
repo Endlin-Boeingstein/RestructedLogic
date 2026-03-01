@@ -171,8 +171,6 @@
     <ClCompile Include="memUtils.cpp" />
     <ClCompile Include="RestructedLogic_ARM64_.cpp" />
     <ClCompile Include="x64\jni\libs\64InlineHook\And64InlineHook.cpp" />
-    <ClCompile Include="x64\jni\libs\KittyMemory\KittyMemory.cpp" />
-    <ClCompile Include="x64\jni\libs\KittyMemory\MemoryPatch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Decrypt\aes.h" />
@@ -188,8 +186,6 @@
     <ClInclude Include="VersionRtonIDs.h" />
     <ClInclude Include="x64\jni\include\Utils.h" />
     <ClInclude Include="x64\jni\libs\64InlineHook\And64InlineHook.hpp" />
-    <ClInclude Include="x64\jni\libs\KittyMemory\KittyMemory.h" />
-    <ClInclude Include="x64\jni\libs\KittyMemory\MemoryPatch.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="x64\jni\Android.mk" />
