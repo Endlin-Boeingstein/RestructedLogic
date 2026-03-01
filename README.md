@@ -4,6 +4,26 @@ Restructed Logic is a project which can help you create PvZ2's hooking by Visual
 
 RestructedLogic_Lite is a simplified version based on RestructedLogic. It removes rarely used and untested features, while eliminating bloated and redundant parts of the code. The codebase has been reorganized in a more C++-style (rather than C-style) manner.
 
+## Features
+
+- Add custom PlantType name (`new_plant_%d` as default). (Outdated, **NOT RECOMMAND**)
+
+- Expand character cache limitation. (This feature is primarily intended for users who use Chinese-localized OBBs, to reduce the occurrence of missing Chinese characters.)
+
+- RSB decrypt.
+
+- Customize CDN read list.
+
+- In-game Max Zoom Perspective. (高视角 in Chinese.)
+
+- Game log output (debug mode only).
+
+  Use the following adb command on your computer to view the log output:
+
+  ```cmd
+  adb logcat -s RestructedLogic_ARM32_:I
+  ```
+
 ## Credits
 
 BreakfastBrainz2's lib.so hooking project: <https://github.com/BreakfastBrainz2/PVZ2ExampleMod>.
@@ -34,13 +54,13 @@ Download and install Visual Studio 2022: <https://visualstudio.microsoft.com>.
 
 Modify the Visual Studio 2022's Workloads and install `Mobile development with C++` module. And then, you can clone the repo and open the repo's `.sln` file by Visual Studio 2022.
 
-If you want to generate ARM32 so. Select the `RestructedLogic(ARM32)` and click the triangle button that the `Release` `ARM` nearby.  If you want to generate ARM64 so. Select the `RestructedLogic(ARM64)` and click the triangle button that the `Release` `ARM64` nearby.
+Select the `RestructedLogic(ARM32)` and click the triangle button that the `Release` `ARM` nearby.
 
-Then in the folder, you would found ARM and ARM64 folder. These so file may inside that name called `libRestructedLogic_ARM32_.so` in `ARM/Release` and `libRestructedLogic_ARM64_.so` in `ARM64/Release`.
+Then in the folder, you would found ARM folder. The so file may inside that name called `libRestructedLogic_ARM32_.so` in `ARM/Release`.
 
 Download APKToolGUI: <https://drive.google.com/file/u/0/d/1Zko59XeiX7DZENWaLDsPjvHPfk9dwHgi/view?usp=drive_link&pli=1>. Use APKToolGUI to decompile the apk that you want to hook.
 
-Copy the .so file to the decompiled folder's `lib\armeabi-v7a` path when you want to use ARM32 or `lib\arm64-v8a` path when you want to use ARM64. Change the .so file's name to `libRestructedLogic.so`.
+Copy the .so file to the decompiled folder's `lib\armeabi-v7a` path. Change the .so file's name to `libRestructedLogic.so`. Delete the `lib\arm64-v8a` folder.
 
 Delete the ARM lib version folder that you needn't use it.
 Then modify `PvZ2GameActivity.smali` which is in the decompiled folder. Open it, and find this:
@@ -91,7 +111,7 @@ Compile the decompiled folder. You will get a hooked apk. Install it in your dev
 
 ---
 
-以下为原作者 Endlin-Boeingstein 对于圈内乱象在代码中写的一些锐评。为使代码精简，现移动至此：
+以下为原作者 Endlin-Boeingstein 对于圈内乱象在代码中写的一些锐评。为精简代码，现移动至此：
 
 ```cpp
 #pragma region PrimeGlyphCacheLimitationDescription
