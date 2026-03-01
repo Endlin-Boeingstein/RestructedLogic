@@ -6,7 +6,7 @@ RestructedLogic_Lite is a simplified version based on RestructedLogic. It remove
 
 ## Features
 
-- Add custom PlantType name (`new_plant_%d` as default). (Outdated, **NOT RECOMMAND**)
+- Add custom PlantType name (`custom_plant_%d` as default). (Outdated and untested.)
 
 - Expand character cache limitation. (This feature is primarily intended for users who use Chinese-localized OBBs, to reduce the occurrence of missing Chinese characters.)
 

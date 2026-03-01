@@ -70,12 +70,6 @@
     <Filter Include="x32\jni\libs">
       <UniqueIdentifier>{fe2812bf-0abe-4809-b8fc-ce277db94861}</UniqueIdentifier>
     </Filter>
-    <Filter Include="x32\jni\src">
-      <UniqueIdentifier>{da7f11f2-9f9e-43a6-b4cc-9f1dfe7fa87d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="x32\jni\src\GlossHookExample">
-      <UniqueIdentifier>{f746f90d-acea-45ad-81e3-b39b54136103}</UniqueIdentifier>
-    </Filter>
     <Filter Include="x32\jni\libs\Substrate">
       <UniqueIdentifier>{52a29c16-48a9-497e-b0cc-8759b52af820}</UniqueIdentifier>
     </Filter>

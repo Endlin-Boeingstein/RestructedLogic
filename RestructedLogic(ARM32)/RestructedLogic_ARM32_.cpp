@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include "VersionSwitcher.h"
 
+#if GAME_VERSION < 1031
+
 namespace AliasToID {
 class PlantNameMapper {
  public:
@@ -34,7 +36,7 @@ void *hkCreatePlantNameMapper(PlantNameMapper *self) {
   oPlantNameMapperCtor(self);
   g_modPlantTypenames.clear();
   for (int i = 1; i <= 100; i++) {
-    REGISTER_PLANT_TYPENAME(("new_plant_" + std::to_string(i)));
+    REGISTER_PLANT_TYPENAME(("custom_plant_" + std::to_string(i)));
   }
   LOGI("Extra typenames size = %d", g_modPlantTypenames.size());
   for (int iter = 0; iter < g_modPlantTypenames.size(); iter++) {
@@ -50,6 +52,8 @@ inline void process() {
 }
 #undef REGISTER_PLANT_TYPENAME
 }  // namespace AliasToID
+
+#endif
 
 namespace PrimeGlyphCacheLimitation {
 typedef uint *(*PrimeGlyphCacheLimitation)(uint *, int, int, int);
@@ -498,15 +502,13 @@ void hkCDNLoad(int *a1, const Sexy::SexyString &rtonName, int rtonTable, int a4)
   // 所以executed在我们塞rton之前是false，塞rton时候就已经变true了，就不需要再塞了
   if (!executed.exchange(true)) {
     // 载入各版本RtonTableID
-    if (rtonTableIDsLoader()) {
-      LOGI("Rton Table IDs Load succeed.");
-      // 遍历载入
-      for (const auto &rtonfile : rtonTableIDs) {
-        oCDNLoad(a1, rtonfile.first, rtonfile.second, 1);
-        LOGI("%s:%d is loaded", (rtonfile.first).c_str(), rtonfile.second);
-      }
-    } else
-      LOGI("Rton Table IDs Load failed.");
+    rtonTableIDsLoader();
+    LOGI("Rton Table IDs Load succeed.");
+    // 遍历载入
+    for (const auto &rtonfile : rtonTableIDs) {
+      oCDNLoad(a1, rtonfile.first, rtonfile.second, 1);
+      LOGI("%s:%d is loaded", (rtonfile.first).c_str(), rtonfile.second);
+    }
   }
   LOGI("%s:%d is loaded", rtonName.c_str(), rtonTable);
   oCDNLoad(a1, rtonName, rtonTable, a4);
@@ -684,14 +686,12 @@ void process() {
 }  // namespace LogOutput
 
 namespace MaxZoom {
-typedef int (*LawnAppScreenWidthHeight)(float *a1, int a2);
-LawnAppScreenWidthHeight oLawnAppScreenWidthHeight = nullptr;
 
-// 设备分辨率 根据 sub_1482320: 1448字节 = 偏移362, 1452字节 = 偏移363
+// 设备分辨率
 int mOrigScreenWidth;
 int mOrigScreenHeight;
 
-// 游戏分辨率 根据 sub_6E4030 反汇编:
+// 游戏分辨率
 int mWidth;
 int mHeight;
 
@@ -700,6 +700,52 @@ float m_contentResWidth;
 float m_contentResHeight;
 
 float zoomScale;
+
+// LawnAppScreenWidthHeight 的原函数会随版本变化。目前只知道 8.7.3 和 10.3.1
+// 的写法。其他版本欢迎补充。
+#if GAME_VERSION == 873
+
+typedef int (*LawnAppScreenWidthHeight)(int a1, int a2);
+LawnAppScreenWidthHeight oLawnAppScreenWidthHeight = nullptr;
+
+int hkLawnAppScreenWidthHeight(int a1, int a2) {
+  // 1. 先执行原函数，让内部逻辑完成内存写入
+  int result = oLawnAppScreenWidthHeight(a1, a2);
+
+  if (a1 == NULL)
+    return result;
+
+  // 2. 根据偏移直接提取数据
+  // 根据 sub_FFE7D0
+  mOrigScreenWidth = *(int32_t *)(a1 + 1512);
+  mOrigScreenHeight = *(int32_t *)(a1 + 1516);
+
+  // 根据自身:
+  mWidth = *(int32_t *)(a1 + 136);
+  mHeight = *(int32_t *)(a1 + 140);
+
+  // float 成员
+  m_contentResWidth = *(float *)(a1 + 1740);
+  m_contentResHeight = *(float *)(a1 + 1744);
+
+  // 3. 输出日志
+  LOGI(R"(
+--- LawnApp::SetWidthHeight Hook ---
+mOrigSize: %d x %d
+mSize:     %d x %d
+mContent:  %.2f x %.2f
+result:    %d)",
+       mOrigScreenWidth, mOrigScreenHeight, mWidth, mHeight, m_contentResWidth, m_contentResHeight,
+       result);
+
+  zoomScale = ((float)mOrigScreenHeight / m_contentResHeight);
+  return result;
+}
+
+#elif GAME_VERSION == 1031
+
+typedef int (*LawnAppScreenWidthHeight)(float *a1, int a2);
+LawnAppScreenWidthHeight oLawnAppScreenWidthHeight = nullptr;
 
 int hkLawnAppScreenWidthHeight(float *a1, int a2) {
   // 1. 先执行原函数，让内部逻辑完成内存写入
@@ -724,24 +770,26 @@ int hkLawnAppScreenWidthHeight(float *a1, int a2) {
   m_contentResWidth = a1[394];
   m_contentResHeight = a1[395];
 
-  // 3. 仿照你的 LogOutputFunc 风格进行输出
-  // 使用 snprintf 格式化到局部 buffer
-  char buffer[512];
-  int len = snprintf(buffer, sizeof(buffer),
-                     "\n--- LawnApp::SetWidthHeight Hook ---\n"
-                     "mOrigSize: %d x %d\n"
-                     "mSize:     %d x %d\n"
-                     "mContent:  %.2f x %.2f\n"
-                     "Result:    %d",
-                     mOrigScreenWidth, mOrigScreenHeight, mWidth, mHeight, m_contentResWidth,
-                     m_contentResHeight, result);
+  // 3. 输出日志
+  LOGI(R"(
+--- LawnApp::SetWidthHeight Hook ---
+mOrigSize: %d x %d
+mSize:     %d x %d
+mContent:  %.2f x %.2f
+result:    %d)",
+       mOrigScreenWidth, mOrigScreenHeight, mWidth, mHeight, m_contentResWidth, m_contentResHeight,
+       result);
 
-  if (len > 0) {
-    LOGI("%s", buffer);
-  }
   zoomScale = ((float)mOrigScreenHeight / m_contentResHeight);
   return result;
 }
+
+#else
+
+#error \
+    "Unsupported game version for LawnAppScreenWidthHeight hook. You may try the above 2 versions."
+
+#endif
 
 // 定义原函数的函数原型 (32位 ARM 中 __fastcall 通常对应 r0, r1...)
 typedef int (*OrigBoardZoom)(uintptr_t a1);
@@ -765,7 +813,7 @@ int hkBoardZoom2(uintptr_t a1) {
   // 缩放系数
   *(float *)(a1 + 860) = 1.0f;
   // 俩半逻辑宽度
-  //int32_t logicalA = *(int32_t *)(a1 + 832);  // unused
+  // int32_t logicalA = *(int32_t *)(a1 + 832);  // unused
   int32_t logicalB = *(int32_t *)(a1 + 840);
   // 改变左侧偏移(因为误差20像素，所以补上)
   *(int32_t *)(a1 + 824) = (int32_t)logicalB - 20;
@@ -793,11 +841,11 @@ __attribute__((constructor)) void libRestructedLogic_ARM32__main() {
   AliasToID::process();  // 添加植物 ID（疑似无效）
 #endif
 #ifdef _DEBUG
-  LogOutput::process();  // 输出日志
+  LogOutput::process();     // 输出日志
+  CDNExpansion::process();  // 自定义 CDN 列表
 #endif
   PrimeGlyphCacheLimitation::process();   // 修改字符缓冲区大小
   RSBPathChangeAndDecryptRSB::process();  // RSB 加密
-  CDNExpansion::process();                // 自定义 CDN 列表
   MaxZoom::process();                     // 高视角
 
   LOGI("Finished initializing");
