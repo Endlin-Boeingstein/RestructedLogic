@@ -4,6 +4,8 @@ Restructed Logic is a project which can help you create PvZ2's hooking by Visual
 
 This project was compiled on April 11, 2024.
 
+**It is recommended that general users with limited code reading ability and no special requirements use the lite branch of this project. (Switch branches from the top-left corner of the repository homepage.)**
+
 ## Acknowledgments
 
 - **MeteorFlower** –For refining and simplifying the project, correcting the documentation, and diligently searching for function offsets to enable multi-version support.
