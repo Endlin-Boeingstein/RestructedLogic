@@ -3,15 +3,6 @@
   <ItemGroup>
     <ClCompile Include="RestructedLogic_ARM32_.cpp" />
     <ClCompile Include="memUtils.cpp" />
-    <ClCompile Include="x32\jni\libs\KittyMemory\MemoryPatch.cpp">
-      <Filter>x32\jni\libs\KittyMemory</Filter>
-    </ClCompile>
-    <ClCompile Include="x32\jni\libs\KittyMemory\KittyMemory.cpp">
-      <Filter>x32\jni\libs\KittyMemory</Filter>
-    </ClCompile>
-    <ClCompile Include="x32\jni\libs\GlossHook\Gloss.cpp">
-      <Filter>x32\jni\libs\GlossHook</Filter>
-    </ClCompile>
     <ClCompile Include="x32\jni\libs\Substrate\SubstrateDebug.cpp">
       <Filter>x32\jni\libs\Substrate</Filter>
     </ClCompile>
@@ -31,15 +22,6 @@
     <ClInclude Include="memUtils.h" />
     <ClInclude Include="x32\jni\include\Utils.h">
       <Filter>x32\jni\include</Filter>
-    </ClInclude>
-    <ClInclude Include="x32\jni\libs\KittyMemory\KittyMemory.h">
-      <Filter>x32\jni\libs\KittyMemory</Filter>
-    </ClInclude>
-    <ClInclude Include="x32\jni\libs\KittyMemory\MemoryPatch.h">
-      <Filter>x32\jni\libs\KittyMemory</Filter>
-    </ClInclude>
-    <ClInclude Include="x32\jni\libs\GlossHook\Gloss.h">
-      <Filter>x32\jni\libs\GlossHook</Filter>
     </ClInclude>
     <ClInclude Include="x32\jni\libs\Substrate\SubstrateARM.hpp">
       <Filter>x32\jni\libs\Substrate</Filter>
@@ -65,14 +47,13 @@
     <ClInclude Include="x32\jni\libs\Substrate\CydiaSubstrate.h">
       <Filter>x32\jni\libs\Substrate</Filter>
     </ClInclude>
-    <ClInclude Include="VersionAddresses.h" />
+    <ClInclude Include="VersionSwitcher.h" />
     <ClInclude Include="Decrypt\aes.h">
       <Filter>Decrypt</Filter>
     </ClInclude>
     <ClInclude Include="Decrypt\picosha2.h">
       <Filter>Decrypt</Filter>
     </ClInclude>
-    <ClInclude Include="VersionRtonIDs.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SexyTypes.h" />
   </ItemGroup>
@@ -91,12 +72,6 @@
     </Filter>
     <Filter Include="x32\jni\src">
       <UniqueIdentifier>{da7f11f2-9f9e-43a6-b4cc-9f1dfe7fa87d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="x32\jni\libs\GlossHook">
-      <UniqueIdentifier>{99f36ce4-e30e-45cc-aa32-6b6a3b3fc7db}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="x32\jni\libs\KittyMemory">
-      <UniqueIdentifier>{708442f0-a5d0-4617-9fe5-403d9aee4ca1}</UniqueIdentifier>
     </Filter>
     <Filter Include="x32\jni\src\GlossHookExample">
       <UniqueIdentifier>{f746f90d-acea-45ad-81e3-b39b54136103}</UniqueIdentifier>

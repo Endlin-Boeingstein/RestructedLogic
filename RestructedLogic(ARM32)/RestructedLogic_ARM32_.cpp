@@ -15,7 +15,7 @@
 #include <sys/mman.h>
 #include <sys/sendfile.h>
 #include <fcntl.h>
-#include "VersionRtonIDs.h"
+#include "VersionSwitcher.h"
 
 namespace AliasToID {
 class PlantNameMapper {
@@ -33,8 +33,8 @@ PlantNameMapperCtor oPlantNameMapperCtor = NULL;
 void *hkCreatePlantNameMapper(PlantNameMapper *self) {
   oPlantNameMapperCtor(self);
   g_modPlantTypenames.clear();
-  for (int i = 0; i < 109; i++) {
-    REGISTER_PLANT_TYPENAME(("new_added_plant_" + i));
+  for (int i = 1; i <= 100; i++) {
+    REGISTER_PLANT_TYPENAME(("new_plant_" + std::to_string(i)));
   }
   LOGI("Extra typenames size = %d", g_modPlantTypenames.size());
   for (int iter = 0; iter < g_modPlantTypenames.size(); iter++) {
@@ -554,6 +554,7 @@ int hkLogOutputFunc(char *format, ...) {
     LOGI("LogOutputFunc: %s", buffer);
   } else {
     LOGI("LogOutputFunc: Failed to format, format=%s, len=%d", format ? format : "null", len);
+    return -1;
   }
 
   int result = oLogOutputFunc(format, va_copy);
@@ -762,11 +763,9 @@ OrigBoardZoom2 oBoardZoom2 = nullptr;
 int hkBoardZoom2(uintptr_t a1) {
   int result = oBoardZoom2(a1);
   // 缩放系数
-  float zoom = *(float *)(a1 + 860);
-  LOGI("zoom= %f", zoom);
   *(float *)(a1 + 860) = 1.0f;
   // 俩半逻辑宽度
-  int32_t logicalA = *(int32_t *)(a1 + 832);
+  //int32_t logicalA = *(int32_t *)(a1 + 832);  // unused
   int32_t logicalB = *(int32_t *)(a1 + 840);
   // 改变左侧偏移(因为误差20像素，所以补上)
   *(int32_t *)(a1 + 824) = (int32_t)logicalB - 20;
@@ -774,9 +773,6 @@ int hkBoardZoom2(uintptr_t a1) {
   // 顶部基准线
   *(int32_t *)(a1 + 868) = (int32_t)mOrigScreenHeight;
   // 右边界屏幕坐标
-  int32_t board_right = *(int32_t *)(a1 + 864);
-  /**(int32_t*)(a1 + 864) = board_right*zoomScale;*/
-  // 高度无法调整，只能靠缩放
   return result;
 }
 
