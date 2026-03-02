@@ -58,7 +58,7 @@ int64_t hkBoardZoom(int64_t a1) {
   // 先跑原函数
   int64_t result = oBoardZoom(a1);
   // 改变选卡时向左滑动距离
-  *(int32_t *)(a1 + 1140) = -(*(int32_t *)(a1 + 1096)) + 20;
+  *(int32_t *)(a1 + 1140) = -(*(int32_t *)(a1 + 1088)) + 20;
   // 高度无法调整，只能靠缩放
   return result;
 }
@@ -89,7 +89,7 @@ inline void process() {
 }
 }  // namespace MaxZoom
 
-__attribute__((constructor)) void libRestructedLogic_ARM32__main() {
+__attribute__((constructor)) void libRestructedLogic_ARM64__main() {
   LOGI("Initializing %s", LIB_TAG);
 
   MaxZoom::process();  // 高视角
