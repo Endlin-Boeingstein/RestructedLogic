@@ -7,9 +7,9 @@
 #ifndef VERSIONADDRESSES_H
 #define VERSIONADDRESSES_H
 
-#define GAME_VERSION 1030//填入版本号，为去掉小数点的版本号
+#define GAME_VERSION 1031//填入版本号，为去掉小数点的版本号
 
-#if GAME_VERSION==940
+#if GAME_VERSION==941
 #define ZombieAlmanacAddr  0x105123C
 #define PlantNameMapperAddr  0xD994B8
 #define CamelZombieAddr  0x7942BC
@@ -17,8 +17,6 @@
 #define WorldMapDoMovementAddr  0x44E604
 #define ZombiePianoAddr  0x890108
 #define ZombiePianoListAddr  0x1CE922C
-#define ReinitForSurfaceChangedAddr  0x127415C
-#define BoardAddr  0x71A004
 #define ZombieCarnieMagician__IsImmuneToShrinkAddr  0x884B6C
 #define ZombieRomanHealer__IsImmuneToShrinkAddr  0x881C4C
 #define ZombieCarnieMagician__ConditionFuncAddr  0x86CCAC
@@ -40,11 +38,13 @@
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
-#define BoardInitAddr  NULL
 #define CDNLoadAddr NULL
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
 #define BoardZoom2Addr NULL
+#define worldMapScrollAddr NULL
+#define KeepCenterAddr NULL
+#define ScrollInertanceAddr NULL
 
 
 
@@ -137,7 +137,7 @@
 
 #endif
 
-#if GAME_VERSION==960
+#if GAME_VERSION==961
 #define ZombieAlmanacAddr  0x10643E0
 #define PlantNameMapperAddr  0xDA5C58
 #define CamelZombieAddr  0x789DC8
@@ -145,8 +145,6 @@
 #define WorldMapDoMovementAddr  0x441068
 #define ZombiePianoAddr  0x885F80
 #define ZombiePianoListAddr  0x1D890F4
-#define ReinitForSurfaceChangedAddr  0x1287430
-#define BoardAddr  0x70F63C
 #define ZombieCarnieMagician__IsImmuneToShrinkAddr  0x87A9E4
 #define ZombieRomanHealer__IsImmuneToShrinkAddr  0x877AC4
 #define ZombieCarnieMagician__ConditionFuncAddr  0x8628B0
@@ -168,11 +166,19 @@
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
-#define BoardInitAddr  NULL
 #define CDNLoadAddr NULL
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
 #define BoardZoom2Addr NULL
+#define worldMapScrollAddr 0x440E4C
+#define KeepCenterAddr 0x446C08
+#define ScrollInertanceAddr 0x45001C
+
+
+
+
+
+
 
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  0x1C5C758
@@ -261,7 +267,7 @@
 
 #endif
 
-#if GAME_VERSION==980
+#if GAME_VERSION==981
 #define ZombieAlmanacAddr  0x10C0800
 #define PlantNameMapperAddr  0xDFC008
 #define CamelZombieAddr  0x7D1BD0
@@ -269,8 +275,6 @@
 #define WorldMapDoMovementAddr  0x483504
 #define ZombiePianoAddr  0x8CDC60
 #define ZombiePianoListAddr  0x1E5429C
-#define ReinitForSurfaceChangedAddr  0x12EE3AC
-#define BoardAddr  0x75743C
 #define ZombieCarnieMagician__IsImmuneToShrinkAddr  0x8C26C4
 #define ZombieRomanHealer__IsImmuneToShrinkAddr  0x8BF7A4
 #define ZombieCarnieMagician__ConditionFuncAddr  0x8AA588
@@ -292,11 +296,19 @@
 #define ResourceManagerFuncAddr  NULL
 #define ResourceReadFuncAddr  NULL
 #define RSBTestAndReadFuncAddr  NULL
-#define BoardInitAddr  NULL
 #define CDNLoadAddr NULL
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
 #define BoardZoom2Addr NULL
+#define worldMapScrollAddr NULL
+#define KeepCenterAddr NULL
+#define ScrollInertanceAddr NULL
+
+
+
+
+
+
 
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  NULL
@@ -385,7 +397,7 @@
 
 #endif
 
-#if GAME_VERSION==1030
+#if GAME_VERSION==1031
 #define ZombieAlmanacAddr  NULL  // NULL means I don't know what it is.
 #define PlantNameMapperAddr  NULL  // 10.3 Don't need it.
 #define CamelZombieAddr  NULL
@@ -393,8 +405,6 @@
 #define WorldMapDoMovementAddr  0x524294
 #define ZombiePianoAddr  NULL
 #define ZombiePianoListAddr  NULL
-#define ReinitForSurfaceChangedAddr  0x164FB80
-#define BoardAddr  0x8856B4
 #define ZombieCarnieMagician__IsImmuneToShrinkAddr  NULL
 #define ZombieRomanHealer__IsImmuneToShrinkAddr  NULL
 #define ZombieCarnieMagician__ConditionFuncAddr  NULL
@@ -416,11 +426,18 @@
 #define ResourceManagerFuncAddr  0x6EE218
 #define ResourceReadFuncAddr  0x16228F0
 #define RSBTestAndReadFuncAddr  0x16303BC
-#define BoardInitAddr  0x6E65AC
 #define CDNLoadAddr 0x876CB0
 #define BoardZoomAddr 0x88D3EC
 #define LawnAppScreenWidthHeightAddr 0x6E4030
 #define BoardZoom2Addr 0x88D670
+#define worldMapScrollAddr 0x523EF0
+#define KeepCenterAddr 0x52ABDC
+#define ScrollInertanceAddr 0x5359F4
+
+
+
+
+
 
 
 #define DelegateBase_SEXYDELEGATE_VTBLAddr  0x21263E8

@@ -149,154 +149,96 @@ bool hkInitZombiePianoList(int a1, int a2)
 #pragma endregion
 
 #pragma region Vertical World Map Scrolling
+//我不得不骂两句了，好一个O3优化，好一个内联函数！
+//10.0以后的版本中，该部分函数直接被遗弃了，保留了函数但是删除了引用
+//而引用它们的函数则直接通过内联把逻辑塞自己函数里了
+//所以目前为止使用新版本的改版并没有出现能使用地图垂直移动的先例
+//那我就写个新旧通用的函数，造福一下大众吧！
 
-bool g_allowVerticalMovement = true;
+//本来我完全可以让你们每个版本都去找通用的三个偏移的，但是为了你们旧版本的，我采用条件调用了
+//旧版只需要找一个偏移，而新版则需要找三个
 
-typedef int (*worldMapDoMovement)(WorldMap*, int64_t, int64_t);
+//新版需要hook三个函数，而且由于该死的内联，不能把函数全反编译了，所以直接暴力扩边界让它们强行切到垂直移动判定
+//拖动函数:
+typedef int (*worldMapScroll)(uintptr_t, int, int);
+worldMapScroll oworldMapScroll = NULL;
+int hkworldMapScroll(uintptr_t a1, int a2, int a3) {
+    *(int32_t*)(a1 + 312) = -1000000000;
+    *(int32_t*)(a1 + 316) = -1000000000;
+    *(int32_t*)(a1 + 320) = 2000000000;
+    *(int32_t*)(a1 + 324) = 2000000000;
+    int result = oworldMapScroll(a1, a2, a3);
+    return result;
+}
+//居中函数：
+typedef int (*KeepCenter)(uintptr_t, uint*, bool);
+KeepCenter oKeepCenter = NULL;
+int hkKeepCenter(uintptr_t a1, uint* a2, bool a3) {
+    *(int32_t*)(a1 + 312) = -1000000000;
+    *(int32_t*)(a1 + 316) = -1000000000;
+    *(int32_t*)(a1 + 320) = 2000000000;
+    *(int32_t*)(a1 + 324) = 2000000000;
+    int result = oKeepCenter(a1, a2, 1);
+    return result;
+}
+//惯性函数：
+typedef int (*ScrollInertance)(uintptr_t);
+ScrollInertance oScrollInertance = NULL;
+int hkScrollInertance(uintptr_t a1) {
+    *(int32_t*)(a1 + 312) = -1000000000;
+    *(int32_t*)(a1 + 316) = -1000000000;
+    *(int32_t*)(a1 + 320) = 2000000000;
+    *(int32_t*)(a1 + 324) = 2000000000;
+    int result = oScrollInertance(a1);
+    return result;
+}
+
+
+//旧函数（10.0版本前有效）
+typedef int (*worldMapDoMovement)(void*, float, float, bool);
 worldMapDoMovement oWorldMapDoMovement = NULL;
 
-int hkWorldMapDoMovement(WorldMap* map, int64_t x, int64_t y)
-{
-    LOGI("Doing map movement: x - %d, y - %d", x, y);
-    return oWorldMapDoMovement(map, x, y);
-}
-
-inline int worldMapBoundaryMovement(WorldMap* self, float fX, float fY, bool allowVerticalMovement)
-{
-    if (fX <= self->m_boundaryX)
-    {
-        fX = self->m_boundaryX;
-    }
-
-    if (fX >= self->m_boundaryX + self->m_boundaryWidth)
-    {
-        fX = self->m_boundaryX + self->m_boundaryWidth;
-    }
-
-    if (fY <= self->m_boundaryY)
-    {
-        fY = self->m_boundaryY;
-    }
-
-    if (fY >= self->m_boundaryY + self->m_boundaryHeight)
-    {
-        fY = self->m_boundaryY + self->m_boundaryHeight;
-    }
-
-    return 1;
-}
-
-#pragma endregion
-
-#pragma region Board Zoom
-
-
-
-int gWidth = 0;
-int gHeight = 0;
-
-inline uint_t getLawnApp() {
-    return *(uint_t*)getActualOffset(LawnAppAddr);
-}
-
-uint_t getSexyApp() {
-    return *(uint_t*)getActualOffset(SexyAppAddr);
-}
-
-enum AspectRatio
-{
-    Letterbox,
-    Widescreen,
-    Ultrawide,
-};
-
-//typedef int(*worldMapDoMovement)(void*, float, float, bool);
-//worldMapDoMovement oWorldMapDoMovement = NULL;
-//
-//int hkWorldMapDoMovement(void* self, float fX, float fY, bool allowVerticalMovement)
+//是否移动
+bool g_allowVerticalMovement = true;
+//要你有何用？
+//移动处理函数
+//int worldMapBoundaryMovement(WorldMap* self, float fX, float fY, bool allowVerticalMovement)
 //{
-//    return oWorldMapDoMovement(self, fX, fY, true);
+//    if (allowVerticalMovement) {
+//        //地图垂直移动修复
+//        self->m_posX = fX;
+//        self->m_posY = fY;
+//    }
+//    else {
+//        if (fX <= self->m_boundaryX)
+//        {
+//            fX = self->m_boundaryX;
+//        }
+//
+//        if (fX >= self->m_boundaryX + self->m_boundaryWidth)
+//        {
+//            fX = self->m_boundaryX + self->m_boundaryWidth;
+//        }
+//
+//        if (fY <= self->m_boundaryY)
+//        {
+//            fY = self->m_boundaryY;
+//        }
+//
+//        if (fY >= self->m_boundaryY + self->m_boundaryHeight)
+//        {
+//            fY = self->m_boundaryY + self->m_boundaryHeight;
+//        }
+//    }
+//    return 1;
 //}
 
-AspectRatio GetAspectRatio()
+//回归本源
+int hkWorldMapDoMovement(void* map, float fX, float fY, bool allowVerticalMovement)
 {
-    float ratio = (float)gWidth / (float)gHeight;
-    if (ratio <= 1.4f)
-    {
-        return Letterbox;
-    }
-    else if (ratio >= 1.41f && ratio <= 1.85f)
-    {
-        return Widescreen;
-    }
-    else if (ratio >= 1.86f)
-    {
-        return Ultrawide;
-    }
+    LOGI("Doing map movement: fX - %d, fY - %d", fX, fY);
+    return oWorldMapDoMovement(map, fX, fY, g_allowVerticalMovement);
 }
-
-typedef void(*ReinitForSurfaceChange)(int, int, int, int, int);
-ReinitForSurfaceChange oRFSC = nullptr;
-
-void HkReinitForSurfaceChange(int thisptr, int a2, int width, int height, int a5)
-{
-    gWidth = width;//width
-    gHeight = height;//height
-    return oRFSC(thisptr, a2, width, height, a5);
-}
-
-//要搞开关了
-bool g_boardZoomOut = true;
-
-typedef void* (*boardCtor)(Board*);
-boardCtor oBoardCtor = NULL;
-
-void* hkBoardCtor(Board* board)
-{
-    oBoardCtor(board);
-
-    LOGI("Board constructor called");
-    LOGI("[ Column Count ] x: %d", board->m_columnCount);
-    LOGI("[ Row Count ] x: %d", board->m_rowCount);
-    LOGI("[ Lawn Rect ] x: %d, y: %d, w: %d, h: %d", board->m_lawnRect.mX, board->m_lawnRect.mY, board->m_lawnRect.mWidth, board->m_lawnRect.mHeight);
-
-    if (g_boardZoomOut)
-    {
-        board->m_lawnRect.mX = 200; //200
-        board->m_lawnRect.mY = 160; //160
-
-        switch (GetAspectRatio())
-        {
-        case Letterbox:
-        {
-            LOGI("Aspect Ratio: Letterbox");
-            board->m_lawnRect.mWidth = 576; //576
-            board->m_lawnRect.mHeight = 500; //380
-            break;
-        }
-        case Widescreen:
-        {
-            LOGI("Aspect Ratio: Widescreen");
-            board->m_lawnRect.mWidth = 576; //576
-            board->m_lawnRect.mHeight = 450; //380
-            // board->m_lawnRect.mHeight = 540; //380
-            break;
-        }
-        case Ultrawide:
-        {
-            LOGI("Aspect Ratio: Ultrawide");
-            board->m_lawnRect.mX = 450; //450
-            board->m_lawnRect.mY = 160;
-            board->m_lawnRect.mWidth = 576; //576
-            board->m_lawnRect.mHeight = 525; //380
-            break;
-        }
-        }
-    }
-
-    return board;
-}
-
 #pragma endregion
 
 #pragma region Dumb Hardcoded Immunities (Healer/Magician)
@@ -1474,7 +1416,7 @@ int hkBoardZoom(uintptr_t a1) {
     int result = oBoardZoom(a1);
 
     //改变选卡时向左滑动距离
-    *(int32_t*)(a1 + 880) = -(*(int32_t*)(a1 + 840)) + 20;
+    *(int32_t*)(a1 + 880) = -(*(int32_t*)(a1 + 840)) + 20 + 64 * 3; /*-(*(int32_t*)(a1 + 832));*///前面这个也是可以的//-(*(int32_t*)(a1 + 840))+20选卡时候会完全靠左边，部分设备选卡会看不到出怪
     //高度无法调整，只能靠缩放
     return result;
 }
@@ -1572,7 +1514,7 @@ void libRestructedLogic_ARM64__main()
     //PVZ2HookFunction(ZombieCarnieMagician__ConditionFuncAddr, (void*)hkMagicianHealerConditionFunc, (void**)&dispose, "ZombieCarnieMagician::ConditionFunc");
     //PVZ2HookFunction(ZombieRomanHealer__ConditionFuncAddr, (void*)hkMagicianHealerConditionFunc, (void**)&dispose, "ZombieRomanHealer::ConditionFunc");
     //PVZ2HookFunction(ZombieRomanHealer__InitializeFamilyImmunitiesAddr, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");
-    //PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
+    
 
     /*if (version_code < v10_3) {*/
     if (GAME_VERSION < 1030) {
@@ -1586,6 +1528,14 @@ void libRestructedLogic_ARM64__main()
         PVZ2HookFunction(ZombieCarnieMagician__ConditionFuncAddr, (void*)hkMagicianHealerConditionFunc, (void**)&dispose, "ZombieCarnieMagician::ConditionFunc");
         PVZ2HookFunction(ZombieRomanHealer__ConditionFuncAddr, (void*)hkMagicianHealerConditionFunc, (void**)&dispose, "ZombieRomanHealer::ConditionFunc");
         PVZ2HookFunction(ZombieRomanHealer__InitializeFamilyImmunitiesAddr, (void*)hkMagicianInitializeFamilyImmunities, (void**)&dispose, "ZombieRomanHealer::InitializeFamilyImmunities");*/
+        PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
+    }
+    else {
+        PVZ2HookFunction(worldMapScrollAddr, (void*)hkworldMapScroll, (void**)&oworldMapScroll, "WorldMap::worldMapScroll");
+        //居中函数
+        PVZ2HookFunction(KeepCenterAddr, (void*)hkKeepCenter, (void**)&oKeepCenter, "WorldMap::KeepCenter");
+        //惯性函数
+        PVZ2HookFunction(ScrollInertanceAddr, (void*)hkScrollInertance, (void**)&oScrollInertance, "WorldMap::worldMapScroll");
     }
     //输出简要日志
     PVZ2HookFunction(LogOutputFuncAddrSimpleAddr, (void*)hkLogOutputFunc_Simple, (void**)&oLogOutputFunc_Simple, "LogOutputFunc_Simple");
@@ -1617,8 +1567,6 @@ void libRestructedLogic_ARM64__main()
     PVZ2HookFunction(RSBPathRecorderAddr, (void*)hkRSBPathRecorder, (void**)&oRSBPathRecorder, "ResourceManager::RSBPathRecorder");
     //此代码为融小宝对RestructedLogic工程的私有化改造功能之一，并未根据RestructedLogic的GPL-3.0协议进行公开，我已拥有相关证据，你不守规矩，就别怪我强制公开了，并且我也没用你的写法，自己写的
     PVZ2HookFunction(PrimeGlyphCacheAddr, (void*)hkPrimeGlyphCacheLimitation, (void**)&oPrimeGlyphCacheLimitation, "PrimeGlyphCache::PrimeGlyphCacheLimitation");
-    /*PVZ2HookFunction(ReinitForSurfaceChangedAddr, (void*)HkReinitForSurfaceChange, (void**)&oRFSC, "ReinitForSurfaceChanged");
-    PVZ2HookFunction(BoardAddr, (void*)hkBoardCtor, (void**)&oBoardCtor, "Board::Board");*/
 
     /*PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");*/
     LOGI("Finished initializing");

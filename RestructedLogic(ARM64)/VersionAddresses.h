@@ -7,9 +7,9 @@
 #ifndef VERSIONADDRESSES_H
 #define VERSIONADDRESSES_H
 
-#define GAME_VERSION 1030//填入版本号，为去掉小数点的版本号
+#define GAME_VERSION 1031//填入版本号，为去掉小数点的版本号
 
-#if GAME_VERSION==940
+#if GAME_VERSION==941
 #define ZombieAlmanacAddr  0x00
 #define PlantNameMapperAddr  0x1157778//
 #define CamelZombieAddr  0x00
@@ -17,8 +17,6 @@
 #define WorldMapDoMovementAddr  0x00
 #define ZombiePianoAddr  0x00
 #define ZombiePianoListAddr  0x00
-#define ReinitForSurfaceChangedAddr  0x164C580
-#define BoardAddr  0xA94604//
 #define ZombieCarnieMagician__IsImmuneToShrinkAddr  0x00
 #define ZombieRomanHealer__IsImmuneToShrinkAddr  0x00
 #define ZombieCarnieMagician__ConditionFuncAddr  0x00
@@ -43,6 +41,9 @@
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
 #define BoardZoom2Addr NULL
+#define worldMapScrollAddr NULL
+#define KeepCenterAddr NULL
+#define ScrollInertanceAddr NULL
 
 
 
@@ -138,7 +139,7 @@
 
 #endif
 
-#if GAME_VERSION==960
+#if GAME_VERSION==961
 #define ZombieAlmanacAddr  0x00
 #define PlantNameMapperAddr  0x00//
 #define CamelZombieAddr  0x00
@@ -146,8 +147,6 @@
 #define WorldMapDoMovementAddr  0x00
 #define ZombiePianoAddr  0x00
 #define ZombiePianoListAddr  0x00
-#define ReinitForSurfaceChangedAddr  0x00
-#define BoardAddr  0x00//
 #define ZombieCarnieMagician__IsImmuneToShrinkAddr  0x00
 #define ZombieRomanHealer__IsImmuneToShrinkAddr  0x00
 #define ZombieCarnieMagician__ConditionFuncAddr  0x00
@@ -172,6 +171,9 @@
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
 #define BoardZoom2Addr NULL
+#define worldMapScrollAddr NULL
+#define KeepCenterAddr NULL
+#define ScrollInertanceAddr NULL
 
 
 
@@ -267,7 +269,7 @@
 
 #endif
 
-#if GAME_VERSION==980
+#if GAME_VERSION==981
 #define ZombieAlmanacAddr  0x00
 #define PlantNameMapperAddr  0x00//
 #define CamelZombieAddr  0x00
@@ -275,8 +277,6 @@
 #define WorldMapDoMovementAddr  0x00
 #define ZombiePianoAddr  0x00
 #define ZombiePianoListAddr  0x00
-#define ReinitForSurfaceChangedAddr  0x00
-#define BoardAddr  0x00//
 #define ZombieCarnieMagician__IsImmuneToShrinkAddr  0x00
 #define ZombieRomanHealer__IsImmuneToShrinkAddr  0x00
 #define ZombieCarnieMagician__ConditionFuncAddr  0x00
@@ -301,6 +301,9 @@
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
 #define BoardZoom2Addr NULL
+#define worldMapScrollAddr NULL
+#define KeepCenterAddr NULL
+#define ScrollInertanceAddr NULL
 
 
 
@@ -402,7 +405,7 @@
 
 #endif
 
-#if GAME_VERSION==1030
+#if GAME_VERSION==1031
 #define ZombieAlmanacAddr  NULL  // NULL means I don't know what it is.
 #define PlantNameMapperAddr  NULL  // 10.3 Don't need it.
 #define CamelZombieAddr  NULL
@@ -410,8 +413,6 @@
 #define WorldMapDoMovementAddr  NULL
 #define ZombiePianoAddr  NULL
 #define ZombiePianoListAddr  NULL
-#define ReinitForSurfaceChangedAddr  NULL
-#define BoardAddr  NULL
 #define ZombieCarnieMagician__IsImmuneToShrinkAddr  NULL
 #define ZombieRomanHealer__IsImmuneToShrinkAddr  NULL
 #define ZombieCarnieMagician__ConditionFuncAddr  NULL
@@ -436,6 +437,9 @@
 #define BoardZoomAddr NULL
 #define LawnAppScreenWidthHeightAddr NULL
 #define BoardZoom2Addr NULL
+#define worldMapScrollAddr NULL
+#define KeepCenterAddr NULL
+#define ScrollInertanceAddr NULL
 
 
 

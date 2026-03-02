@@ -19,7 +19,7 @@ std::map<std::string, int> rtonTableIDs;
 //然后sub_10CBCD8(&v1476, 4, &v1265, v1420, 0, 0, &v1409, v1471);这个函数的第二个参数即RTON编号
 
 bool rtonTableIDsLoader() {
-#if GAME_VERSION==940
+#if GAME_VERSION==941
 	rtonTableIDs["ScratchSpace.rton"] = 999;
 	rtonTableIDs["UknRton.rton"] = 999;
 	rtonTableIDs["Version.rton"] = 999;
@@ -76,9 +76,10 @@ bool rtonTableIDsLoader() {
 	rtonTableIDs["LevelModulesDifficulty.rton"] = 999;
 	rtonTableIDs["LevelMutatorModules.rton"] = 999;
 	rtonTableIDs["LevelMutatorTables.rton"] = 999;
+	return 1;
 #endif
 
-#if GAME_VERSION==960
+#if GAME_VERSION==961
 	rtonTableIDs["ScratchSpace.rton"] = 999;
 	rtonTableIDs["UknRton.rton"] = 999;
 	rtonTableIDs["Version.rton"] = 999;
@@ -135,9 +136,10 @@ bool rtonTableIDsLoader() {
 	rtonTableIDs["LevelModulesDifficulty.rton"] = 999;
 	rtonTableIDs["LevelMutatorModules.rton"] = 999;
 	rtonTableIDs["LevelMutatorTables.rton"] = 999;
+	return 1;
 #endif
 
-#if GAME_VERSION==980
+#if GAME_VERSION==981
 	rtonTableIDs["ScratchSpace.rton"] = 999;
 	rtonTableIDs["UknRton.rton"] = 999;
 	rtonTableIDs["Version.rton"] = 999;
@@ -194,9 +196,10 @@ bool rtonTableIDsLoader() {
 	rtonTableIDs["LevelModulesDifficulty.rton"] = 999;
 	rtonTableIDs["LevelMutatorModules.rton"] = 999;
 	rtonTableIDs["LevelMutatorTables.rton"] = 999;
+	return 1;
 #endif
 
-#if GAME_VERSION==1030
+#if GAME_VERSION==1031
 	rtonTableIDs["ScratchSpace.rton"] = 0;
 	rtonTableIDs["UknRton.rton"] = 1;
 	rtonTableIDs["Version.rton"] = 2;
@@ -253,7 +256,10 @@ bool rtonTableIDsLoader() {
 	rtonTableIDs["LevelModulesDifficulty.rton"] = 53;
 	rtonTableIDs["LevelMutatorModules.rton"] = 54;
 	rtonTableIDs["LevelMutatorTables.rton"] = 55;
+	return 1;
 #endif
 
 //更多版本请自行填写
+	return 0;
+
 }
