@@ -687,18 +687,8 @@ void process() {
 namespace MaxZoom {
 
 // 设备分辨率
-int mOrigScreenWidth;
+// int mOrigScreenWidth;
 int mOrigScreenHeight;
-
-// 游戏分辨率
-int mWidth;
-int mHeight;
-
-// 缩放后结果 float 成员
-float m_contentResWidth;
-float m_contentResHeight;
-
-float zoomScale;
 
 // LawnAppScreenWidthHeight 的原函数会随版本变化。目前只知道 8.7.3 和 10.3.1
 // 的写法。其他版本欢迎补充。
@@ -716,28 +706,15 @@ int hkLawnAppScreenWidthHeight(int a1, int a2) {
 
   // 2. 根据偏移直接提取数据
   // 根据 sub_FFE7D0
-  mOrigScreenWidth = *(int32_t *)(a1 + 1512);
+  // mOrigScreenWidth = *(int32_t *)(a1 + 1512);
   mOrigScreenHeight = *(int32_t *)(a1 + 1516);
-
-  // 根据自身:
-  mWidth = *(int32_t *)(a1 + 136);
-  mHeight = *(int32_t *)(a1 + 140);
-
-  // float 成员
-  m_contentResWidth = *(float *)(a1 + 1740);
-  m_contentResHeight = *(float *)(a1 + 1744);
 
   // 3. 输出日志
   LOGI(R"(
 --- LawnApp::SetWidthHeight Hook ---
-mOrigSize: %d x %d
-mSize:     %d x %d
-mContent:  %.2f x %.2f
-result:    %d)",
-       mOrigScreenWidth, mOrigScreenHeight, mWidth, mHeight, m_contentResWidth, m_contentResHeight,
-       result);
+mOrigHeight: %d, result: %d)",
+       mOrigScreenHeight, result);
 
-  zoomScale = ((float)mOrigScreenHeight / m_contentResHeight);
   return result;
 }
 
@@ -758,28 +735,15 @@ int hkLawnAppScreenWidthHeight(float *a1, int a2) {
   int *iPtr = (int *)a1;
 
   // 根据 sub_1482320: 1448字节 = 偏移362, 1452字节 = 偏移363
-  mOrigScreenWidth = iPtr[362];
+  // mOrigScreenWidth = iPtr[362];
   mOrigScreenHeight = iPtr[363];
-
-  // 根据 sub_6E4030 反汇编:
-  mWidth = iPtr[25];
-  mHeight = iPtr[26];
-
-  // float 成员
-  m_contentResWidth = a1[394];
-  m_contentResHeight = a1[395];
 
   // 3. 输出日志
   LOGI(R"(
 --- LawnApp::SetWidthHeight Hook ---
-mOrigSize: %d x %d
-mSize:     %d x %d
-mContent:  %.2f x %.2f
-result:    %d)",
-       mOrigScreenWidth, mOrigScreenHeight, mWidth, mHeight, m_contentResWidth, m_contentResHeight,
-       result);
+mOrigHeight: %d, result: %d)",
+       mOrigScreenHeight, result);
 
-  zoomScale = ((float)mOrigScreenHeight / m_contentResHeight);
   return result;
 }
 
