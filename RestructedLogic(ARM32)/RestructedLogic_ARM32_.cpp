@@ -11,7 +11,6 @@
 #include "Decrypt/picosha2.h"
 #include "Decrypt/aes.h"
 #include <thread>
-#include <vector>
 #include <sys/mman.h>
 #include <sys/sendfile.h>
 #include <fcntl.h>
@@ -602,10 +601,10 @@ int hkLogOutputFunc_Struct(void *result) {
     // 如果 (*(unsigned char*)result & 1) != 0
     if ((*((unsigned char *)result) & 1) != 0) {
       // 长字符串逻辑：从偏移 8 处取指针
-      v1 = *(const char **)((uintptr_t)result + 8);
+      v1 = *(const char **)((uint)result + 8);
     } else {
       // 短字符串逻辑：从偏移 1 处取内容
-      v1 = (const char *)((uintptr_t)result + 1);
+      v1 = (const char *)((uint)result + 1);
     }
     // 如果指针不为空且内容不为空字符串
     if (v1 && *v1 != '\0') {
@@ -792,10 +791,10 @@ result:    %d)",
 #endif
 
 // 定义原函数的函数原型 (32位 ARM 中 __fastcall 通常对应 r0, r1...)
-typedef int (*OrigBoardZoom)(uintptr_t a1);
+typedef int (*OrigBoardZoom)(uint a1);
 OrigBoardZoom oBoardZoom = nullptr;
 
-int hkBoardZoom(uintptr_t a1) {
+int hkBoardZoom(uint a1) {
   // 先跑原函数
   int result = oBoardZoom(a1);
   // 改变选卡时向左滑动距离
@@ -805,10 +804,10 @@ int hkBoardZoom(uintptr_t a1) {
 }
 
 // 定义原函数的函数原型 (32位 ARM 中 __fastcall 通常对应 r0, r1...)
-typedef int (*OrigBoardZoom2)(uintptr_t a1);
+typedef int (*OrigBoardZoom2)(uint a1);
 OrigBoardZoom2 oBoardZoom2 = nullptr;
 
-int hkBoardZoom2(uintptr_t a1) {
+int hkBoardZoom2(uint a1) {
   int result = oBoardZoom2(a1);
   // 缩放系数
   *(float *)(a1 + 860) = 1.0f;

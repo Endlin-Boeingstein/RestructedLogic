@@ -4,26 +4,26 @@
 #include "x32/jni/include/Utils.h"
 #include "x32/jni/libs/Substrate/SubstrateHook.h"
 
-uint g_libAddress = NULL;
+size_t g_libAddress = NULL;
 
-uint getLibraryAddress(const char *libName) {
+size_t getLibraryAddress(const char *libName) {
   return get_libBase(libName);
 }
 
-uint getActualOffset(uint offset) {
+size_t getActualOffset(size_t offset) {
   return getRealOffset(offset);
 }
 
-uint_t getOriginalOffset(uint_t actualOffset) {
+size_t getOriginalOffset(size_t actualOffset) {
   return getOriOffset(actualOffset);
 }
 
-void PVZ2HookFunction(uint offset, void *replace, void **result, const char *funcName) {
+void PVZ2HookFunction(size_t offset, void *replace, void **result, const char *funcName) {
   MSHookFunction((void *)getActualOffset(offset), replace, result);
   LOGI("Hooked %s", funcName);
 }
 
-void *copyVFTable(int vftableAddr, int numVFuncs) {
+void *copyVFTable(size_t vftableAddr, int numVFuncs) {
   int size = numVFuncs * sizeof(int);
   void *vftableCopy = malloc(size);
   memcpy(vftableCopy, (const void *)vftableAddr, size);
@@ -34,7 +34,7 @@ void patchVFTable(void *vftable, void *funcAddr, int index) {
   ((reinterpret_cast<void **>(vftable))[index]) = funcAddr;
 }
 
-void copyVFTable(void *dest, int vftableAddr, int numVFuncsToCopy) {
+void copyVFTable(void *dest, size_t vftableAddr, int numVFuncsToCopy) {
   int size = numVFuncsToCopy * sizeof(int);
   memcpy(dest, (const void *)vftableAddr, size);
 }
@@ -47,8 +47,8 @@ void *createChildVFTable(int vFuncsCount, int parentVftable, int nuMVFuncsToCopy
   return childVftable;
 }
 
-void setVFTable(void *obj, uintptr_t newVftablePtr) {
-  *reinterpret_cast<int *>(uintptr_t(obj)) = newVftablePtr;
+void setVFTable(void *obj, size_t newVftablePtr) {
+  *reinterpret_cast<int *>(size_t(obj)) = newVftablePtr;
 }
 
 void *GetVirtualFunc(void *obj, int index) {

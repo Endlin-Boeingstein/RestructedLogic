@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="x64\jni\libs\64InlineHook\And64InlineHook.cpp">
+      <Filter>x64\jni\libs\64InlineHook</Filter>
+    </ClCompile>
+    <ClCompile Include="RestructedLogic_ARM64_.cpp" />
+    <ClCompile Include="memUtils.cpp" />
+    <ClCompile Include="Decrypt\aes.cpp">
+      <Filter>Decrypt</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="x64\jni\include\Utils.h">
+      <Filter>x64\jni\include</Filter>
+    </ClInclude>
+    <ClInclude Include="x64\jni\libs\64InlineHook\And64InlineHook.hpp">
+      <Filter>x64\jni\libs\64InlineHook</Filter>
+    </ClInclude>
+    <ClInclude Include="RestructedLogic_ARM64_.h" />
+    <ClInclude Include="SexyTypes.h" />
+    <ClInclude Include="Logging.h" />
+    <ClInclude Include="memUtils.h" />
+    <ClInclude Include="VersionSwitcher.h" />
+    <ClInclude Include="Decrypt\aes.h">
+      <Filter>Decrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="Decrypt\picosha2.h">
+      <Filter>Decrypt</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="x64">
+      <UniqueIdentifier>{6e350318-162c-4c85-b78d-d3f5323de8bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x64\jni">
+      <UniqueIdentifier>{1ef42489-e64b-4f80-aa97-717db21b7638}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x64\jni\include">
+      <UniqueIdentifier>{56023d27-523d-425b-aa27-72e0a5f5b2af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x64\jni\libs">
+      <UniqueIdentifier>{d1c2a284-1422-41c7-90dc-89ac72052aee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="x64\jni\libs\64InlineHook">
+      <UniqueIdentifier>{0c8cc5aa-ce7d-4bbd-98a8-b60fe4a7108d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Decrypt">
+      <UniqueIdentifier>{da75c95d-4d88-4a9e-9066-82bcfec5d38c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
