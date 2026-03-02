@@ -1,6 +1,12 @@
 ﻿#include <map>
 #include <string>
 
+#ifndef __arm__
+
+#error "This sub-project is only for ARM architecture."
+
+#endif
+
 static constexpr size_t UNKNOWN = 0;
 #define GAME_VERSION 1031
 // 填入版本号，为去掉小数点的版本号

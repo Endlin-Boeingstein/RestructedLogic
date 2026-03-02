@@ -12,9 +12,9 @@ RestructedLogic_Lite is a simplified version based on RestructedLogic. It remove
 
 - RSB decrypt.
 
-- Customize CDN read list.
-
 - In-game Max Zoom Perspective. (高视角 in Chinese.)
+
+- Customize CDN read list (debug mode only).
 
 - Game log output (debug mode only).
 
@@ -54,13 +54,13 @@ Download and install Visual Studio 2022: <https://visualstudio.microsoft.com>.
 
 Modify the Visual Studio 2022's Workloads and install `Mobile development with C++` module. And then, you can clone the repo and open the repo's `.sln` file by Visual Studio 2022.
 
-Select the `RestructedLogic(ARM32)` and click the triangle button that the `Release` `ARM` nearby.
+If you want to generate ARM32 so. Select the `RestructedLogic(ARM32)` and click the triangle button that the `Release` `ARM` nearby.  If you want to generate ARM64 so. Select the `RestructedLogic(ARM64)` and click the triangle button that the `Release` `ARM64` nearby.
 
-Then in the folder, you would found ARM folder. The so file may inside that name called `libRestructedLogic_ARM32_.so` in `ARM/Release`.
+Then in the folder, you would found ARM and ARM64 folder. These so file may inside that name called `libRestructedLogic_ARM32_.so` in `ARM/Release` and `libRestructedLogic_ARM64_.so` in `ARM64/Release`.
 
 Download APKToolGUI: <https://drive.google.com/file/u/0/d/1Zko59XeiX7DZENWaLDsPjvHPfk9dwHgi/view?usp=drive_link&pli=1>. Use APKToolGUI to decompile the apk that you want to hook.
 
-Copy the .so file to the decompiled folder's `lib\armeabi-v7a` path. Change the .so file's name to `libRestructedLogic.so`. Delete the `lib\arm64-v8a` folder.
+Copy the .so file to the decompiled folder's `lib\armeabi-v7a` path when you want to use ARM32 or `lib\arm64-v8a` path when you want to use ARM64. Change the .so file's name to `libRestructedLogic.so`.
 
 Delete the ARM lib version folder that you needn't use it.
 Then modify `PvZ2GameActivity.smali` which is in the decompiled folder. Open it, and find this:
