@@ -89,7 +89,7 @@ inline void process() {
 }
 }  // namespace MaxZoom
 
-__attribute__((constructor)) void libRestructedLogic_ARM32__main() {
+__attribute__((constructor)) void libRestructedLogic_ARM64__main() {
   LOGI("Initializing %s", LIB_TAG);
 
   MaxZoom::process();  // 高视角
