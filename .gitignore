@@ -9,6 +9,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.clang-format
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -21,8 +22,6 @@ mono_crash.*
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
-x64/
-x86/
 [Ww][Ii][Nn]32/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/

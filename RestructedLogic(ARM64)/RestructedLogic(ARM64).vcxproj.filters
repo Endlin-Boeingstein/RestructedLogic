@@ -22,20 +22,13 @@
     <ClInclude Include="SexyTypes.h" />
     <ClInclude Include="Logging.h" />
     <ClInclude Include="memUtils.h" />
-    <ClInclude Include="VersionAddresses.h" />
-    <ClInclude Include="PvZ2\Board.h">
-      <Filter>PvZ2</Filter>
-    </ClInclude>
-    <ClInclude Include="PvZ2\WorldMap.h">
-      <Filter>PvZ2</Filter>
-    </ClInclude>
+    <ClInclude Include="VersionSwitcher.h" />
     <ClInclude Include="Decrypt\aes.h">
       <Filter>Decrypt</Filter>
     </ClInclude>
     <ClInclude Include="Decrypt\picosha2.h">
       <Filter>Decrypt</Filter>
     </ClInclude>
-    <ClInclude Include="VersionRtonIDs.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x64">
@@ -50,25 +43,11 @@
     <Filter Include="x64\jni\libs">
       <UniqueIdentifier>{d1c2a284-1422-41c7-90dc-89ac72052aee}</UniqueIdentifier>
     </Filter>
-    <Filter Include="x64\jni\src">
-      <UniqueIdentifier>{aa26b0ed-5a98-4356-aa63-cbf755c37d2c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="x64\jni\libs\64InlineHook">
       <UniqueIdentifier>{0c8cc5aa-ce7d-4bbd-98a8-b60fe4a7108d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="PvZ2">
-      <UniqueIdentifier>{bb6aef8a-dbf0-4984-8a60-9f2142dc34cb}</UniqueIdentifier>
     </Filter>
     <Filter Include="Decrypt">
       <UniqueIdentifier>{da75c95d-4d88-4a9e-9066-82bcfec5d38c}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="x64\jni\Android.mk">
-      <Filter>x64\jni</Filter>
-    </None>
-    <None Include="x64\jni\Application.mk">
-      <Filter>x64\jni</Filter>
-    </None>
   </ItemGroup>
 </Project>
