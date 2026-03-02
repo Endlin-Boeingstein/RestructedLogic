@@ -762,7 +762,7 @@ int hkBoardZoom(uint a1) {
   // 先跑原函数
   int result = oBoardZoom(a1);
   // 改变选卡时向左滑动距离
-  *(int32_t *)(a1 + 880) = -(*(int32_t *)(a1 + 840)) + 20;
+  *(int32_t *)(a1 + 880) = -(*(int32_t *)(a1 + 832)) + 20;
   // 高度无法调整，只能靠缩放
   return result;
 }
