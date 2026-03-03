@@ -686,9 +686,23 @@ void process() {
 
 namespace MaxZoom {
 
+constexpr int TEXTURE_WIDTH = 2048, TEXTURE_LEFT_WIDTH = 556, TEXTURE_RIGHT_WIDTH = 1345;
+constexpr int stageRightLine = TEXTURE_WIDTH + TEXTURE_RIGHT_WIDTH;
+
+// 选卡界面与正式游戏视野右边缘（相对于棋盘左侧边缘的距离）
+int gameStartRightLine, preGameRightLine;
+
 // 设备分辨率
-// int mOrigScreenWidth;
+#ifdef _DEBUG
+int mOrigScreenWidth;
+#endif
 int mOrigScreenHeight;
+
+// 游戏分辨率
+int mWidth;
+#ifdef _DEBUG
+int mHeight;
+#endif
 
 // LawnAppScreenWidthHeight 的原函数会随版本变化。目前只知道 8.7.3 和 10.3.1
 // 的写法。其他版本欢迎补充。
@@ -706,14 +720,33 @@ int hkLawnAppScreenWidthHeight(int a1, int a2) {
 
   // 2. 根据偏移直接提取数据
   // 根据 sub_FFE7D0
-  // mOrigScreenWidth = *(int32_t *)(a1 + 1512);
+#ifdef _DEBUG
+  mOrigScreenWidth = *(int32_t *)(a1 + 1512);
+#endif
   mOrigScreenHeight = *(int32_t *)(a1 + 1516);
+
+  // 根据自身
+  mWidth = *(int32_t *)(a1 + 136);
+#ifdef _DEBUG
+  mHeight = *(int32_t *)(a1 + 140);
+#endif
 
   // 3. 输出日志
   LOGI(R"(
 --- LawnApp::SetWidthHeight Hook ---
-mOrigHeight: %d, result: %d)",
-       mOrigScreenHeight, result);
+mOrigWidth: %d, mOrigHeight: %d
+mWidth: %d, mHeight: %d
+result: %d)",
+       mOrigScreenWidth, mOrigScreenHeight, mWidth, mHeight, result);
+
+  // 若游戏分辨率宽度大于棋盘和左侧的总宽度（足以让左侧全部显示），则使偏移与左侧宽度相同
+  // 否则使偏移等于游戏分辨率宽度减去棋盘宽度（即让右侧边缘与屏幕右侧对齐）
+  gameStartRightLine = (mWidth >= TEXTURE_WIDTH + TEXTURE_LEFT_WIDTH)
+                           ? (mWidth - TEXTURE_LEFT_WIDTH)
+                           : TEXTURE_WIDTH;
+  gameStartRightLine = std::min(gameStartRightLine, stageRightLine);
+  preGameRightLine = (gameStartRightLine + stageRightLine) / 2;
+  preGameRightLine = std::min(preGameRightLine, stageRightLine);
 
   return result;
 }
@@ -735,14 +768,33 @@ int hkLawnAppScreenWidthHeight(float *a1, int a2) {
   int *iPtr = (int *)a1;
 
   // 根据 sub_1482320: 1448字节 = 偏移362, 1452字节 = 偏移363
-  // mOrigScreenWidth = iPtr[362];
+#ifdef _DEBUG
+  mOrigScreenWidth = iPtr[362];
+#endif
   mOrigScreenHeight = iPtr[363];
+
+  // 根据自身
+  mWidth = iPtr[25];
+#ifdef _DEBUG
+  mHeight = iPtr[26];
+#endif
 
   // 3. 输出日志
   LOGI(R"(
 --- LawnApp::SetWidthHeight Hook ---
-mOrigHeight: %d, result: %d)",
-       mOrigScreenHeight, result);
+mOrigWidth: %d, mOrigHeight: %d
+mWidth: %d, mHeight: %d
+result: %d)",
+       mOrigScreenWidth, mOrigScreenHeight, mWidth, mHeight, result);
+
+  // 若游戏分辨率宽度大于棋盘和左侧的总宽度（足以让左侧全部显示），则使偏移与左侧宽度相同
+  // 否则使偏移等于游戏分辨率宽度减去棋盘宽度（即让右侧边缘与屏幕右侧对齐）
+  gameStartRightLine = (mWidth >= TEXTURE_WIDTH + TEXTURE_LEFT_WIDTH)
+                           ? (mWidth - TEXTURE_LEFT_WIDTH)
+                           : TEXTURE_WIDTH;
+  gameStartRightLine = std::min(gameStartRightLine, stageRightLine);
+  preGameRightLine = (gameStartRightLine + stageRightLine) / 2;
+  preGameRightLine = std::min(preGameRightLine, stageRightLine);
 
   return result;
 }
@@ -754,36 +806,31 @@ mOrigHeight: %d, result: %d)",
 
 #endif
 
-// 定义原函数的函数原型 (32位 ARM 中 __fastcall 通常对应 r0, r1...)
-typedef int (*OrigBoardZoom)(uint a1);
+// 定义原函数的函数原型
+typedef int (*OrigBoardZoom)(int a1);
 OrigBoardZoom oBoardZoom = nullptr;
 
-int hkBoardZoom(uint a1) {
+int hkBoardZoom(int a1) {
   // 先跑原函数
   int result = oBoardZoom(a1);
-  // 改变选卡时向左滑动距离
-  *(int32_t *)(a1 + 880) = -(*(int32_t *)(a1 + 832)) + 20;
+  // 改变选卡时视野左边缘与棋盘左边缘的距离
+  *(int32_t *)(a1 + 880) = preGameRightLine - mWidth;
   // 高度无法调整，只能靠缩放
   return result;
 }
 
-// 定义原函数的函数原型 (32位 ARM 中 __fastcall 通常对应 r0, r1...)
-typedef int (*OrigBoardZoom2)(uint a1);
+// 定义原函数的函数原型
+typedef int (*OrigBoardZoom2)(int a1);
 OrigBoardZoom2 oBoardZoom2 = nullptr;
 
-int hkBoardZoom2(uint a1) {
+int hkBoardZoom2(int a1) {
   int result = oBoardZoom2(a1);
   // 缩放系数
   *(float *)(a1 + 860) = 1.0f;
-  // 俩半逻辑宽度
-  // int32_t logicalA = *(int32_t *)(a1 + 832);  // unused
-  int32_t logicalB = *(int32_t *)(a1 + 840);
-  // 改变左侧偏移(因为误差20像素，所以补上)
-  *(int32_t *)(a1 + 824) = (int32_t)logicalB - 20;
-  /**(int32_t *)(a1 + 44) - mOrigScreenWidth;*/  // 注释的是刘海屏留存的数值
+  // 改变视野左边缘与棋盘左边缘的距离
+  *(int32_t *)(a1 + 824) = -(gameStartRightLine - mWidth);
   // 顶部基准线
   *(int32_t *)(a1 + 868) = (int32_t)mOrigScreenHeight;
-  // 右边界屏幕坐标
   return result;
 }
 
