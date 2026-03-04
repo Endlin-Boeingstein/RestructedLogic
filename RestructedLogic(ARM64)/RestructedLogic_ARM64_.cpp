@@ -109,11 +109,14 @@ void hkBoardZoom2(int64_t a1) {
 
 inline void process() {
   // 得到缩放前后尺寸
-  PVZ2HookFunction(LawnAppScreenWidthHeightAddr, (void *)hkLawnAppScreenWidthHeight,
-                   (void **)&oLawnAppScreenWidthHeight, "LawnApp:SetScreenWidthHeight");
+  if constexpr (LawnAppScreenWidthHeightAddr != UNKNOWN)
+    PVZ2HookFunction(LawnAppScreenWidthHeightAddr, (void *)hkLawnAppScreenWidthHeight,
+                     (void **)&oLawnAppScreenWidthHeight, "LawnApp::SetScreenWidthHeight");
   // 控制屏幕缩放
-  PVZ2HookFunction(BoardZoomAddr, (void *)hkBoardZoom, (void **)&oBoardZoom, "BoardZoom");
-  PVZ2HookFunction(BoardZoom2Addr, (void *)hkBoardZoom2, (void **)&oBoardZoom2, "BoardZoom2");
+  if constexpr (BoardZoomAddr != UNKNOWN)
+    PVZ2HookFunction(BoardZoomAddr, (void *)hkBoardZoom, (void **)&oBoardZoom, "BoardZoom");
+  if constexpr (BoardZoom2Addr != UNKNOWN)
+    PVZ2HookFunction(BoardZoom2Addr, (void *)hkBoardZoom2, (void **)&oBoardZoom2, "BoardZoom2");
 }
 }  // namespace MaxZoom
 

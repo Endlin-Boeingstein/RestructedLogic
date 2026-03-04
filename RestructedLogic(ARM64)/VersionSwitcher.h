@@ -7,7 +7,7 @@
 
 #endif
 
-static constexpr size_t UNKNOWN = 0;
+constexpr size_t UNKNOWN = 0;
 #define GAME_VERSION 873
 // 填入版本号，为去掉小数点的版本号
 // UNKNOWN 表示暂时未知

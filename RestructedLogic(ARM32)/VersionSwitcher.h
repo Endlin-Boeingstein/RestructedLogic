@@ -7,8 +7,8 @@
 
 #endif
 
-static constexpr size_t UNKNOWN = 0;
-#define GAME_VERSION 1031
+constexpr size_t UNKNOWN = 0;
+#define GAME_VERSION 873
 // 填入版本号，为去掉小数点的版本号
 // UNKNOWN 表示暂时未知
 
@@ -20,7 +20,7 @@ constexpr size_t RSBPathRecorderAddr = UNKNOWN;
 constexpr size_t ResourceManagerFuncAddr = UNKNOWN;
 constexpr size_t CDNLoadAddr = UNKNOWN;
 constexpr size_t LogOutputFuncAddr_Simple = UNKNOWN;
-constexpr size_t LogOutputFuncAddr = UNKNOWN;
+constexpr size_t LogOutputFuncAddr = 0xFEDB0C;
 constexpr size_t LogOutputFuncAddr_Struct = UNKNOWN;
 constexpr size_t LogOutputFuncAddr_v2 = UNKNOWN;
 constexpr size_t LawnAppScreenWidthHeightAddr = 0x5A1454;

@@ -46,8 +46,9 @@ void *hkCreatePlantNameMapper(PlantNameMapper *self) {
 }
 
 inline void process() {
-  PVZ2HookFunction(PlantNameMapperAddr, (void *)hkCreatePlantNameMapper,
-                   (void **)&oPlantNameMapperCtor, "PlantNameMapper::PlantNameMapper");
+  if constexpr (PlantNameMapperAddr != UNKNOWN && firstFreePlantID != UNKNOWN)
+    PVZ2HookFunction(PlantNameMapperAddr, (void *)hkCreatePlantNameMapper,
+                     (void **)&oPlantNameMapperCtor, "PlantNameMapper::PlantNameMapper");
 }
 #undef REGISTER_PLANT_TYPENAME
 }  // namespace AliasToID
@@ -67,9 +68,10 @@ uint *hkPrimeGlyphCacheLimitation(uint *a1, int a2, int a3, int a4) {
 }
 
 inline void process() {
-  PVZ2HookFunction(PrimeGlyphCacheAddr, (void *)hkPrimeGlyphCacheLimitation,
-                   (void **)&oPrimeGlyphCacheLimitation,
-                   "PrimeGlyphCache::PrimeGlyphCacheLimitation");
+  if constexpr (PrimeGlyphCacheAddr != UNKNOWN)
+    PVZ2HookFunction(PrimeGlyphCacheAddr, (void *)hkPrimeGlyphCacheLimitation,
+                     (void **)&oPrimeGlyphCacheLimitation,
+                     "PrimeGlyphCache::PrimeGlyphCacheLimitation");
 }
 }  // namespace PrimeGlyphCacheLimitation
 
@@ -465,11 +467,13 @@ int hkResourceManagerFunc(int a1, int a2, int a3) {
 
 inline void process() {
   // Hook RSB 读取函数
-  PVZ2HookFunction(RSBPathRecorderAddr, (void *)hkRSBPathRecorder, (void **)&oRSBPathRecorder,
-                   "ResourceManager::RSBPathRecorder");
+  if constexpr (RSBPathRecorderAddr != UNKNOWN)
+    PVZ2HookFunction(RSBPathRecorderAddr, (void *)hkRSBPathRecorder, (void **)&oRSBPathRecorder,
+                     "ResourceManager::RSBPathRecorder");
   // ROOT 检测
-  PVZ2HookFunction(ResourceManagerFuncAddr, (void *)hkResourceManagerFunc,
-                   (void **)&oResourceManagerFunc, "ResourceManager::ResourceManagerFunc");
+  if constexpr (ResourceManagerFuncAddr != UNKNOWN)
+    PVZ2HookFunction(ResourceManagerFuncAddr, (void *)hkResourceManagerFunc,
+                     (void **)&oResourceManagerFunc, "ResourceManager::ResourceManagerFunc");
 }
 }  // namespace RSBPathChangeAndDecryptRSB
 
@@ -515,7 +519,8 @@ void hkCDNLoad(int *a1, const Sexy::SexyString &rtonName, int rtonTable, int a4)
 
 inline void process() {
   // CDN读取rton，感谢CZ技术专栏分享技术！！！
-  PVZ2HookFunction(CDNLoadAddr, (void *)hkCDNLoad, (void **)&oCDNLoad, "CDNLoadExpansion");
+  if constexpr (CDNLoadAddr != UNKNOWN)
+    PVZ2HookFunction(CDNLoadAddr, (void *)hkCDNLoad, (void **)&oCDNLoad, "CDNLoadExpansion");
 }
 }  // namespace CDNExpansion
 
@@ -670,17 +675,21 @@ int hkLogOutputFunc_v2(int a1, ...) {
 
 void process() {
   // 输出简要日志
-  PVZ2HookFunction(LogOutputFuncAddr_Simple, (void *)hkLogOutputFunc_Simple,
-                   (void **)&oLogOutputFunc_Simple, "LogOutputFunc_Simple");
+  if constexpr (LogOutputFuncAddr_Simple != UNKNOWN)
+    PVZ2HookFunction(LogOutputFuncAddr_Simple, (void *)hkLogOutputFunc_Simple,
+                     (void **)&oLogOutputFunc_Simple, "LogOutputFunc_Simple");
   // 输出主日志
-  PVZ2HookFunction(LogOutputFuncAddr, (void *)hkLogOutputFunc, (void **)&oLogOutputFunc,
-                   "LogOutputFunc");
+  if constexpr (LogOutputFuncAddr != UNKNOWN)
+    PVZ2HookFunction(LogOutputFuncAddr, (void *)hkLogOutputFunc, (void **)&oLogOutputFunc,
+                     "LogOutputFunc");
   // 输出结构日志
-  PVZ2HookFunction(LogOutputFuncAddr_Struct, (void *)hkLogOutputFunc_Struct,
-                   (void **)&oLogOutputFunc_Struct, "LogOutputFunc_Struct");
+  if constexpr (LogOutputFuncAddr_Struct != UNKNOWN)
+    PVZ2HookFunction(LogOutputFuncAddr_Struct, (void *)hkLogOutputFunc_Struct,
+                     (void **)&oLogOutputFunc_Struct, "LogOutputFunc_Struct");
   // 输出v2日志
-  PVZ2HookFunction(LogOutputFuncAddr_v2, (void *)hkLogOutputFunc_v2, (void **)&oLogOutputFunc_v2,
-                   "LogOutputFunc_v2");
+  if constexpr (LogOutputFuncAddr_v2 != UNKNOWN)
+    PVZ2HookFunction(LogOutputFuncAddr_v2, (void *)hkLogOutputFunc_v2, (void **)&oLogOutputFunc_v2,
+                     "LogOutputFunc_v2");
 }
 }  // namespace LogOutput
 
@@ -815,7 +824,6 @@ int hkBoardZoom(int a1) {
   int result = oBoardZoom(a1);
   // 改变选卡时视野左边缘与棋盘左边缘的距离
   *(int32_t *)(a1 + 880) = preGameRightLine - mWidth;
-  // 高度无法调整，只能靠缩放
   return result;
 }
 
@@ -836,11 +844,14 @@ int hkBoardZoom2(int a1) {
 
 inline void process() {
   // 得到缩放前后尺寸
-  PVZ2HookFunction(LawnAppScreenWidthHeightAddr, (void *)hkLawnAppScreenWidthHeight,
-                   (void **)&oLawnAppScreenWidthHeight, "LawnApp:SetScreenWidthHeight");
+  if constexpr (LawnAppScreenWidthHeightAddr != UNKNOWN)
+    PVZ2HookFunction(LawnAppScreenWidthHeightAddr, (void *)hkLawnAppScreenWidthHeight,
+                     (void **)&oLawnAppScreenWidthHeight, "LawnApp::SetScreenWidthHeight");
   // 控制屏幕缩放
-  PVZ2HookFunction(BoardZoomAddr, (void *)hkBoardZoom, (void **)&oBoardZoom, "BoardZoom");
-  PVZ2HookFunction(BoardZoom2Addr, (void *)hkBoardZoom2, (void **)&oBoardZoom2, "BoardZoom2");
+  if constexpr (BoardZoomAddr != UNKNOWN)
+    PVZ2HookFunction(BoardZoomAddr, (void *)hkBoardZoom, (void **)&oBoardZoom, "BoardZoom");
+  if constexpr (BoardZoom2Addr != UNKNOWN)
+    PVZ2HookFunction(BoardZoom2Addr, (void *)hkBoardZoom2, (void **)&oBoardZoom2, "BoardZoom2");
 }
 }  // namespace MaxZoom
 
