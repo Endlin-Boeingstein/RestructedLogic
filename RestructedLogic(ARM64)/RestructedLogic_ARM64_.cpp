@@ -19,7 +19,42 @@
 #include <fcntl.h>
 #include "VersionRtonIDs.h"
 
-//友情提示：该ARM64工程所有功能均未测试，据估计应当全部重写（以支持64位指针），故劳烦修好后在进行测试，尤其是数据包载入，谢谢！
+//友情提示：该ARM64工程所有功能均未测试，据估计应当全部重写（以支持64位指针），故劳烦修好后再进行测试，尤其是数据包载入，谢谢！
+
+namespace fs = std::filesystem;
+
+/**
+ * 递归创建目录 (模拟 mkdir -p)
+ * @param path 目标绝对路径
+ * @return 是否创建成功或目录已存在
+ */
+bool makePath(const std::string& path) {
+    std::string tmp_path = path;
+
+    // 确保路径以斜杠结尾，方便统一逻辑处理
+    if (tmp_path.empty()) return false;
+    if (tmp_path.back() != '/') {
+        tmp_path += '/';
+    }
+
+    size_t pos = 0;
+    // 找到每一个 '/' 的位置并逐层创建
+    // 从 pos+1 开始，跳过根目录的第一个 '/'
+    while ((pos = tmp_path.find('/', pos + 1)) != std::string::npos) {
+        std::string dir = tmp_path.substr(0, pos);
+
+        // 尝试创建目录
+        if (mkdir(dir.c_str(), 0777) != 0) {
+            // 如果错误原因不是“目录已存在”，则返回失败
+            if (errno != EEXIST) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
 
 #pragma region Alias to ID
 
@@ -700,8 +735,22 @@ int hkRSBPathRecorder(uintptr_t* a1) {
     }
     LOGI("RSBPathRecorder: Original path=%s", original_path.c_str());
 
+    //C++17新增优化
+    fs::path fsOriPath = original_path;
+    std::vector<std::string> path_components;
+    //存入路径上各文件夹名称
+    for (const auto& part : fsOriPath) {
+        if (!part.empty() && part != "/") {
+            path_components.push_back(part.string());
+        }
+    }
+    //获取包名
+    std::string pack_name = path_components[path_components.size() - 2];
+    //获取数据包名
+    std::string rsb_name = path_components[path_components.size() - 1];
+
     // 验证预期路径
-    std::string expected_path = "/storage/emulated/0/Android/obb/com.ea.game.pvz2_na/main.763.com.ea.game.pvz2_na.obb";
+    std::string expected_path = "/storage/emulated/0/Android/obb/" + pack_name + "/" + rsb_name;
     if (original_path != expected_path) {
         LOGI("RSBPathRecorder: Path mismatch, expected %s", expected_path.c_str());
         // 继续处理，允许非预期路径
@@ -709,7 +758,7 @@ int hkRSBPathRecorder(uintptr_t* a1) {
 
     //定义临时路径
     // 创建缓存目录/data/user/0/com.ea.game.pvz2_改版名/files
-    std::string cache_dir = "/data/user/0/com.ea.game.pvz2_row/files";///storage/emulated/0/Android/data/com.ea.game.pvz2_na/cache
+    std::string cache_dir = "/data/user/0/"+pack_name+"/files";///storage/emulated/0/Android/data/com.ea.game.pvz2_na/cache
     if (mkdir(cache_dir.c_str(), 0777) != 0 && errno != EEXIST) {
         LOGI("RSBPathRecorder: Failed to create %s, errno=%d", cache_dir.c_str(), errno);
         return result;

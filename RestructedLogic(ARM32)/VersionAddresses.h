@@ -433,6 +433,7 @@
 #define worldMapScrollAddr 0x523EF0
 #define KeepCenterAddr 0x52ABDC
 #define ScrollInertanceAddr 0x5359F4
+#define JNI_OnLoadAddr 0x163DF6C
 
 
 

@@ -21,7 +21,187 @@
 #include <fcntl.h>
 #include "Customize/Projectile/GridItemRaiserProjectileProps.h"
 #include "VersionRtonIDs.h"
+#include<jni.h>
 //#include "Customize/Projectile/GridItemRaiserProjectile.cpp"
+
+namespace fs = std::filesystem;
+
+//拦截JNI!!!
+//JavaVM* g_vm = nullptr;
+//JNIEXPORT jint JNICALL JNI_Onload(JavaVM* vm, void* reserved) {
+//    g_vm = vm;
+//    return JNI_VERSION_1_6;
+//}
+
+//jobject get_context(JNIEnv* env) {
+//    // 核心逻辑：ActivityThread.currentActivityThread().getApplication()
+//    jclass atClass = env->FindClass("android/app/ActivityThread");
+//    jmethodID currentATMethod = env->GetStaticMethodID(atClass, "currentActivityThread", "()Landroid/app/ActivityThread;");
+//    jobject atInstance = env->CallStaticObjectMethod(atClass, currentATMethod);
+//
+//    jmethodID getAppMethod = env->GetMethodID(atClass, "getApplication", "()Landroid/app/Application;");
+//    return env->CallObjectMethod(atInstance, getAppMethod);
+//}
+//
+////一键搞定目录创建，搬运还是算了
+////void auto_move_payload(JNIEnv* env, const std::string& src_path) {
+//void auto_move_payload(JNIEnv* env) {
+//    jobject context = get_context(env);
+//    if (!context) return;
+//
+//    // 1. 让 Java 帮你把 OBB 文件夹建好（带上正确的 SELinux 标签）
+//    jclass contextClass = env->GetObjectClass(context);
+//    jmethodID getObbDir = env->GetMethodID(contextClass, "getObbDir", "()Ljava/io/File;");
+//    jobject obbFile = env->CallObjectMethod(context, getObbDir);
+//
+//    //// 2. 获取这个文件夹的绝对路径
+//    //jclass fileClass = env->GetObjectClass(obbFile);
+//    //jmethodID getPath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
+//    //jstring jPath = (jstring)env->CallObjectMethod(obbFile, getPath);
+//    //const char* cPath = env->GetStringUTFChars(jPath, nullptr);
+//
+//    //// 3. 拼接目标全路径并写入
+//    //std::string dst_path = std::string(cPath) + "/config.dat";
+//
+//    //std::ifstream src(src_path, std::ios::binary);
+//    //std::ofstream dst(dst_path, std::ios::binary);
+//    //dst << src.rdbuf(); // 暴力搬运
+//
+//    //// 释放资源
+//    //env->ReleaseStringUTFChars(jPath, cPath);
+//}
+
+
+//static JavaVM* g_vm = nullptr;
+//
+//jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+//    g_vm = vm;
+//    return JNI_VERSION_1_6;
+//}
+//
+//// 获取当前 Application Context 的 getObbDir() 路径
+//std::string getObbDirPath() {
+//    JNIEnv* env = nullptr;
+//    // 获取当前线程的 JNIEnv，若线程未附加，则附加
+//    jint ret = g_vm->GetEnv((void**)&env, JNI_VERSION_1_6);
+//    if (ret == JNI_EDETACHED) {
+//        // 如果当前线程未附加，先附加
+//        if (g_vm->AttachCurrentThread(&env, nullptr) != JNI_OK) {
+//            LOGI("AttachCurrentThread failed");
+//            return "";
+//        }
+//    }
+//    else if (ret != JNI_OK) {
+//        LOGI("GetEnv failed");
+//        return "";
+//    }
+//
+//    // 1. 获取 ActivityThread 类
+//    jclass activityThreadCls = env->FindClass("android/app/ActivityThread");
+//    if (activityThreadCls == nullptr) {
+//        LOGI("FindClass ActivityThread failed");
+//        return "";
+//    }
+//
+//    // 2. 获取 currentApplication() 静态方法
+//    jmethodID currentAppMethod = env->GetStaticMethodID(activityThreadCls, "currentApplication", "()Landroid/app/Application;");
+//    if (currentAppMethod == nullptr) {
+//        LOGI("GetMethodID currentApplication failed");
+//        return "";
+//    }
+//
+//    // 3. 调用静态方法获得 Application 对象
+//    jobject application = env->CallStaticObjectMethod(activityThreadCls, currentAppMethod);
+//    if (application == nullptr) {
+//        LOGI("currentApplication returned null");
+//        return "";
+//    }
+//
+//    // 4. 获取 Context 类的 getObbDir() 方法
+//    jclass contextCls = env->FindClass("android/content/Context");
+//    jmethodID getObbDirMethod = env->GetMethodID(contextCls, "getObbDir", "()Ljava/io/File;");
+//    if (getObbDirMethod == nullptr) {
+//        LOGI("GetMethodID getObbDir failed");
+//        return "";
+//    }
+//
+//    // 5. 调用 application.getObbDir() 获得 File 对象
+//    jobject obbFile = env->CallObjectMethod(application, getObbDirMethod);
+//    if (obbFile == nullptr) {
+//        LOGI("getObbDir returned null");
+//        return "";
+//    }
+//
+//    // 6. 获取 File 类的 getPath() 方法
+//    jclass fileCls = env->FindClass("java/io/File");
+//    jmethodID getPathMethod = env->GetMethodID(fileCls, "getPath", "()Ljava/lang/String;");
+//    if (getPathMethod == nullptr) {
+//        LOGI("GetMethodID getPath failed");
+//        return "";
+//    }
+//
+//    // 7. 调用 obbFile.getPath() 获得路径字符串
+//    jstring pathStr = (jstring)env->CallObjectMethod(obbFile, getPathMethod);
+//    if (pathStr == nullptr) {
+//        LOGI("getPath returned null");
+//        return "";
+//    }
+//
+//    // 8. 将 Java 字符串转为 C 字符串
+//    const char* pathChars = env->GetStringUTFChars(pathStr, nullptr);
+//    std::string result(pathChars);
+//    env->ReleaseStringUTFChars(pathStr, pathChars);
+//
+//    // 9. 清理局部引用（可选，但建议）
+//    env->DeleteLocalRef(activityThreadCls);
+//    env->DeleteLocalRef(application);
+//    env->DeleteLocalRef(contextCls);
+//    env->DeleteLocalRef(obbFile);
+//    env->DeleteLocalRef(fileCls);
+//    env->DeleteLocalRef(pathStr);
+//
+//    // 如果之前附加了线程，记得分离（根据实际情况决定）
+//    // 如果你的代码是在一个长期运行的 native 线程中调用，且该线程不会退出，可以考虑不分离，或者在线程结束时分离。
+//    // 这里简单起见，暂不分离，但需注意平衡。
+//
+//    return result;
+//}
+
+
+
+
+
+/**
+ * 递归创建目录 (模拟 mkdir -p)
+ * @param path 目标绝对路径
+ * @return 是否创建成功或目录已存在
+ */
+bool makePath(const std::string& path) {
+    std::string tmp_path = path;
+
+    // 确保路径以斜杠结尾，方便统一逻辑处理
+    if (tmp_path.empty()) return false;
+    if (tmp_path.back() != '/') {
+        tmp_path += '/';
+    }
+
+    size_t pos = 0;
+    // 找到每一个 '/' 的位置并逐层创建
+    // 从 pos+1 开始，跳过根目录的第一个 '/'
+    while ((pos = tmp_path.find('/', pos + 1)) != std::string::npos) {
+        std::string dir = tmp_path.substr(0, pos);
+
+        // 尝试创建目录
+        if (mkdir(dir.c_str(), 0777) != 0) {
+            // 如果错误原因不是“目录已存在”，则返回失败
+            if (errno != EEXIST) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 #pragma region Alias to ID
 
 class ZombieAlmanac
@@ -625,36 +805,7 @@ struct ObfuscatedString {
 #define HIDE_STR(s) (ObfuscatedString<(0x55 + __LINE__), sizeof(s)>(s, make_index_sequence<sizeof(s)>()).decrypt())
 
 
-/**
- * 递归创建目录 (模拟 mkdir -p)
- * @param path 目标绝对路径
- * @return 是否创建成功或目录已存在
- */
-bool makePath(const std::string& path) {
-    std::string tmp_path = path;
 
-    // 确保路径以斜杠结尾，方便统一逻辑处理
-    if (tmp_path.empty()) return false;
-    if (tmp_path.back() != '/') {
-        tmp_path += '/';
-    }
-
-    size_t pos = 0;
-    // 找到每一个 '/' 的位置并逐层创建
-    // 从 pos+1 开始，跳过根目录的第一个 '/'
-    while ((pos = tmp_path.find('/', pos + 1)) != std::string::npos) {
-        std::string dir = tmp_path.substr(0, pos);
-
-        // 尝试创建目录
-        if (mkdir(dir.c_str(), 0777) != 0) {
-            // 如果错误原因不是“目录已存在”，则返回失败
-            if (errno != EEXIST) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
 
 // 物理平移覆盖头部
 //void shift_file_left_20_bytes_precise(int fd, size_t plain_size) {
@@ -909,8 +1060,24 @@ int hkRSBPathRecorder(uint* a1) {
     }
     LOGI("RSBPathRecorder: Original path=%s", original_path.c_str());
 
+    //C++17新增优化
+    fs::path fsOriPath = original_path;
+    std::vector<std::string> path_components;
+    //存入路径上各文件夹名称
+    for (const auto& part : fsOriPath) {
+        if (!part.empty() && part != "/") {
+            path_components.push_back(part.string());
+        }
+    }
+    //获取包名
+    std::string pack_name = path_components[path_components.size() - 2];
+    //获取数据包名
+    std::string rsb_name = path_components[path_components.size() - 1];
+
+
+
     // 验证预期路径，可改，改成你的改版路径即可，不改也没影响！！！！！！！！！！！！
-    std::string expected_path = "/storage/emulated/0/Android/obb/com.ea.game.pvz2_na/main.763.com.ea.game.pvz2_na.obb";
+    std::string expected_path = "/storage/emulated/0/Android/obb/"+pack_name+"/"+rsb_name;
     if (original_path != expected_path) {
         LOGI("RSBPathRecorder: Path mismatch, expected %s", expected_path.c_str());
         // 继续处理，允许非预期路径
@@ -1048,7 +1215,8 @@ int hkRSBPathRecorder(uint* a1) {
     LOGI("RSB_TRACE: Starting Hybrid Mmap-Stream Process...");
 
     // 一定要改！！！！！把你的地址改成/data/user/0/com.ea.game.pvz2_改版名/files！！！！！
-    std::string cache_dir = "/data/user/0/com.ea.game.pvz2_row/files";///storage/emulated/0/Android/data/com.ea.game.pvz2_row/cache
+    //PS:为了多开用户，改成了/data/data/com.ea.game.pvz2_改版名/files
+    std::string cache_dir = "/data/data/"+pack_name+"/files";///storage/emulated/0/Android/data/com.ea.game.pvz2_row/cache
     makePath(cache_dir);
     //这个地方可以随意写，这样别人就认不出来了
     std::string temp_path = cache_dir + "/.cache_data_file";
@@ -1463,6 +1631,149 @@ int hkManifestChecker(
     return backdata;
 }
 #pragma endregion
+
+
+
+#pragma region Direct Install Package Funcs
+std::atomic<bool> directed_install_executed(false);
+//void get_package_name(char* out_name) {
+std::string get_package_name() {
+    //FILE* fp = fopen("/proc/self/cmdline", "r");
+    //if (fp) {
+    //    fgets(out_name, 256, fp);//读取进程名
+    //    fclose(fp);
+    //}
+    std::ifstream cmdline("/proc/self/cmdline");
+    std::string package_name;
+    std::getline(cmdline, package_name, '\0');//cmdline以\0结尾
+    return package_name;
+}
+
+//获取so所在文件夹
+std::string get_so_parent_dir() {
+    std::ifstream maps("/proc/self/maps");
+    std::string line;
+    while (std::getline(maps, line)) {
+        if (line.find("libRestructedLogic.so") != std::string::npos) {
+            size_t path_start = line.find_last_of(' ') + 1;
+            std::string full_path = line.substr(path_start);
+            //去掉末尾换行符并返回父目录
+            return fs::path(full_path).parent_path().string();
+        }
+    }
+    return "";
+}
+
+bool RSBDirectInstall() {
+    std::string ori_rsb_name = "main.0.com.ea.game.pvz2_row.obb";
+    std::string rsb_name = "libRSB.so";
+    //获取lib路径
+    std::string so_dir = get_so_parent_dir();
+    if (so_dir.empty()) return 0;
+    //构造源文件路径
+    fs::path src_file = fs::path(so_dir) / rsb_name;
+    //构造目标路径
+    fs::path target_dir = fs::path("/storage/emulated/0/Android/obb/") / get_package_name();
+    //目标数据包前往的路径
+    fs::path target_file = target_dir / ori_rsb_name;
+    LOGI("src_file:%s,target_dir:%s,target_file:%s", src_file.string().c_str(), target_dir.string().c_str(), target_file.string().c_str());
+    if (fs::exists(src_file)) {
+        LOGI("file exist.");
+        if (!fs::exists(target_dir)) {
+            /*fs::create_directories(target_dir);*/
+            /*std::string obbPath = getObbDirPath();
+            if (obbPath.empty()) {
+                LOGI("错误！");
+                return 0;
+            }*/
+            /*if (mkdir(target_dir.string().c_str(), 0775) == -1) {
+                if (errno == EACCES) {
+                    LOGI("SELinux或者权限拦截！");
+                }
+                else if (errno == ENOENT) {
+                    LOGI("父目录可能不存在，需要递归创建。");
+                }
+            }*/
+            LOGI("target_dir not created.");
+            return 0;
+        }
+        //拷贝文件。使用update_existing保证文件版本更新
+        fs::copy(src_file, target_file, fs::copy_options::overwrite_existing);
+        //权限修复
+        fs::permissions(target_file, fs::perms::owner_all | fs::perms::group_read);
+        return 1;
+    }
+    else {
+        LOGI("不是直装包");
+        return 0;
+    }
+}
+
+#pragma endregion
+
+#pragma region JNI_OnLoad
+// 之前定义的全局 VM 指针
+JavaVM* g_vm = nullptr;
+
+// 封装一个简单的“开路”函数
+void prepare_obb_path(JNIEnv* env) {
+    // 1. 还是套路B：拿到 Application Context
+    jclass atClass = env->FindClass("android/app/ActivityThread");
+    jmethodID currentATMethod = env->GetStaticMethodID(atClass, "currentActivityThread", "()Landroid/app/ActivityThread;");
+    jobject atInstance = env->CallStaticObjectMethod(atClass, currentATMethod);
+    jmethodID getAppMethod = env->GetMethodID(atClass, "getApplication", "()Landroid/app/Application;");
+    jobject context = env->CallObjectMethod(atInstance, getAppMethod);
+
+    if (context) {
+        // 2. 核心：调用 getObbDir。这一步执行完，文件夹就变出来了！
+        jclass contextClass = env->FindClass("android/content/Context");
+        jmethodID getObbDir = env->GetMethodID(contextClass, "getObbDir", "()Ljava/io/File;");
+        jobject obbFile = env->CallObjectMethod(context, getObbDir);
+
+        //// 3. 拿到路径并执行你的 C 语言搬运逻辑
+        //jclass fileClass = env->FindClass("java/io/File");
+        //jmethodID getPath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
+        //jstring jstr = (jstring)env->CallObjectMethod(obbFile, getPath);
+
+        //const char* obbPath = env->GetStringUTFChars(jstr, nullptr);
+
+        //// --- 此时 OBB 文件夹已存在，直接搬运 ---
+        //// move_assets_to_obb(obbPath); 
+
+        //env->ReleaseStringUTFChars(jstr, obbPath);
+    }
+}
+typedef jint (*JNI_OnLoadFunc)(JavaVM* vm, void* reserved);
+JNI_OnLoadFunc oJNI_OnLoad = NULL;
+jint hkJNI_OnLoad(JavaVM* vm, void* reserved) {
+    //辛苦你了，接下来我要搞事情了！
+    if (!directed_install_executed.exchange(true)) {
+        JNIEnv* env = nullptr;
+        if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) == JNI_OK) {
+            // 在这里“借刀杀人”，先让系统把路径建好并搬运数据
+            LOGI("CreateOBBPath Start.");
+            prepare_obb_path(env);
+            LOGI("CreateOBBPath End.");
+            LOGI("RSBDirectInstall Start.");
+            RSBDirectInstall();
+            LOGI("RSBDirectInstall End.");
+        }
+    }
+    return oJNI_OnLoad(vm, reserved);
+}
+#pragma endregion
+
+
+
+
+
+
+
+
+
+
+
+
 
 #pragma region LogOutputHook
 
@@ -1913,6 +2224,9 @@ int hkIgnoreSafeArea(int a1, int a2) {
 
 
 
+
+
+
 #pragma region Build Symbol Funcs
 
 //Reflection::CRefManualSymbolBuilder::BuildSymbolsFunc PlantType::oPlantTypeBuildSymbols = nullptr;
@@ -1921,6 +2235,7 @@ int hkIgnoreSafeArea(int a1, int a2) {
 //Reflection::CRefManualSymbolBuilder::ConstructFunc ZombieType::oZombieTypeConstruct = nullptr;
 
 #pragma endregion
+
 
 
 
@@ -1955,14 +2270,15 @@ void libRestructedLogic_ARM32__main()
         PVZ2HookFunction(WorldMapDoMovementAddr, (void*)hkWorldMapDoMovement, (void**)&oWorldMapDoMovement, "WorldMap::doMovement");
     }
     else {
+        //拖动函数
         PVZ2HookFunction(worldMapScrollAddr, (void*)hkworldMapScroll, (void**)&oworldMapScroll, "WorldMap::worldMapScroll");
         //居中函数
         PVZ2HookFunction(KeepCenterAddr, (void*)hkKeepCenter, (void**)&oKeepCenter, "WorldMap::KeepCenter");
         //惯性函数
         PVZ2HookFunction(ScrollInertanceAddr, (void*)hkScrollInertance, (void**)&oScrollInertance, "WorldMap::worldMapScroll");
     }
-    //拖动函数
-        
+    ////直装包函数
+    //PVZ2HookFunction(JNI_OnLoadAddr, (void*)hkJNI_OnLoad, (void**)&oJNI_OnLoad, "JNI_OnLoad");
     //输出简要日志
     PVZ2HookFunction(LogOutputFuncAddrSimpleAddr, (void*)hkLogOutputFunc_Simple, (void**)&oLogOutputFunc_Simple, "LogOutputFunc_Simple");
     //输出日志
