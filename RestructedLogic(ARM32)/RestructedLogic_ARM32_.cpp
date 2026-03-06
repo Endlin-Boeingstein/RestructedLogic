@@ -76,7 +76,7 @@ namespace fs = std::filesystem;
 //
 //jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 //    g_vm = vm;
-//    return JNI_VERSION_1_6;
+//    return JNI_VERSION_1_4;
 //}
 //
 //// 获取当前 Application Context 的 getObbDir() 路径
@@ -168,6 +168,240 @@ namespace fs = std::filesystem;
 //}
 
 
+//直装包专项
+#pragma region Direct Install Package Funcs
+//RSB迁移是否开始判定
+std::atomic<bool> thread_applied(false);
+
+//让主程序延迟防止数据包迁移期间被读取（可放在除了Log输出函数以外的任一hook函数调用旧函数之前）
+void dalay_hook() {
+    //直装包延迟
+    while (thread_applied) {
+        //对不起，让你歇一下
+        LOGI("RSB first loaded, sleeping......");
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    }
+}
+
+
+//数据分块
+void copy_chunk(const fs::path& src, const fs::path& dst,
+    uint64_t offset, uint64_t size)
+{
+    const size_t BUF_SIZE = 64ull * 1024 * 1024; // 512MB
+
+    std::ifstream in(src, std::ios::binary);
+    std::fstream out(dst, std::ios::binary | std::ios::in | std::ios::out);
+
+    in.seekg(offset);
+    out.seekp(offset);
+
+    std::vector<char> buffer(std::min<uint64_t>(BUF_SIZE, size));
+
+    uint64_t remaining = size;
+
+    while (remaining > 0)
+    {
+        size_t to_read = std::min<uint64_t>(buffer.size(), remaining);
+
+        in.read(buffer.data(), to_read);
+        out.write(buffer.data(), to_read);
+
+        remaining -= to_read;
+    }
+}
+//分块迁移函数
+bool copy_file_parallel(const fs::path& src, const fs::path& dst, int threads)
+{
+    uint64_t file_size = fs::file_size(src);
+
+    // 预创建目标文件
+    {
+        std::ofstream out(dst, std::ios::binary | std::ios::trunc);
+        out.seekp(file_size - 1);
+        out.write("", 1);
+    }
+
+    uint64_t chunk = file_size / threads;
+
+    std::vector<std::thread> workers;
+
+    for (int i = 0; i < threads; i++)
+    {
+        uint64_t offset = i * chunk;
+        uint64_t size = (i == threads - 1) ? (file_size - offset) : chunk;
+
+        workers.emplace_back(copy_chunk, src, dst, offset, size);
+    }
+
+    for (auto& t : workers)
+        t.join();
+
+    return true;
+}
+
+//RSB迁移期间防止主线程读取函数（大概率无法一次载入因为res头读取比RSB读取要早..........）
+void safe_pipe_copy(const std::string& src_path, const std::string& target_path) {
+    // 1. 如果路径已存在普通文件，先删掉，否则没法建管道
+    unlink(target_path.c_str());
+
+    // 2. 创建管道 (FIFO)
+    if (mkfifo(target_path.c_str(), 0666) != 0) {
+        // 如果创建失败（比如权限问题），退回到普通拷贝作为保底
+        fs::copy(src_path, target_path, fs::copy_options::overwrite_existing);
+        return;
+    }
+
+    // 3. 打开管道准备写入 (注意：如果主线程没来读，这里会阻塞)
+    // 建议在子线程执行，这样不会卡死你的 Mod 初始化
+    int fifo_fd = open(target_path.c_str(), O_WRONLY);
+    if (fifo_fd < 0) return;
+
+    // 4. 分块读写数据
+    std::ifstream src(src_path, std::ios::binary);
+    std::vector<char> buffer(1024 * 1024); // 每次 64KB，正好是典型 Linux 管道的大小
+
+    while (src.read(buffer.data(), buffer.size()) || src.gcount() > 0) {
+        ssize_t count = src.gcount();
+        // 这一步会根据主线程的读取速度自动“限速”
+        if (write(fifo_fd, buffer.data(), count) == -1) break;
+    }
+
+    // 5. 关键：关闭管道，主线程才会收到 EOF 并结束读取
+    close(fifo_fd);
+    src.close();
+
+    // 6. 可选：任务彻底完成后删除管道（或者留着下次用）
+    unlink(target_path.c_str()); 
+}
+
+
+
+//std::atomic<bool> directed_install_executed(false);
+//void get_package_name(char* out_name) {
+//获取游戏包名
+std::string get_package_name() {
+    //FILE* fp = fopen("/proc/self/cmdline", "r");
+    //if (fp) {
+    //    fgets(out_name, 256, fp);//读取进程名
+    //    fclose(fp);
+    //}
+    std::ifstream cmdline("/proc/self/cmdline");
+    std::string package_name;
+    std::getline(cmdline, package_name, '\0');//cmdline以\0结尾
+    return package_name;
+}
+
+
+//获取so所在文件夹
+std::string get_so_parent_dir() {
+    std::ifstream maps("/proc/self/maps");
+    std::string line;
+    while (std::getline(maps, line)) {
+        if (line.find("libRestructedLogic.so") != std::string::npos) {
+            size_t path_start = line.find_last_of(' ') + 1;
+            std::string full_path = line.substr(path_start);
+            //去掉末尾换行符并返回父目录
+            return fs::path(full_path).parent_path().string();
+        }
+    }
+    return "";
+}
+//OBB文件夹是否存在
+bool OBBPathExisted() {
+    int app_version = 0;
+    std::string ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
+    std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
+    fs::path rsb_real_path = fs::path(rsb_path_str);
+    if (fs::exists(rsb_real_path)) return 1;
+    return 0;
+}
+//OBB是否存在
+bool OBBExisted() {
+    int app_version = 0;
+    std::string ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
+    std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
+    std::string rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
+    fs::path rsb_self_path = fs::path(rsb_self_path_str);
+    if (fs::exists(rsb_self_path)) return 1;
+    return 0;
+}
+//直装转移
+bool RSBDirectInstall() {
+    std::string rsb_name = "libRSB.so";
+    int app_version = 0;
+    std::string ori_rsb_name = "main."+ std::to_string(app_version) + "." + get_package_name() + ".obb";
+    std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
+    std::string rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
+    //获取lib路径
+    std::string so_dir = get_so_parent_dir();
+    if (so_dir.empty()) return 0;
+    //构造源文件路径
+    fs::path src_file = fs::path(so_dir) / rsb_name;
+    //构造目标路径
+    fs::path target_dir = fs::path("/storage/emulated/0/Android/obb/") / get_package_name();
+    //目标数据包前往的路径
+    fs::path target_file = target_dir / ori_rsb_name;
+    LOGI("src_file:%s\ntarget_dir:%s\ntarget_file:%s", src_file.string().c_str(), target_dir.string().c_str(), target_file.string().c_str());
+    if (fs::exists(src_file)) {
+        LOGI("file exist.");
+        if (!fs::exists(target_dir)) {
+            /*fs::create_directories(target_dir);*/
+            /*std::string obbPath = getObbDirPath();*/
+            /*if (obbPath.empty()) {
+                LOGI("错误！");
+                return 0;
+            }*/
+            /*if (mkdir(target_dir.string().c_str(), 0775) == -1) {
+                if (errno == EACCES) {
+                    LOGI("SELinux或者权限拦截！");
+                }
+                else if (errno == ENOENT) {
+                    LOGI("父目录可能不存在，需要递归创建。");
+                }
+            }*/
+            LOGI("target_dir not created.");
+            return 0;
+        }
+        //拷贝文件。使用update_existing保证文件版本更新
+        /*fs::copy(src_file, target_file, fs::copy_options::overwrite_existing);*/
+        ////可能内存不够，用分块
+        //copy_file_parallel(src_file, target_file, 4);
+        //防读取但防不了res检测.........
+        safe_pipe_copy(src_file, target_file);
+        //权限修复
+        fs::permissions(target_file, fs::perms::owner_all | fs::perms::group_read);
+        return 1;
+    }
+    else {
+        LOGI("不是直装包");
+        return 0;
+    }
+}
+
+//线程监控OBB路径是否存在，存在则毙掉游戏（因为会卡死在下载界面）//现在不需要毙掉了，直接载入了
+void obb_path_monitor() {
+    while (true) {
+        if (OBBPathExisted()) {
+            thread_applied = true;
+            LOGI("RSBDirectInstall Start.");
+            RSBDirectInstall();
+            LOGI("RSBDirectInstall End.");
+            if (OBBExisted()) {
+                //成功迁移
+                thread_applied = false;
+            }
+            /*kill(getpid(), SIGKILL);*/
+            return;
+        }
+        /*else if(OBBExisted()){
+            
+        }*/
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    }
+}
+
+#pragma endregion
 
 
 
@@ -1522,6 +1756,9 @@ ResourceManagerFunc oResourceManagerFunc = NULL;
 int hkResourceManagerFunc(int a1, int a2, int a3) {
     LOGI("Hooking ResourcesManagerFunc 6EE218");
     LOGI("a1=%d, a2=%d, a3=%d", a1, a2, a3);
+    //直装包专用：第一次载入RSB时候则延迟做到一次载入，否则只能第一次卡住第二次正常进
+    dalay_hook();
+
     int backdata= oResourceManagerFunc(a1, a2, a3);
     LOGI("Hooking ResourcesManagerFunc 6EE218 End");
     //如果检测到ROOT，则进入秒删模式
@@ -1634,133 +1871,56 @@ int hkManifestChecker(
 
 
 
-#pragma region Direct Install Package Funcs
-std::atomic<bool> directed_install_executed(false);
-//void get_package_name(char* out_name) {
-std::string get_package_name() {
-    //FILE* fp = fopen("/proc/self/cmdline", "r");
-    //if (fp) {
-    //    fgets(out_name, 256, fp);//读取进程名
-    //    fclose(fp);
-    //}
-    std::ifstream cmdline("/proc/self/cmdline");
-    std::string package_name;
-    std::getline(cmdline, package_name, '\0');//cmdline以\0结尾
-    return package_name;
-}
 
-//获取so所在文件夹
-std::string get_so_parent_dir() {
-    std::ifstream maps("/proc/self/maps");
-    std::string line;
-    while (std::getline(maps, line)) {
-        if (line.find("libRestructedLogic.so") != std::string::npos) {
-            size_t path_start = line.find_last_of(' ') + 1;
-            std::string full_path = line.substr(path_start);
-            //去掉末尾换行符并返回父目录
-            return fs::path(full_path).parent_path().string();
-        }
-    }
-    return "";
-}
-
-bool RSBDirectInstall() {
-    std::string ori_rsb_name = "main.0.com.ea.game.pvz2_row.obb";
-    std::string rsb_name = "libRSB.so";
-    //获取lib路径
-    std::string so_dir = get_so_parent_dir();
-    if (so_dir.empty()) return 0;
-    //构造源文件路径
-    fs::path src_file = fs::path(so_dir) / rsb_name;
-    //构造目标路径
-    fs::path target_dir = fs::path("/storage/emulated/0/Android/obb/") / get_package_name();
-    //目标数据包前往的路径
-    fs::path target_file = target_dir / ori_rsb_name;
-    LOGI("src_file:%s,target_dir:%s,target_file:%s", src_file.string().c_str(), target_dir.string().c_str(), target_file.string().c_str());
-    if (fs::exists(src_file)) {
-        LOGI("file exist.");
-        if (!fs::exists(target_dir)) {
-            /*fs::create_directories(target_dir);*/
-            /*std::string obbPath = getObbDirPath();
-            if (obbPath.empty()) {
-                LOGI("错误！");
-                return 0;
-            }*/
-            /*if (mkdir(target_dir.string().c_str(), 0775) == -1) {
-                if (errno == EACCES) {
-                    LOGI("SELinux或者权限拦截！");
-                }
-                else if (errno == ENOENT) {
-                    LOGI("父目录可能不存在，需要递归创建。");
-                }
-            }*/
-            LOGI("target_dir not created.");
-            return 0;
-        }
-        //拷贝文件。使用update_existing保证文件版本更新
-        fs::copy(src_file, target_file, fs::copy_options::overwrite_existing);
-        //权限修复
-        fs::permissions(target_file, fs::perms::owner_all | fs::perms::group_read);
-        return 1;
-    }
-    else {
-        LOGI("不是直装包");
-        return 0;
-    }
-}
-
-#pragma endregion
 
 #pragma region JNI_OnLoad
 // 之前定义的全局 VM 指针
-JavaVM* g_vm = nullptr;
+//JavaVM* g_vm = nullptr;
 
 // 封装一个简单的“开路”函数
-void prepare_obb_path(JNIEnv* env) {
-    // 1. 还是套路B：拿到 Application Context
-    jclass atClass = env->FindClass("android/app/ActivityThread");
-    jmethodID currentATMethod = env->GetStaticMethodID(atClass, "currentActivityThread", "()Landroid/app/ActivityThread;");
-    jobject atInstance = env->CallStaticObjectMethod(atClass, currentATMethod);
-    jmethodID getAppMethod = env->GetMethodID(atClass, "getApplication", "()Landroid/app/Application;");
-    jobject context = env->CallObjectMethod(atInstance, getAppMethod);
-
-    if (context) {
-        // 2. 核心：调用 getObbDir。这一步执行完，文件夹就变出来了！
-        jclass contextClass = env->FindClass("android/content/Context");
-        jmethodID getObbDir = env->GetMethodID(contextClass, "getObbDir", "()Ljava/io/File;");
-        jobject obbFile = env->CallObjectMethod(context, getObbDir);
-
-        //// 3. 拿到路径并执行你的 C 语言搬运逻辑
-        //jclass fileClass = env->FindClass("java/io/File");
-        //jmethodID getPath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
-        //jstring jstr = (jstring)env->CallObjectMethod(obbFile, getPath);
-
-        //const char* obbPath = env->GetStringUTFChars(jstr, nullptr);
-
-        //// --- 此时 OBB 文件夹已存在，直接搬运 ---
-        //// move_assets_to_obb(obbPath); 
-
-        //env->ReleaseStringUTFChars(jstr, obbPath);
-    }
-}
-typedef jint (*JNI_OnLoadFunc)(JavaVM* vm, void* reserved);
-JNI_OnLoadFunc oJNI_OnLoad = NULL;
-jint hkJNI_OnLoad(JavaVM* vm, void* reserved) {
-    //辛苦你了，接下来我要搞事情了！
-    if (!directed_install_executed.exchange(true)) {
-        JNIEnv* env = nullptr;
-        if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) == JNI_OK) {
-            // 在这里“借刀杀人”，先让系统把路径建好并搬运数据
-            LOGI("CreateOBBPath Start.");
-            prepare_obb_path(env);
-            LOGI("CreateOBBPath End.");
-            LOGI("RSBDirectInstall Start.");
-            RSBDirectInstall();
-            LOGI("RSBDirectInstall End.");
-        }
-    }
-    return oJNI_OnLoad(vm, reserved);
-}
+//void prepare_obb_path(JNIEnv* env) {
+//    // 1. 还是套路B：拿到 Application Context
+//    jclass atClass = env->FindClass("android/app/ActivityThread");
+//    jmethodID currentATMethod = env->GetStaticMethodID(atClass, "currentActivityThread", "()Landroid/app/ActivityThread;");
+//    jobject atInstance = env->CallStaticObjectMethod(atClass, currentATMethod);
+//    jmethodID getAppMethod = env->GetMethodID(atClass, "getApplication", "()Landroid/app/Application;");
+//    jobject context = env->CallObjectMethod(atInstance, getAppMethod);
+//
+//    if (context) {
+//        // 2. 核心：调用 getObbDir。这一步执行完，文件夹就变出来了！
+//        jclass contextClass = env->FindClass("android/content/Context");
+//        jmethodID getObbDir = env->GetMethodID(contextClass, "getObbDir", "()Ljava/io/File;");
+//        jobject obbFile = env->CallObjectMethod(context, getObbDir);
+//
+//        //// 3. 拿到路径并执行你的 C 语言搬运逻辑
+//        //jclass fileClass = env->FindClass("java/io/File");
+//        //jmethodID getPath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
+//        //jstring jstr = (jstring)env->CallObjectMethod(obbFile, getPath);
+//
+//        //const char* obbPath = env->GetStringUTFChars(jstr, nullptr);
+//
+//        //// --- 此时 OBB 文件夹已存在，直接搬运 ---
+//        //// move_assets_to_obb(obbPath); 
+//
+//        //env->ReleaseStringUTFChars(jstr, obbPath);
+//    }
+//}
+//typedef jint (*JNI_OnLoadFunc)(JavaVM* vm, void* reserved);
+//JNI_OnLoadFunc oJNI_OnLoad = NULL;
+//jint hkJNI_OnLoad(JavaVM* vm, void* reserved) {
+//    //辛苦你了，接下来我要搞事情了！
+//    if (!directed_install_executed.exchange(true)) {
+//        JNIEnv* env = nullptr;
+//        if (vm->GetEnv((void**)&env, JNI_VERSION_1_4) == JNI_OK) {
+//            // 在这里“借刀杀人”，先让系统把路径建好并搬运数据
+//            LOGI("CreateOBBPath Start.");
+//            prepare_obb_path(env);
+//            LOGI("CreateOBBPath End.");
+//            
+//        }
+//    }
+//    return oJNI_OnLoad(vm, reserved);
+//}
 #pragma endregion
 
 
@@ -1945,6 +2105,30 @@ int hkLogOutputFunc_v2(int a1, ...) {
     if (buffer) delete[] buffer;
 
     return result;
+}
+
+#pragma endregion
+
+
+#pragma region _android_log_write
+
+typedef int (*LogWriteFunc)(int, const char*, const char*);
+LogWriteFunc oLogWrite = NULL;
+
+int hkLogWrite(int prio, const char* tag, const char* text)
+{
+    //日志等级prio
+    /*ANDROID_LOG_VERBOSE	2
+    ANDROID_LOG_DEBUG	3
+    ANDROID_LOG_INFO	4
+    ANDROID_LOG_WARN	5
+    ANDROID_LOG_ERROR	6*/
+    /*if (tag && strcmp(tag, "PvZ2Debug") == 0) {*/
+    //if (prio == ANDROID_LOG_DEBUG) {
+    //    /*LOGI("Forwarded: [%s] %s", tag, text);*/
+    //    prio = ANDROID_LOG_INFO;
+    //}
+    return oLogWrite(prio, tag, text);
 }
 
 #pragma endregion
@@ -2249,6 +2433,15 @@ void libRestructedLogic_ARM32__main()
     //根据版本修改偏移——已经不需要了
     /*AddressesChangedByVersion();*/
     
+    /*if (!directed_install_executed.exchange(true)) {
+        LOGI("RSBDirectInstall Start.");
+        RSBDirectInstall();
+        LOGI("RSBDirectInstall End.");
+    }*/
+    //直装包：数据包不存在则轮询路径是否存在
+    if (!OBBExisted()) {
+        std::thread(obb_path_monitor).detach();
+    }
     
 
     // New, easier to manage way of adding typenames to the plant/zombie name mapper
@@ -2277,16 +2470,22 @@ void libRestructedLogic_ARM32__main()
         //惯性函数
         PVZ2HookFunction(ScrollInertanceAddr, (void*)hkScrollInertance, (void**)&oScrollInertance, "WorldMap::worldMapScroll");
     }
-    ////直装包函数
+    ////直装包函数__没啥用
     //PVZ2HookFunction(JNI_OnLoadAddr, (void*)hkJNI_OnLoad, (void**)&oJNI_OnLoad, "JNI_OnLoad");
-    //输出简要日志
-    PVZ2HookFunction(LogOutputFuncAddrSimpleAddr, (void*)hkLogOutputFunc_Simple, (void**)&oLogOutputFunc_Simple, "LogOutputFunc_Simple");
-    //输出日志
+    ////输出简要日志
+    //PVZ2HookFunction(LogOutputFuncAddrSimpleAddr, (void*)hkLogOutputFunc_Simple, (void**)&oLogOutputFunc_Simple, "LogOutputFunc_Simple");
+    ////输出日志
     PVZ2HookFunction(LogOutputFuncAddr, (void*)hkLogOutputFunc, (void**)&oLogOutputFunc, "LogOutputFunc");
-    //输出结构日志
-    PVZ2HookFunction(LogOutputFuncAddr_Struct, (void*)hkLogOutputFunc_Struct, (void**)&oLogOutputFunc_Struct, "LogOutputFunc_Struct");
-    //输出v2日志
-    PVZ2HookFunction(LogOutputFuncAddr_v2, (void*)hkLogOutputFunc_v2, (void**)&oLogOutputFunc_v2, "LogOutputFunc_v2");
+    ////输出结构日志
+    //PVZ2HookFunction(LogOutputFuncAddr_Struct, (void*)hkLogOutputFunc_Struct, (void**)&oLogOutputFunc_Struct, "LogOutputFunc_Struct");
+    ////输出v2日志
+    //PVZ2HookFunction(LogOutputFuncAddr_v2, (void*)hkLogOutputFunc_v2, (void**)&oLogOutputFunc_v2, "LogOutputFunc_v2");
+    
+
+
+    //直接主log函数__不能用，用了必无限递归
+    //PVZ2HookFunction(LogWriteAddr, (void*)hkLogWrite, (void**)&oLogWrite, "LogWrite");
+
     //Hook主函数、RSB读取函数、资源组读取函数、资源分布读取函数
     PVZ2HookFunction(MainLoadFuncAddr, (void*)hkMainLoadFunc, (void**)&oMainLoadFunc, "ResourceManager::MainLoadFunc");
     PVZ2HookFunction(ResourceManagerFuncAddr, (void*)hkResourceManagerFunc, (void**)&oResourceManagerFunc, "ResourceManager::ResourceManagerFunc");
