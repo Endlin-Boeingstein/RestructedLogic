@@ -24,6 +24,12 @@ Ookdshin's PicoSHA2: [GitHub - okdshin/PicoSHA2: a header-file-only, SHA256 hash
 
 Kokke's Tiny-AES-C: [GitHub - kokke/tiny-AES-c: Small portable AES128/192/256 in C](https://github.com/kokke/tiny-AES-c).
 
+Rich Geldreich's miniz for portable unzipping: <https://github.com/richgel999/miniz>.
+
+Yutaka Tsutano's axmldec for analysing AXML (Reference) : <https://github.com/ytsutano/axmldec>.
+
+Antonin Hildebrand's boost for using axmldec (Unused) : <https://github.com/darwin/boost>.
+
 BlazeyLol's updated lib.so hooking project: <https://github.com/BlazeyLol/PVZ2ExampleMod>.
 
 BlazeyLol's expansion hooking project: <https://github.com/BlazeyLol/PVZ2ExpansionMod>.
