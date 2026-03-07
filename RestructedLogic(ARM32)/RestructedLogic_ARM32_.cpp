@@ -21,151 +21,11 @@
 #include <fcntl.h>
 #include "Customize/Projectile/GridItemRaiserProjectileProps.h"
 #include "VersionRtonIDs.h"
-#include<jni.h>
+#include "Unzip/ApkUnzipper.h"
+#include "AXML/axml_parser.hpp"
 //#include "Customize/Projectile/GridItemRaiserProjectile.cpp"
 
 namespace fs = std::filesystem;
-
-//拦截JNI!!!
-//JavaVM* g_vm = nullptr;
-//JNIEXPORT jint JNICALL JNI_Onload(JavaVM* vm, void* reserved) {
-//    g_vm = vm;
-//    return JNI_VERSION_1_6;
-//}
-
-//jobject get_context(JNIEnv* env) {
-//    // 核心逻辑：ActivityThread.currentActivityThread().getApplication()
-//    jclass atClass = env->FindClass("android/app/ActivityThread");
-//    jmethodID currentATMethod = env->GetStaticMethodID(atClass, "currentActivityThread", "()Landroid/app/ActivityThread;");
-//    jobject atInstance = env->CallStaticObjectMethod(atClass, currentATMethod);
-//
-//    jmethodID getAppMethod = env->GetMethodID(atClass, "getApplication", "()Landroid/app/Application;");
-//    return env->CallObjectMethod(atInstance, getAppMethod);
-//}
-//
-////一键搞定目录创建，搬运还是算了
-////void auto_move_payload(JNIEnv* env, const std::string& src_path) {
-//void auto_move_payload(JNIEnv* env) {
-//    jobject context = get_context(env);
-//    if (!context) return;
-//
-//    // 1. 让 Java 帮你把 OBB 文件夹建好（带上正确的 SELinux 标签）
-//    jclass contextClass = env->GetObjectClass(context);
-//    jmethodID getObbDir = env->GetMethodID(contextClass, "getObbDir", "()Ljava/io/File;");
-//    jobject obbFile = env->CallObjectMethod(context, getObbDir);
-//
-//    //// 2. 获取这个文件夹的绝对路径
-//    //jclass fileClass = env->GetObjectClass(obbFile);
-//    //jmethodID getPath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
-//    //jstring jPath = (jstring)env->CallObjectMethod(obbFile, getPath);
-//    //const char* cPath = env->GetStringUTFChars(jPath, nullptr);
-//
-//    //// 3. 拼接目标全路径并写入
-//    //std::string dst_path = std::string(cPath) + "/config.dat";
-//
-//    //std::ifstream src(src_path, std::ios::binary);
-//    //std::ofstream dst(dst_path, std::ios::binary);
-//    //dst << src.rdbuf(); // 暴力搬运
-//
-//    //// 释放资源
-//    //env->ReleaseStringUTFChars(jPath, cPath);
-//}
-
-
-//static JavaVM* g_vm = nullptr;
-//
-//jint JNI_OnLoad(JavaVM* vm, void* reserved) {
-//    g_vm = vm;
-//    return JNI_VERSION_1_4;
-//}
-//
-//// 获取当前 Application Context 的 getObbDir() 路径
-//std::string getObbDirPath() {
-//    JNIEnv* env = nullptr;
-//    // 获取当前线程的 JNIEnv，若线程未附加，则附加
-//    jint ret = g_vm->GetEnv((void**)&env, JNI_VERSION_1_6);
-//    if (ret == JNI_EDETACHED) {
-//        // 如果当前线程未附加，先附加
-//        if (g_vm->AttachCurrentThread(&env, nullptr) != JNI_OK) {
-//            LOGI("AttachCurrentThread failed");
-//            return "";
-//        }
-//    }
-//    else if (ret != JNI_OK) {
-//        LOGI("GetEnv failed");
-//        return "";
-//    }
-//
-//    // 1. 获取 ActivityThread 类
-//    jclass activityThreadCls = env->FindClass("android/app/ActivityThread");
-//    if (activityThreadCls == nullptr) {
-//        LOGI("FindClass ActivityThread failed");
-//        return "";
-//    }
-//
-//    // 2. 获取 currentApplication() 静态方法
-//    jmethodID currentAppMethod = env->GetStaticMethodID(activityThreadCls, "currentApplication", "()Landroid/app/Application;");
-//    if (currentAppMethod == nullptr) {
-//        LOGI("GetMethodID currentApplication failed");
-//        return "";
-//    }
-//
-//    // 3. 调用静态方法获得 Application 对象
-//    jobject application = env->CallStaticObjectMethod(activityThreadCls, currentAppMethod);
-//    if (application == nullptr) {
-//        LOGI("currentApplication returned null");
-//        return "";
-//    }
-//
-//    // 4. 获取 Context 类的 getObbDir() 方法
-//    jclass contextCls = env->FindClass("android/content/Context");
-//    jmethodID getObbDirMethod = env->GetMethodID(contextCls, "getObbDir", "()Ljava/io/File;");
-//    if (getObbDirMethod == nullptr) {
-//        LOGI("GetMethodID getObbDir failed");
-//        return "";
-//    }
-//
-//    // 5. 调用 application.getObbDir() 获得 File 对象
-//    jobject obbFile = env->CallObjectMethod(application, getObbDirMethod);
-//    if (obbFile == nullptr) {
-//        LOGI("getObbDir returned null");
-//        return "";
-//    }
-//
-//    // 6. 获取 File 类的 getPath() 方法
-//    jclass fileCls = env->FindClass("java/io/File");
-//    jmethodID getPathMethod = env->GetMethodID(fileCls, "getPath", "()Ljava/lang/String;");
-//    if (getPathMethod == nullptr) {
-//        LOGI("GetMethodID getPath failed");
-//        return "";
-//    }
-//
-//    // 7. 调用 obbFile.getPath() 获得路径字符串
-//    jstring pathStr = (jstring)env->CallObjectMethod(obbFile, getPathMethod);
-//    if (pathStr == nullptr) {
-//        LOGI("getPath returned null");
-//        return "";
-//    }
-//
-//    // 8. 将 Java 字符串转为 C 字符串
-//    const char* pathChars = env->GetStringUTFChars(pathStr, nullptr);
-//    std::string result(pathChars);
-//    env->ReleaseStringUTFChars(pathStr, pathChars);
-//
-//    // 9. 清理局部引用（可选，但建议）
-//    env->DeleteLocalRef(activityThreadCls);
-//    env->DeleteLocalRef(application);
-//    env->DeleteLocalRef(contextCls);
-//    env->DeleteLocalRef(obbFile);
-//    env->DeleteLocalRef(fileCls);
-//    env->DeleteLocalRef(pathStr);
-//
-//    // 如果之前附加了线程，记得分离（根据实际情况决定）
-//    // 如果你的代码是在一个长期运行的 native 线程中调用，且该线程不会退出，可以考虑不分离，或者在线程结束时分离。
-//    // 这里简单起见，暂不分离，但需注意平衡。
-//
-//    return result;
-//}
 
 
 //直装包专项
@@ -307,10 +167,53 @@ std::string get_so_parent_dir() {
     }
     return "";
 }
+
+//获取base.apk路径
+std::string find_apk_path()
+{
+    return (fs::path(get_so_parent_dir()).parent_path().parent_path()).string() + "/base.apk";
+}
+//读取AndroidManifest.axml
+std::vector<uint8_t> read_manifest(const std::string& apk)
+{
+    std::vector<uint8_t> result;
+
+    ApkUnzipper::extract_to_memory(
+        apk,
+        "AndroidManifest.xml",
+        result
+    );
+
+    return result;
+}
+
+AppInfo get_app_info()
+{
+    auto apk = find_apk_path();
+    LOGI("APK LOACTION:%s", apk.c_str());
+    //验证apk是否是源apk的//safe_pipe_copy(find_apk_path(), "/storage/emulated/0/Android/data/com.ea.game.pvz2_end/base.apk");
+    auto manifest = read_manifest(apk);
+    //验证unzip是否有效的//ApkUnzipper::extract_asset(apk, "AndroidManifest.xml", "/storage/emulated/0/Android/data/com.ea.game.pvz2_end/AndroidManifest.xml");
+    return parse_manifest(
+        manifest.data(),
+        manifest.size()
+    );
+}
+
+int get_apk_versioncode() {
+    auto info = get_app_info();
+    LOGI("package=%s", info.package.c_str());
+    LOGI("versionName=%s", info.versionName.c_str());
+    LOGI("versionCode=%d", info.versionCode);
+    LOGI("minSdk=%d", info.minSdk);
+    LOGI("targetSdk=%d", info.targetSdk);
+    return info.versionCode;
+}
+
+
 //OBB文件夹是否存在
 bool OBBPathExisted() {
-    int app_version = 0;
-    std::string ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
+    int app_version = get_apk_versioncode();
     std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
     fs::path rsb_real_path = fs::path(rsb_path_str);
     if (fs::exists(rsb_real_path)) return 1;
@@ -318,7 +221,7 @@ bool OBBPathExisted() {
 }
 //OBB是否存在
 bool OBBExisted() {
-    int app_version = 0;
+    int app_version = get_apk_versioncode();
     std::string ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
     std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
     std::string rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
@@ -326,8 +229,8 @@ bool OBBExisted() {
     if (fs::exists(rsb_self_path)) return 1;
     return 0;
 }
-//直装转移
-bool RSBDirectInstall() {
+//SO版直装转移//现在已经用不着了
+bool libRSBSODirectInstall() {
     std::string rsb_name = "libRSB.so";
     int app_version = 0;
     std::string ori_rsb_name = "main."+ std::to_string(app_version) + "." + get_package_name() + ".obb";
@@ -379,13 +282,32 @@ bool RSBDirectInstall() {
     }
 }
 
+//Assets版直装转移
+bool AssetsRSBDirectInstall() {
+    auto apk = find_apk_path();
+    int app_version = get_apk_versioncode();
+    std::string ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
+    std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
+    std::string rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
+    LOGI("ori_rsb_name = %s,rsb_path_str = %s,rsb_self_path_str = %s", ori_rsb_name.c_str(), rsb_path_str.c_str(), rsb_self_path_str.c_str());
+    //提取并放置OBB
+    if (ApkUnzipper::extract_asset(apk, "assets/"+ ori_rsb_name, rsb_self_path_str)) {
+        //权限修复
+        fs::permissions(rsb_self_path_str, fs::perms::owner_all | fs::perms::group_read);
+        return 1;
+    }
+    else {
+        LOGI("不是直装包");
+        return 0;
+    }
+}
 //线程监控OBB路径是否存在，存在则毙掉游戏（因为会卡死在下载界面）//现在不需要毙掉了，直接载入了
 void obb_path_monitor() {
     while (true) {
         if (OBBPathExisted()) {
             thread_applied = true;
             LOGI("RSBDirectInstall Start.");
-            RSBDirectInstall();
+            AssetsRSBDirectInstall();
             LOGI("RSBDirectInstall End.");
             if (OBBExisted()) {
                 //成功迁移
@@ -651,7 +573,7 @@ bool g_allowVerticalMovement = true;
 //回归本源
 int hkWorldMapDoMovement(void* map, float fX, float fY,bool allowVerticalMovement)
 {
-    LOGI("Doing map movement: fX - %d, fY - %d", fX, fY);
+    LOGI("Doing map movement: fX - %f, fY - %f", fX, fY);
     return oWorldMapDoMovement(map, fX, fY,g_allowVerticalMovement);
 }
 #pragma endregion
@@ -1874,6 +1796,12 @@ int hkManifestChecker(
 
 
 #pragma region JNI_OnLoad
+//根本不调用...............
+
+
+
+
+
 // 之前定义的全局 VM 指针
 //JavaVM* g_vm = nullptr;
 
@@ -1923,7 +1851,29 @@ int hkManifestChecker(
 //}
 #pragma endregion
 
+#pragma region _android_log_write
+//不能用，用了必无限递归
 
+typedef int (*LogWriteFunc)(int, const char*, const char*);
+LogWriteFunc oLogWrite = NULL;
+
+int hkLogWrite(int prio, const char* tag, const char* text)
+{
+    //日志等级prio
+    /*ANDROID_LOG_VERBOSE	2
+    ANDROID_LOG_DEBUG	3
+    ANDROID_LOG_INFO	4
+    ANDROID_LOG_WARN	5
+    ANDROID_LOG_ERROR	6*/
+    /*if (tag && strcmp(tag, "PvZ2Debug") == 0) {*/
+    //if (prio == ANDROID_LOG_DEBUG) {
+    //    /*LOGI("Forwarded: [%s] %s", tag, text);*/
+    //    prio = ANDROID_LOG_INFO;
+    //}
+    return oLogWrite(prio, tag, text);
+}
+
+#pragma endregion
 
 
 
@@ -2110,28 +2060,7 @@ int hkLogOutputFunc_v2(int a1, ...) {
 #pragma endregion
 
 
-#pragma region _android_log_write
 
-typedef int (*LogWriteFunc)(int, const char*, const char*);
-LogWriteFunc oLogWrite = NULL;
-
-int hkLogWrite(int prio, const char* tag, const char* text)
-{
-    //日志等级prio
-    /*ANDROID_LOG_VERBOSE	2
-    ANDROID_LOG_DEBUG	3
-    ANDROID_LOG_INFO	4
-    ANDROID_LOG_WARN	5
-    ANDROID_LOG_ERROR	6*/
-    /*if (tag && strcmp(tag, "PvZ2Debug") == 0) {*/
-    //if (prio == ANDROID_LOG_DEBUG) {
-    //    /*LOGI("Forwarded: [%s] %s", tag, text);*/
-    //    prio = ANDROID_LOG_INFO;
-    //}
-    return oLogWrite(prio, tag, text);
-}
-
-#pragma endregion
 
 
 
@@ -2438,6 +2367,9 @@ void libRestructedLogic_ARM32__main()
         RSBDirectInstall();
         LOGI("RSBDirectInstall End.");
     }*/
+
+    //必须留，获取包名和版本号信息
+    get_apk_versioncode();
     //直装包：数据包不存在则轮询路径是否存在
     if (!OBBExisted()) {
         std::thread(obb_path_monitor).detach();

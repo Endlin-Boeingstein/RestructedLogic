@@ -72,7 +72,7 @@ public:
 	int32_t m_propertyFlags; //0x00F0
 	char pad_00F4[4]; //0x00F4
 	Sexy::RtWeakPtr<RtObject> m_attachedAnimRig; //0x00F8
-	class Sexy::SexyVector2 m_attachedAnimRigOffset; //0x0100
+	Sexy::SexyVector2 m_attachedAnimRigOffset; //0x0100
 	Sexy::RtWeakPtr<RtObject> m_target; //0x0108
 	char pad_0110[24]; //0x0110
 	std::vector<Sexy::SexyString> m_plantFamilies; //0x0128

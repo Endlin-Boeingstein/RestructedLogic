@@ -27,6 +27,12 @@
     <ClCompile Include="Customize\Projectile\GridItemRaiserProjectileProps.cpp">
       <Filter>Customize\Projectile</Filter>
     </ClCompile>
+    <ClCompile Include="Unzip\miniz.c">
+      <Filter>Unzip</Filter>
+    </ClCompile>
+    <ClCompile Include="AXML\axml_parser.cpp">
+      <Filter>AXML</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RestructedLogic_ARM32_.h" />
@@ -219,6 +225,15 @@
       <Filter>Customize\Projectile</Filter>
     </ClInclude>
     <ClInclude Include="VersionRtonIDs.h" />
+    <ClInclude Include="Unzip\ApkUnzipper.h">
+      <Filter>Unzip</Filter>
+    </ClInclude>
+    <ClInclude Include="Unzip\miniz.h">
+      <Filter>Unzip</Filter>
+    </ClInclude>
+    <ClInclude Include="AXML\axml_parser.hpp">
+      <Filter>AXML</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x32">
@@ -262,6 +277,12 @@
     </Filter>
     <Filter Include="Customize\Projectile">
       <UniqueIdentifier>{cf0721f2-84bd-417b-8b62-a387f6fa8be5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Unzip">
+      <UniqueIdentifier>{5d612c47-314d-4c1e-9c00-c2ba0c4cde3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AXML">
+      <UniqueIdentifier>{688440c5-6dc5-487e-9333-7ba74498df7c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

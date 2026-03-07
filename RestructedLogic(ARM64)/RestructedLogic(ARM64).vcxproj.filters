@@ -9,6 +9,12 @@
     <ClCompile Include="Decrypt\aes.cpp">
       <Filter>Decrypt</Filter>
     </ClCompile>
+    <ClCompile Include="AXML\axml_parser.cpp">
+      <Filter>AXML</Filter>
+    </ClCompile>
+    <ClCompile Include="Unzip\miniz.c">
+      <Filter>Unzip</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -36,6 +42,15 @@
       <Filter>Decrypt</Filter>
     </ClInclude>
     <ClInclude Include="VersionRtonIDs.h" />
+    <ClInclude Include="AXML\axml_parser.hpp">
+      <Filter>AXML</Filter>
+    </ClInclude>
+    <ClInclude Include="Unzip\ApkUnzipper.h">
+      <Filter>Unzip</Filter>
+    </ClInclude>
+    <ClInclude Include="Unzip\miniz.h">
+      <Filter>Unzip</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x64">
@@ -61,6 +76,12 @@
     </Filter>
     <Filter Include="Decrypt">
       <UniqueIdentifier>{da75c95d-4d88-4a9e-9066-82bcfec5d38c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Unzip">
+      <UniqueIdentifier>{5ccce1fa-c28c-4c18-8c14-d51d829796db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AXML">
+      <UniqueIdentifier>{3ec4c13f-bab7-4e05-851c-edca92c6235a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

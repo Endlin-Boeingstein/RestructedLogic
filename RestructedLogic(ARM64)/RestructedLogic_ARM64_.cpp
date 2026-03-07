@@ -18,6 +18,8 @@
 #include <vector>
 #include <fcntl.h>
 #include "VersionRtonIDs.h"
+#include "AXML/axml_parser.hpp"
+#include "Unzip/ApkUnzipper.h"
 
 //友情提示：该ARM64工程所有功能均未测试，据估计应当全部重写（以支持64位指针），故劳烦修好后再进行测试，尤其是数据包载入，谢谢！
 
@@ -162,10 +164,53 @@ std::string get_so_parent_dir() {
     }
     return "";
 }
+
+//获取base.apk路径
+std::string find_apk_path()
+{
+    return (fs::path(get_so_parent_dir()).parent_path().parent_path()).string() + "/base.apk";
+}
+//读取AndroidManifest.axml
+std::vector<uint8_t> read_manifest(const std::string& apk)
+{
+    std::vector<uint8_t> result;
+
+    ApkUnzipper::extract_to_memory(
+        apk,
+        "AndroidManifest.xml",
+        result
+    );
+
+    return result;
+}
+
+AppInfo get_app_info()
+{
+    auto apk = find_apk_path();
+    LOGI("APK LOACTION:%s", apk.c_str());
+    //验证apk是否是源apk的//safe_pipe_copy(find_apk_path(), "/storage/emulated/0/Android/data/com.ea.game.pvz2_end/base.apk");
+    auto manifest = read_manifest(apk);
+    //验证unzip是否有效的//ApkUnzipper::extract_asset(apk, "AndroidManifest.xml", "/storage/emulated/0/Android/data/com.ea.game.pvz2_end/AndroidManifest.xml");
+    return parse_manifest(
+        manifest.data(),
+        manifest.size()
+    );
+}
+
+int get_apk_versioncode() {
+    auto info = get_app_info();
+    LOGI("package=%s", info.package.c_str());
+    LOGI("versionName=%s", info.versionName.c_str());
+    LOGI("versionCode=%d", info.versionCode);
+    LOGI("minSdk=%d", info.minSdk);
+    LOGI("targetSdk=%d", info.targetSdk);
+    return info.versionCode;
+}
+
+
 //OBB文件夹是否存在
 bool OBBPathExisted() {
-    int app_version = 0;
-    std::string ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
+    int app_version = get_apk_versioncode();
     std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
     fs::path rsb_real_path = fs::path(rsb_path_str);
     if (fs::exists(rsb_real_path)) return 1;
@@ -173,7 +218,7 @@ bool OBBPathExisted() {
 }
 //OBB是否存在
 bool OBBExisted() {
-    int app_version = 0;
+    int app_version = get_apk_versioncode();
     std::string ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
     std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
     std::string rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
@@ -181,8 +226,8 @@ bool OBBExisted() {
     if (fs::exists(rsb_self_path)) return 1;
     return 0;
 }
-//直装转移
-bool RSBDirectInstall() {
+//SO版直装转移//现在已经用不着了
+bool libRSBSODirectInstall() {
     std::string rsb_name = "libRSB.so";
     int app_version = 0;
     std::string ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
@@ -234,13 +279,32 @@ bool RSBDirectInstall() {
     }
 }
 
+//Assets版直装转移
+bool AssetsRSBDirectInstall() {
+    auto apk = find_apk_path();
+    int app_version = get_apk_versioncode();
+    std::string ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
+    std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
+    std::string rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
+    LOGI("ori_rsb_name = %s,rsb_path_str = %s,rsb_self_path_str = %s", ori_rsb_name.c_str(), rsb_path_str.c_str(), rsb_self_path_str.c_str());
+    //提取并放置OBB
+    if (ApkUnzipper::extract_asset(apk, "assets/" + ori_rsb_name, rsb_self_path_str)) {
+        //权限修复
+        fs::permissions(rsb_self_path_str, fs::perms::owner_all | fs::perms::group_read);
+        return 1;
+    }
+    else {
+        LOGI("不是直装包");
+        return 0;
+    }
+}
 //线程监控OBB路径是否存在，存在则毙掉游戏（因为会卡死在下载界面）//现在不需要毙掉了，直接载入了
 void obb_path_monitor() {
     while (true) {
         if (OBBPathExisted()) {
             thread_applied = true;
             LOGI("RSBDirectInstall Start.");
-            RSBDirectInstall();
+            AssetsRSBDirectInstall();
             LOGI("RSBDirectInstall End.");
             if (OBBExisted()) {
                 //成功迁移
@@ -1780,6 +1844,8 @@ void libRestructedLogic_ARM64__main()
     LOGI("Initializing %s", LIB_TAG);
 
 
+    //必须留，获取包名和版本号信息
+    get_apk_versioncode();
     //直装包：数据包不存在则轮询路径是否存在
     if (!OBBExisted()) {
         std::thread(obb_path_monitor).detach();

@@ -172,12 +172,20 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AXML\axml_parser.cpp" />
     <ClCompile Include="Decrypt\aes.cpp" />
     <ClCompile Include="memUtils.cpp" />
     <ClCompile Include="RestructedLogic_ARM64_.cpp" />
+    <ClCompile Include="Unzip\miniz.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">NotUsing</PrecompiledHeader>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">CompileAsC</CompileAs>
+    </ClCompile>
     <ClCompile Include="x64\jni\libs\64InlineHook\And64InlineHook.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AXML\axml_parser.hpp" />
     <ClInclude Include="Decrypt\aes.h" />
     <ClInclude Include="Decrypt\picosha2.h" />
     <ClInclude Include="Logging.h" />
@@ -187,6 +195,8 @@
     <ClInclude Include="PvZ2\WorldMap.h" />
     <ClInclude Include="RestructedLogic_ARM64_.h" />
     <ClInclude Include="SexyTypes.h" />
+    <ClInclude Include="Unzip\ApkUnzipper.h" />
+    <ClInclude Include="Unzip\miniz.h" />
     <ClInclude Include="VersionAddresses.h" />
     <ClInclude Include="VersionRtonIDs.h" />
     <ClInclude Include="x64\jni\include\Utils.h" />

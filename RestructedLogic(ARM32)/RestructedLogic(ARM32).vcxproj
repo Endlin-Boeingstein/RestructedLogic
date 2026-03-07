@@ -167,6 +167,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AXML\axml_parser.cpp" />
     <ClCompile Include="Customize\Projectile\GridItemRaiserProjectileProps.cpp" />
     <ClCompile Include="Decrypt\aes.cpp" />
     <ClCompile Include="memUtils.cpp" />
@@ -174,11 +175,18 @@
     <ClCompile Include="Reflection\ReflectionBuilder.cpp" />
     <ClCompile Include="RestructedLogic_ARM32_.cpp" />
     <ClCompile Include="Sexy\RtClass.cpp" />
+    <ClCompile Include="Unzip\miniz.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">CompileAsC</CompileAs>
+    </ClCompile>
     <ClCompile Include="x32\jni\libs\Substrate\SubstrateDebug.cpp" />
     <ClCompile Include="x32\jni\libs\Substrate\SubstrateHook.cpp" />
     <ClCompile Include="x32\jni\libs\Substrate\SubstratePosixMemory.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AXML\axml_parser.hpp" />
     <ClInclude Include="Customize\Projectile\GridItemRaiserProjectileProps.h" />
     <ClInclude Include="Decrypt\aes.h" />
     <ClInclude Include="Decrypt\picosha2.h" />
@@ -236,6 +244,8 @@
     <ClInclude Include="Sexy\RtClass.h" />
     <ClInclude Include="Sexy\RtObject.h" />
     <ClInclude Include="Sexy\RtWeakPtr.h" />
+    <ClInclude Include="Unzip\ApkUnzipper.h" />
+    <ClInclude Include="Unzip\miniz.h" />
     <ClInclude Include="VersionAddresses.h" />
     <ClInclude Include="VersionRtonIDs.h" />
     <ClInclude Include="x32\jni\include\Utils.h" />
