@@ -183,6 +183,12 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">CompileAsC</CompileAs>
     </ClCompile>
     <ClCompile Include="x64\jni\libs\64InlineHook\And64InlineHook.cpp" />
+    <ClCompile Include="XXHash\xxhash.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">NotUsing</PrecompiledHeader>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">CompileAsC</CompileAs>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AXML\axml_parser.hpp" />
@@ -196,11 +202,13 @@
     <ClInclude Include="RestructedLogic_ARM64_.h" />
     <ClInclude Include="SexyTypes.h" />
     <ClInclude Include="Unzip\ApkUnzipper.h" />
+    <ClInclude Include="Unzip\HashComparer.h" />
     <ClInclude Include="Unzip\miniz.h" />
     <ClInclude Include="VersionAddresses.h" />
     <ClInclude Include="VersionRtonIDs.h" />
     <ClInclude Include="x64\jni\include\Utils.h" />
     <ClInclude Include="x64\jni\libs\64InlineHook\And64InlineHook.hpp" />
+    <ClInclude Include="XXHash\xxhash.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="x64\jni\Android.mk" />

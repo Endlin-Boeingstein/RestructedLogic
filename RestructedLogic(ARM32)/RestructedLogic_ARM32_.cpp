@@ -23,6 +23,7 @@
 #include "VersionRtonIDs.h"
 #include "Unzip/ApkUnzipper.h"
 #include "AXML/axml_parser.hpp"
+#include "Unzip/HashComparer.h"
 //#include "Customize/Projectile/GridItemRaiserProjectile.cpp"
 
 namespace fs = std::filesystem;
@@ -30,8 +31,28 @@ namespace fs = std::filesystem;
 
 //直装包专项
 #pragma region Direct Install Package Funcs
+//防止重复读取应用信息
+std::atomic<bool> apkinforeaded(false);
 //RSB迁移是否开始判定
 std::atomic<bool> thread_applied(false);
+//源安装包路径
+std::string apk;
+//数据包版本
+int app_version;
+//OBB名称
+std::string ori_rsb_name;
+//OBB专属文件夹路径
+std::string rsb_path_str;
+//OBB路径
+std::string rsb_self_path_str;
+//AndroidManifest.xml信息
+std::vector<uint8_t> manifest;
+//应用信息
+AppInfo info;
+//安装包内数据包哈希值
+uint32_t apkOBBHash;
+//数据包哈希值
+uint32_t OBBHash;
 
 //让主程序延迟防止数据包迁移期间被读取（可放在除了Log输出函数以外的任一hook函数调用旧函数之前）
 void dalay_hook() {
@@ -189,10 +210,10 @@ std::vector<uint8_t> read_manifest(const std::string& apk)
 
 AppInfo get_app_info()
 {
-    auto apk = find_apk_path();
+    apk = find_apk_path();
     LOGI("APK LOACTION:%s", apk.c_str());
     //验证apk是否是源apk的//safe_pipe_copy(find_apk_path(), "/storage/emulated/0/Android/data/com.ea.game.pvz2_end/base.apk");
-    auto manifest = read_manifest(apk);
+    manifest = read_manifest(apk);
     //验证unzip是否有效的//ApkUnzipper::extract_asset(apk, "AndroidManifest.xml", "/storage/emulated/0/Android/data/com.ea.game.pvz2_end/AndroidManifest.xml");
     return parse_manifest(
         manifest.data(),
@@ -201,7 +222,7 @@ AppInfo get_app_info()
 }
 
 int get_apk_versioncode() {
-    auto info = get_app_info();
+    info = get_app_info();
     LOGI("package=%s", info.package.c_str());
     LOGI("versionName=%s", info.versionName.c_str());
     LOGI("versionCode=%d", info.versionCode);
@@ -210,32 +231,77 @@ int get_apk_versioncode() {
     return info.versionCode;
 }
 
-
 //OBB文件夹是否存在
 bool OBBPathExisted() {
-    int app_version = get_apk_versioncode();
-    std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
+    app_version = get_apk_versioncode();
+    rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
     fs::path rsb_real_path = fs::path(rsb_path_str);
     if (fs::exists(rsb_real_path)) return 1;
     return 0;
 }
 //OBB是否存在
 bool OBBExisted() {
-    int app_version = get_apk_versioncode();
-    std::string ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
-    std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
-    std::string rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
+    app_version = get_apk_versioncode();
+    ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
+    rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
+    rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
     fs::path rsb_self_path = fs::path(rsb_self_path_str);
     if (fs::exists(rsb_self_path)) return 1;
     return 0;
 }
+
+//验证头部四字节
+// 检查文件头是否为特定的四个字符
+bool check_magic_number(const char* path, const char* magic) {
+    FILE* fp = fopen(path, "rb");
+    if (!fp) return false;
+
+    char buffer[4];
+    size_t count = fread(buffer, 1, 4, fp);
+    fclose(fp);
+
+    if (count != 4) return false;
+
+    // 对比前 4 字节
+    return memcmp(buffer, magic, 4) == 0;
+}
+//验证哈希值是否相等
+bool OBBHashEquals() {
+    LOGI("Hash Start");
+    app_version = get_apk_versioncode();
+    ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
+    rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
+    rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
+    //apk内数据包哈希值
+    apkOBBHash=HashComparer::get_asset_hash_32(apk, "assets/" + ori_rsb_name);
+    if (apkOBBHash == 0) {
+        LOGI("哈希校验：非直装包");
+        return true;
+    }
+    if (check_magic_number(rsb_self_path_str.c_str(), "EBRL")) {
+        LOGI("检测到EBRL，读取后续哈希值");
+        OBBHash = HashComparer::read_hash_after_header_32(rsb_self_path_str.c_str());
+    }
+    else {
+        //如果大小不一，直接就是不一样
+        if (ApkUnzipper::get_apk_asset_size(apk, "assets/" + ori_rsb_name)!= fs::file_size(fs::path(rsb_self_path_str))) {
+            LOGI("文件大小不一，必然不同");
+            return false;
+        }
+        OBBHash = HashComparer::compute_file_hash_32(fs::path(rsb_self_path_str));
+    }
+    bool result = HashComparer::are_hashes_identical_32(apkOBBHash, OBBHash);
+    LOGI("Hash End");
+    return result;
+}
+
 //SO版直装转移//现在已经用不着了
 bool libRSBSODirectInstall() {
     std::string rsb_name = "libRSB.so";
-    int app_version = 0;
-    std::string ori_rsb_name = "main."+ std::to_string(app_version) + "." + get_package_name() + ".obb";
-    std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
-    std::string rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
+    app_version = get_apk_versioncode();
+    ori_rsb_name = "main."+ std::to_string(app_version) + "." + get_package_name() + ".obb";
+    rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
+    rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
     //获取lib路径
     std::string so_dir = get_so_parent_dir();
     if (so_dir.empty()) return 0;
@@ -284,11 +350,11 @@ bool libRSBSODirectInstall() {
 
 //Assets版直装转移
 bool AssetsRSBDirectInstall() {
-    auto apk = find_apk_path();
-    int app_version = get_apk_versioncode();
-    std::string ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
-    std::string rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
-    std::string rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
+    apk = find_apk_path();
+    app_version = get_apk_versioncode();
+    ori_rsb_name = "main." + std::to_string(app_version) + "." + get_package_name() + ".obb";
+    rsb_path_str = "/storage/emulated/0/Android/obb/" + get_package_name();
+    rsb_self_path_str = rsb_path_str + "/" + ori_rsb_name;
     LOGI("ori_rsb_name = %s,rsb_path_str = %s,rsb_self_path_str = %s", ori_rsb_name.c_str(), rsb_path_str.c_str(), rsb_self_path_str.c_str());
     //提取并放置OBB
     if (ApkUnzipper::extract_asset(apk, "assets/"+ ori_rsb_name, rsb_self_path_str)) {
@@ -309,7 +375,7 @@ void obb_path_monitor() {
             LOGI("RSBDirectInstall Start.");
             AssetsRSBDirectInstall();
             LOGI("RSBDirectInstall End.");
-            if (OBBExisted()) {
+            if (OBBExisted()|| OBBHashEquals()) {
                 //成功迁移
                 thread_applied = false;
             }
@@ -1375,7 +1441,7 @@ int hkRSBPathRecorder(uint* a1) {
     std::string cache_dir = "/data/data/"+pack_name+"/files";///storage/emulated/0/Android/data/com.ea.game.pvz2_row/cache
     makePath(cache_dir);
     //这个地方可以随意写，这样别人就认不出来了
-    std::string temp_path = cache_dir + "/.cache_data_file";
+    std::string temp_path = cache_dir + "/.cache_file";
 
     // 2. 检测 1bsr (保持不变)
     int src_fd = open(original_path.c_str(), O_RDONLY);
@@ -1505,7 +1571,8 @@ int hkRSBPathRecorder(uint* a1) {
             //重写数据包头部为EBRL
             if (!isRooted()) {
                 //没ROOT重写数据包头
-                if (!maskFileHeader(original_path.c_str(), "EBRL")) {
+                /*if (!maskFileHeader(original_path.c_str(), "EBRL")) {*/
+                if (!HashComparer::generate_hash_file_with_header_32(original_path.c_str(), original_path.c_str(), "EBRL")) {
                     //重写失败报错
                     LOGI("RSB_TRACE: EBRL overrides failed.");
                     return result;
@@ -2369,9 +2436,11 @@ void libRestructedLogic_ARM32__main()
     }*/
 
     //必须留，获取包名和版本号信息
-    get_apk_versioncode();
-    //直装包：数据包不存在则轮询路径是否存在
-    if (!OBBExisted()) {
+    if (!apkinforeaded.exchange(true)) {
+        get_apk_versioncode();
+    }
+    //直装包：数据包不存在或者哈希校验不通过则轮询路径是否存在
+    if (!OBBExisted()|| !OBBHashEquals()) {
         std::thread(obb_path_monitor).detach();
     }
     

@@ -184,6 +184,12 @@
     <ClCompile Include="x32\jni\libs\Substrate\SubstrateDebug.cpp" />
     <ClCompile Include="x32\jni\libs\Substrate\SubstrateHook.cpp" />
     <ClCompile Include="x32\jni\libs\Substrate\SubstratePosixMemory.cpp" />
+    <ClCompile Include="XXHash\xxhash.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">NotUsing</PrecompiledHeader>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">CompileAsC</CompileAs>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">CompileAsC</CompileAs>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AXML\axml_parser.hpp" />
@@ -245,6 +251,7 @@
     <ClInclude Include="Sexy\RtObject.h" />
     <ClInclude Include="Sexy\RtWeakPtr.h" />
     <ClInclude Include="Unzip\ApkUnzipper.h" />
+    <ClInclude Include="Unzip\HashComparer.h" />
     <ClInclude Include="Unzip\miniz.h" />
     <ClInclude Include="VersionAddresses.h" />
     <ClInclude Include="VersionRtonIDs.h" />
@@ -257,6 +264,7 @@
     <ClInclude Include="x32\jni\libs\Substrate\SubstrateLog.hpp" />
     <ClInclude Include="x32\jni\libs\Substrate\SubstrateX86.hpp" />
     <ClInclude Include="x32\jni\libs\Substrate\table64.h" />
+    <ClInclude Include="XXHash\xxhash.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

@@ -33,6 +33,9 @@
     <ClCompile Include="AXML\axml_parser.cpp">
       <Filter>AXML</Filter>
     </ClCompile>
+    <ClCompile Include="XXHash\xxhash.c">
+      <Filter>XXHash</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RestructedLogic_ARM32_.h" />
@@ -234,6 +237,12 @@
     <ClInclude Include="AXML\axml_parser.hpp">
       <Filter>AXML</Filter>
     </ClInclude>
+    <ClInclude Include="XXHash\xxhash.h">
+      <Filter>XXHash</Filter>
+    </ClInclude>
+    <ClInclude Include="Unzip\HashComparer.h">
+      <Filter>Unzip</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x32">
@@ -283,6 +292,9 @@
     </Filter>
     <Filter Include="AXML">
       <UniqueIdentifier>{688440c5-6dc5-487e-9333-7ba74498df7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XXHash">
+      <UniqueIdentifier>{c6dcd97a-d8bc-424b-8de0-bbc3a42fcf48}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

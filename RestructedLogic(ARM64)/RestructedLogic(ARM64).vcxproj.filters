@@ -15,6 +15,9 @@
     <ClCompile Include="Unzip\miniz.c">
       <Filter>Unzip</Filter>
     </ClCompile>
+    <ClCompile Include="XXHash\xxhash.c">
+      <Filter>XXHash</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -51,6 +54,12 @@
     <ClInclude Include="Unzip\miniz.h">
       <Filter>Unzip</Filter>
     </ClInclude>
+    <ClInclude Include="XXHash\xxhash.h">
+      <Filter>XXHash</Filter>
+    </ClInclude>
+    <ClInclude Include="Unzip\HashComparer.h">
+      <Filter>Unzip</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="x64">
@@ -82,6 +91,9 @@
     </Filter>
     <Filter Include="AXML">
       <UniqueIdentifier>{3ec4c13f-bab7-4e05-851c-edca92c6235a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XXHash">
+      <UniqueIdentifier>{290f8f73-9b53-4839-b075-7cec06dd65f3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
