@@ -1745,8 +1745,8 @@ ResourceManagerFunc oResourceManagerFunc = NULL;
 int hkResourceManagerFunc(int a1, int a2, int a3) {
     LOGI("Hooking ResourcesManagerFunc 6EE218");
     LOGI("a1=%d, a2=%d, a3=%d", a1, a2, a3);
-    //直装包专用：第一次载入RSB时候则延迟做到一次载入，否则只能第一次卡住第二次正常进
-    dalay_hook();
+    ////直装包专用：第一次载入RSB时候则延迟做到一次载入，否则只能第一次卡住第二次正常进
+    //dalay_hook();
 
     int backdata= oResourceManagerFunc(a1, a2, a3);
     LOGI("Hooking ResourcesManagerFunc 6EE218 End");
@@ -1961,11 +1961,12 @@ LogOutputFunc oLogOutputFunc = NULL;
 std::mutex g_logMutex;
 
 int hkLogOutputFunc(char* format, ...) {
+    //直装包专用：第一次载入RSB时候则延迟做到一次载入，否则只能第一次卡住第二次正常进
+    dalay_hook();
     if (!oLogOutputFunc) {
         LOGI("LogOutputFunc: Original function pointer is null");
         return -1;
     }
-
     std::lock_guard<std::mutex> lock(g_logMutex);
 
     va_list va, va_copy;
@@ -2436,9 +2437,9 @@ void libRestructedLogic_ARM32__main()
     }*/
 
     //必须留，获取包名和版本号信息
-    if (!apkinforeaded.exchange(true)) {
+    /*if (!apkinforeaded.exchange(true)) {*/
         get_apk_versioncode();
-    }
+    /*}*/
     //直装包：数据包不存在或者哈希校验不通过则轮询路径是否存在
     if (!OBBExisted()|| !OBBHashEquals()) {
         std::thread(obb_path_monitor).detach();

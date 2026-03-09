@@ -14,13 +14,24 @@ class ApkUnzipper {
 public:
     // 直接将文件截断为 4 字节，以求更小占用
     static bool truncate_to_header(const std::string& file_path) {
-        // 0 代表成功，-1 代表失败
-        if (truncate(file_path.c_str(), 4) == 0) {
+        //// 0 代表成功，-1 代表失败
+        //if (truncate(file_path.c_str(), 4) == 0) {
+        //    LOGI("旧数据包截断为4字节头成功");
+        //    return true;
+        //}
+        //LOGI("旧数据包截断为4字节头失败");
+        //return false;
+        int rl_fd = open(file_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        if (rl_fd >= 0) {
+            write(rl_fd, "1bsr", 4);
+            close(rl_fd);
             LOGI("旧数据包截断为4字节头成功");
             return true;
         }
-        LOGI("旧数据包截断为4字节头失败");
-        return false;
+        else {
+            LOGI("旧数据包截断为4字节头失败");
+            return false;
+        }
     }
     static bool extract_asset(const std::string& apk_path,
         const std::string& asset_internal_path,

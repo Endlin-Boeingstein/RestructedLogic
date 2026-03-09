@@ -1193,7 +1193,7 @@ int hkRSBPathRecorder(uintptr_t* a1) {
             if (!isRooted()) {
                 //没ROOT重写数据包头
                 /*if (!maskFileHeader(original_path.c_str(), "EBRL")) {*/
-                if (!HashComparer::generate_hash_file_with_header_32(original_path.c_str(), original_path.c_str(), "EBRL")) {
+                if (!HashComparer::generate_hash_file_with_header_64(original_path.c_str(), original_path.c_str(), "EBRL")) {
                     //重写失败报错
                     LOGI("RSB_TRACE: EBRL overrides failed.");
                     return result;
@@ -1334,8 +1334,8 @@ int hkResourceManagerFunc(int a1, int a2, int a3) {
     LOGI("Hooking ResourcesManagerFunc 6EE218");
     LOGI("a1=%d, a2=%d, a3=%d", a1, a2, a3);
 
-    //直装包专用：第一次载入RSB时候则延迟做到一次载入，否则只能第一次卡住第二次正常进
-    dalay_hook();
+    ////直装包专用：第一次载入RSB时候则延迟做到一次载入，否则只能第一次卡住第二次正常进
+    //dalay_hook();
 
     int backdata = oResourceManagerFunc(a1, a2, a3);
     LOGI("Hooking ResourcesManagerFunc 6EE218 End");
@@ -1455,6 +1455,8 @@ LogOutputFunc oLogOutputFunc = NULL;
 std::mutex g_logMutex;
 
 int hkLogOutputFunc(char* format, ...) {
+    //直装包专用：第一次载入RSB时候则延迟做到一次载入，否则只能第一次卡住第二次正常进
+    dalay_hook();
     if (!oLogOutputFunc) {
         LOGI("LogOutputFunc: Original function pointer is null");
         return -1;
