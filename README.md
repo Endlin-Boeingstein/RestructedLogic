@@ -30,6 +30,8 @@ Yutaka Tsutano's axmldec for analysing AXML (Reference) : <https://github.com/yt
 
 Antonin Hildebrand's boost for using axmldec (Unused) : <https://github.com/darwin/boost>.
 
+Yann Collet's xxHash: <https://github.com/Cyan4973/xxHash>.
+
 BlazeyLol's updated lib.so hooking project: <https://github.com/BlazeyLol/PVZ2ExampleMod>.
 
 BlazeyLol's expansion hooking project: <https://github.com/BlazeyLol/PVZ2ExpansionMod>.
