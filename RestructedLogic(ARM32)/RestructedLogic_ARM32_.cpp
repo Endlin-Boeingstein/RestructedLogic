@@ -27,7 +27,9 @@
 //#include "Customize/Projectile/GridItemRaiserProjectile.cpp"
 
 namespace fs = std::filesystem;
-
+using _DWORD = uint32_t;
+using __int64 = int64_t;
+using _BYTE = uint8_t;
 
 //直装包专项
 #pragma region Direct Install Package Funcs
@@ -2246,7 +2248,10 @@ int hkLogOutputFunc_v2(int a1, ...) {
 //    return finalZoom;
 //}
 
-
+constexpr int TEXTURE_WIDTH = 2048, TEXTURE_LEFT_WIDTH = 556, TEXTURE_RIGHT_WIDTH = 1345;
+constexpr int stageRightLine = TEXTURE_WIDTH + TEXTURE_RIGHT_WIDTH;
+// 选卡界面与正式游戏视野右边缘（相对于棋盘左侧边缘的距离）
+int gameStartRightLine, preGameRightLine;
 //获取设备分辨率和结果分辨率
 // 原函数签名
 typedef int (*LawnAppScreenWidthHeight)(float* a1, int a2);
@@ -2306,6 +2311,17 @@ int hkLawnAppScreenWidthHeight(float* a1, int a2) {
         LOGI("%s", buffer);
     }
     zoomScale = ((float)mOrigScreenHeight / m_contentResHeight);
+
+    // 若游戏分辨率宽度大于棋盘和左侧的总宽度（足以让左侧全部显示），则使偏移与左侧宽度相同
+  // 否则使偏移等于游戏分辨率宽度减去棋盘宽度（即让右侧边缘与屏幕右侧对齐）
+    gameStartRightLine = (mWidth >= TEXTURE_WIDTH + TEXTURE_LEFT_WIDTH)
+        ? (mWidth - TEXTURE_LEFT_WIDTH)
+        : TEXTURE_WIDTH;
+    gameStartRightLine = std::min(gameStartRightLine, stageRightLine);
+    preGameRightLine = (gameStartRightLine + stageRightLine) / 2;
+    preGameRightLine = std::min(preGameRightLine, stageRightLine);
+
+
     return result;
 }
 
@@ -2313,10 +2329,10 @@ int hkLawnAppScreenWidthHeight(float* a1, int a2) {
 
 
 // 定义原函数的函数原型 (32位 ARM 中 __fastcall 通常对应 r0, r1...)
-typedef int (*OrigBoardZoom)(uintptr_t a1);
+typedef int (*OrigBoardZoom)(int a1);
 OrigBoardZoom oBoardZoom = nullptr;
 
-int hkBoardZoom(uintptr_t a1) {
+int hkBoardZoom(int a1) {
     //集体注释（没用了，用了会起反作用）
     {
         ////缩放系数
@@ -2346,7 +2362,7 @@ int hkBoardZoom(uintptr_t a1) {
     int result = oBoardZoom(a1);
     
     //改变选卡时向左滑动距离
-    *(int32_t*)(a1 + 880) = -(*(int32_t*)(a1 + 840)) + 20 + 64 * 3; /*-(*(int32_t*)(a1 + 832));*///前面这个也是可以的//-(*(int32_t*)(a1 + 840))+20选卡时候会完全靠左边，部分设备选卡会看不到出怪
+    *(_DWORD*)(a1 + 880) = preGameRightLine - mWidth;
     //高度无法调整，只能靠缩放
     return result;
 }
@@ -2368,13 +2384,10 @@ int hkBoardZoom2(uintptr_t a1) {
     //俩半逻辑宽度
     int32_t logicalA = *(int32_t*)(a1 + 832);
     int32_t logicalB = *(int32_t*)(a1 + 840);
-    //改变左侧偏移(因为误差20像素，所以补上)
-    *(int32_t*)(a1 + 824) = (int32_t)logicalB-20;/**(int32_t*)(a1 + 44)-mOrigScreenWidth;*///注释的是刘海屏留存的数值
-    
-
-
-    //顶部基准线
-    *(int32_t*)(a1 + 868) = (int32_t)mOrigScreenHeight;
+    // 改变视野左边缘与棋盘左边缘的距离
+    *(_DWORD*)(a1 + 824) = -(gameStartRightLine - mWidth);
+    // 顶部基准线
+    *(_DWORD*)(a1 + 868) = (_DWORD)mOrigScreenHeight;
 
     //右边界屏幕坐标
     int32_t board_right = *(int32_t*)(a1 + 864);
