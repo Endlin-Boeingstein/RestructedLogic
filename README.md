@@ -8,7 +8,7 @@ This project was compiled on April 11, 2024.
 
 ## Acknowledgements
 
-- **MeteorFlower** –For refining and simplifying the project, correcting the documentation, and diligently searching for function offsets to enable multi-version support.
+- **MeteorFlower** –For refining and simplifying the project, correcting the documentation, diligently searching for function offsets to enable multi-version support, calculating the MaxZoom accurately, and creating an adaptable MaxZoom formula compatible with all devices.
 
 ## Credits
 
@@ -20,9 +20,9 @@ Rprop's ARM64 hooking project: <https://github.com/Rprop/And64InlineHook>.
 
 XMDS's hooking project: <https://github.com/XMDS/GlossHook>.
 
-Ookdshin's PicoSHA2: [GitHub - okdshin/PicoSHA2: a header-file-only, SHA256 hash generator in C++](https://github.com/okdshin/PicoSHA2).
+Ookdshin's PicoSHA2: <https://github.com/okdshin/PicoSHA2>.
 
-Kokke's Tiny-AES-C: [GitHub - kokke/tiny-AES-c: Small portable AES128/192/256 in C](https://github.com/kokke/tiny-AES-c).
+Kokke's Tiny-AES-C: <https://github.com/kokke/tiny-AES-c>.
 
 Rich Geldreich's miniz for portable unzipping: <https://github.com/richgel999/miniz>.
 
